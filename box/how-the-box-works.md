@@ -132,7 +132,8 @@ the manifest, rendered and handed over.
   it a bucket, and gives your UI maintainer leave to write it as it
   writes `www`. Everything else is yours: raw HTML, or Markdown built
   by pandoc, MkDocs, Hugo, md-preview or anything else, by hand or in
-  your CI. `docs/` holds a seed. A release is a sync of the built
+  your CI. `docs/` starts as md-preview pages, built by `md-preview
+  build docs` into `docs/_site/`. A release is a sync of the built
   folder; its index is `index.html`, and a missing page is S3's `404`.
   Nothing secret goes here: it is as public as `www`.
 
