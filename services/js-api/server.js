@@ -7,7 +7,7 @@
 //   POST /echo     a signed-in caller: the body back, with who sent it
 //
 // In front of this process, the box's nginx (rendered from
-// box/project.json, docs/how-the-box-works.md):
+// box/project.json, box/how-the-box-works.md):
 //   - an allow-list: a route added here is unreachable until
 //     box/project.json names it, and the box's owner rolls it out;
 //   - CORS for your www alone, and the rate of writes;

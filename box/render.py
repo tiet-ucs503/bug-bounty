@@ -18,7 +18,7 @@ repository as projects/<name>/ and review there:
     ONBOARDING.md   the box owner's steps for this project, by name
 
 Python's standard library alone, so it runs anywhere. Nothing here
-talks to AWS or Cloudflare. docs/how-the-box-works.md says what each
+talks to AWS or Cloudflare. box/how-the-box-works.md says what each
 piece does on the box.
 """
 
@@ -37,7 +37,7 @@ LANGUAGES = {
     "python": ["CMD", "python", "-c",
                "import urllib.request; urllib.request.urlopen('http://localhost:{port}/health', timeout=5)"],
 }
-RESERVED_LABELS = {"www", "static"}
+RESERVED_LABELS = {"www", "static", "docs"}
 
 NAME = re.compile(r"^[a-z][a-z0-9]{1,15}$")
 SERVICE = re.compile(r"^[a-z][a-z0-9-]{0,18}[a-z0-9]$")
@@ -293,7 +293,7 @@ services:
 def onboarding(p: dict) -> str:
     n = p["name"]
     svcs = [s["name"] for s in p["services"]]
-    hosts = ", ".join(f"`{h}.<zone>`" for h in ["www", "static", *svcs])
+    hosts = ", ".join(f"`{h}.<zone>`" for h in ["www", "static", "docs", *svcs])
     builds = "\n".join(
         f"       make -f probes/40-project.Makefile ACT-build PROJECT={n} SVC={s} CONFIRM=project" for s in svcs
     )
@@ -312,18 +312,19 @@ Memory asked for: {mem} MiB in all, of the box's 1 GiB.
    by project name.
 3. **Cloudflare, by hand, in the zone:**
    - records for {hosts}, each proxied: the API hosts `A` to the
-     box's Elastic IP; `www` and `static` `CNAME` to their buckets'
-     website endpoints, from Terraform's outputs after step 5;
-   - `www` and `static` in the Configuration Rule for Flexible, and
-     in the Transform Rule that sets the Referer;
+     box's Elastic IP; `www`, `static` and `docs` `CNAME` to their
+     buckets' website endpoints, from Terraform's outputs after
+     step 5;
+   - `www`, `static` and `docs` in the Configuration Rule for
+     Flexible, and in the Transform Rule that sets the Referer;
    - **a zone of its own:** the zone's Authenticated Origin Pulls with
      the box's client certificate, and the box's Origin CA
      certificate reissued to name the zone and its wildcard (one
      `ACT-store-cert` and a reload).
 4. **Before:** `make -f probes/40-project.Makefile PROJECT={n}`.
 5. **Terraform:** `plan-check`, then `ACT-apply CONFIRM=project`, both
-   with `PROJECT={n}`: the repositories and builds, the `www` and
-   `static` buckets, the UI's Cognito client.
+   with `PROJECT={n}`: the repositories and builds, the `www`,
+   `static` and `docs` buckets, the UI's Cognito client.
 6. **Builds,** after `ACT-upload-sources PROJECT={n} CONFIRM=project`:
 
 {builds}
@@ -331,7 +332,10 @@ Memory asked for: {mem} MiB in all, of the box's 1 GiB.
    then `ACT-pin PROJECT={n} CONFIRM=project`.
 7. **The stack:** the box's upload and reload, then
    `make -f probes/40-project.Makefile after PROJECT={n}`.
-8. **The project's own probes,** from its repository:
+8. **The first releases** of the UI and the documentation, from the
+   project's commit: `ui/` synced to `www`, `make docs` and
+   `build/docs/` synced to `docs`, each by its bucket's writers.
+9. **The project's own probes,** from its repository:
    `make -C probes ZONE=<zone>`.
 
 Steps 4 to 7 name the box's probe 40, which the box's `todo.md` §51

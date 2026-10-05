@@ -12,7 +12,7 @@ them on the box.
 browser ──https──▶ Cloudflare ──https, its client certificate──▶ nginx ──▶ your service
    │                 (your zone)                                 (the box)   (a container)
    │
-   └──https──▶ Cloudflare ──http, a secret Referer──▶ S3: your www and static buckets
+   └──https──▶ Cloudflare ──http, a secret Referer──▶ S3: your www, docs and static buckets
 ```
 
 - **Cloudflare is the only way in.** The box's ports 80 and 443 admit
@@ -36,11 +36,12 @@ browser ──https──▶ Cloudflare ──https, its client certificate─�
 - **Your service** is a container on the box's network, reached by
   name, on the port the manifest names. It decides who the caller is
   and what they may do.
-- **`www.<zone>` and `static.<zone>`** are S3 buckets named for those
-  hosts, served by Cloudflare. They are readable only through
-  Cloudflare, which adds a secret header the buckets require. `www`
-  holds your UI. `static` is for public objects; how your users write
-  to it is not yet wired (§8).
+- **`www.<zone>`, `docs.<zone>` and `static.<zone>`** are S3 buckets
+  named for those hosts, served by Cloudflare. They are readable only
+  through Cloudflare, which adds a secret header the buckets require.
+  `www` holds your UI, `docs` your documentation, both released from
+  this repository (§5). `static` is for public objects; how your users
+  write to it is not yet wired (§8).
 
 ## 2 Who Controls What
 
@@ -48,7 +49,7 @@ browser ──https──▶ Cloudflare ──https, its client certificate─�
 |---|---|
 | Your services' code, Dockerfiles and pinned packages | The instance, nginx, Docker, the compose file |
 | `box/project.json`: services, ports, memory, routes | Whether and when a manifest is rolled out |
-| The UI's files | Terraform: repositories, builds, buckets, Cognito |
+| The UI's files, and the documentation's pages | Terraform: repositories, builds, buckets, Cognito |
 | Your probes, from outside | Cloudflare: records, rules, certificates |
 | | Builds, pins, uploads and reloads |
 | | Logs, alarms, backups |
@@ -110,7 +111,7 @@ the manifest, rendered and handed over.
 - **What the caller may do** is yours: `sub` is the user,
   `cognito:groups` their groups in the pool.
 
-## 5 The UI
+## 5 The UI and the Documentation
 
 - **Static files in `www`,** released by a sync of `ui/` to the bucket,
   by the box's owner or the project's UI maintainer, if the owner has
@@ -127,11 +128,18 @@ the manifest, rendered and handed over.
 - **Calls:** `https://<service>.<zone>`, the access token as
   `Authorization: Bearer`. Retry a `429` after its `Retry-After`; sign
   in again on `401`.
+- **The documentation in `docs`,** public, no sign-in: `docs/*.md`
+  built to HTML by `make docs` (pandoc) into `build/docs/`, and
+  released by a sync of that folder to the bucket, as `ui/` is to
+  `www`, by the same writers. Its index is `index.html`; a missing page
+  is S3's `404`. Nothing secret goes here: it is as public as `www`.
 
 ## 6 A Change, From Commit to Live
 
 1. **You:** commit; `make check test`; `make render` if the manifest
    changed; hand over the commit, and `box/out/<name>/` if it changed.
+   A change to `ui/` or `docs/` alone needs neither build nor reload:
+   only its sync to `www` or `docs`.
 2. **The owner:** reviews and copies `box/out/<name>/`; uploads your
    service's folder; builds it; pins the new digest; uploads the stack
    and reloads. The box pulls images by digest only, so what runs is

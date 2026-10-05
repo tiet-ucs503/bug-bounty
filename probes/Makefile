@@ -25,13 +25,13 @@ H = pass() { echo "PASS $@: $$*"; }; fail() { echo "FAIL $@: $$*"; exit 1; }; \
   services() { jq -r '.services[].name' $(MANIFEST); }; \
   code() { curl -s -o /dev/null -w '%{http_code}' "$$@"; };
 
-.PHONY: all hosts health allow-list signed-in cors rate www static token
-all: hosts health allow-list signed-in cors rate www static
+.PHONY: all hosts health allow-list signed-in cors rate www static docs token
+all: hosts health allow-list signed-in cors rate www static docs
 
 # Every host answers through Cloudflare, over TLS
 hosts:
 	@$(H) \
-	for h in www static $$(services); do \
+	for h in www static docs $$(services); do \
 	  s=$$(curl -s -o /dev/null -D - "https://$$h.$(ZONE)/" | tr -d '\r' | awk 'tolower($$1) == "server:" {print $$2}'); \
 	  want "$$h: server $${s:-none}" "$$h: server cloudflare"; \
 	done
@@ -98,6 +98,11 @@ rate:
 www:
 	@$(H) \
 	want "www: / $$(code "https://www.$(ZONE)/")" "www: / 200"
+
+# The documentation's index, built by make docs and released
+docs:
+	@$(H) \
+	want "docs: /index.html $$(code "https://docs.$(ZONE)/index.html")" "docs: /index.html 200"
 
 static:
 	@$(H) \

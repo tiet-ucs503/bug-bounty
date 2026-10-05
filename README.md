@@ -1,22 +1,24 @@
 # A Project on the Box
 
-A template for a project whose API and UI run on the box kept by
-`aws-iac`. Fork it, name your project, write your services and UI; the
-box's owner rolls it out in a few Cloudflare, Terraform and probe
+A template for a project whose API, UI and documentation run on the
+box kept by `aws-iac`. Fork it, name your project, write your
+services, UI and documentation; the box's owner rolls it out in a few Cloudflare, Terraform and probe
 steps. You need no AWS access and no control of the box.
 
-Start with [docs/how-the-box-works.md](docs/how-the-box-works.md).
+Start with [box/how-the-box-works.md](box/how-the-box-works.md).
 
 ## What Is Here
 
-    box/project.json      your project, as the box sees it: services, ports, memory, routes
-    box/render.py         the box's pieces from it, into box/out/<name>/, for the owner
-    box/build.sh          the box's build script; every service holds a copy
-    services/js-api/      a starter in Node 24: Fastify, jose
-    services/py-api/      a starter in Python 3.12: FastAPI, PyJWT
-    ui/                   a UI with no build step: PKCE sign-in, calls to both services
-    probes/Makefile       checks of your live hosts from outside, no AWS
-    docs/                 how the box works
+    box/project.json          your project, as the box sees it: services, ports, memory, routes
+    box/render.py             the box's pieces from it, into box/out/<name>/, for the owner
+    box/build.sh              the box's build script; every service holds a copy
+    box/how-the-box-works.md  what a project needs to know about the box
+    services/js-api/          a starter in Node 24: Fastify, jose
+    services/py-api/          a starter in Python 3.12: FastAPI, PyJWT
+    ui/                       a UI with no build step: PKCE sign-in, calls to both services
+    docs/                     your documentation, published at docs.<zone>
+    tools/md-links.lua        the docs build's link filter
+    probes/Makefile           checks of your live hosts from outside, no AWS
 
 ## Start
 
@@ -38,10 +40,12 @@ Start with [docs/how-the-box-works.md](docs/how-the-box-works.md).
 
    Give the owner your repository's commit and `box/out/<name>/`.
    `box/out/<name>/ONBOARDING.md` is their list.
-6. **After the rollout,** the owner gives you the zone, Cognito's
+6. **Write the documentation** in `docs/`, Markdown; `make docs`
+   builds it into `build/docs/` to check it locally. Needs pandoc.
+7. **After the rollout,** the owner gives you the zone, Cognito's
    sign-in domain and your UI's client ID. Copy `ui/config.example.js`
    to `ui/config.js` and fill them in.
-7. **Probe your hosts:**
+8. **Probe your hosts:**
 
        make -C probes ZONE=<your zone>
 
