@@ -332,9 +332,9 @@ Memory asked for: {mem} MiB in all, of the box's 1 GiB.
    then `ACT-pin PROJECT={n} CONFIRM=project`.
 7. **The stack:** the box's upload and reload, then
    `make -f probes/40-project.Makefile after PROJECT={n}`.
-8. **The first releases** of the UI and the documentation, from the
-   project's commit: `ui/` synced to `www`, `make docs` and
-   `build/docs/` synced to `docs`, each by its bucket's writers.
+8. **The first releases** of the UI and the documentation, by the
+   project's UI maintainer: `ui/` synced to `www`, and the project's
+   built documentation, however it builds it, synced to `docs`.
 9. **The project's own probes,** from its repository:
    `make -C probes ZONE=<zone>`.
 

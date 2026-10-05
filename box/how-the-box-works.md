@@ -128,11 +128,13 @@ the manifest, rendered and handed over.
 - **Calls:** `https://<service>.<zone>`, the access token as
   `Authorization: Bearer`. Retry a `429` after its `Retry-After`; sign
   in again on `401`.
-- **The documentation in `docs`,** public, no sign-in: `docs/*.md`
-  built to HTML by `make docs` (pandoc) into `build/docs/`, and
-  released by a sync of that folder to the bucket, as `ui/` is to
-  `www`, by the same writers. Its index is `index.html`; a missing page
-  is S3's `404`. Nothing secret goes here: it is as public as `www`.
+- **The documentation in `docs`,** public, no sign-in. The box gives
+  it a bucket, and gives your UI maintainer leave to write it as it
+  writes `www`. Everything else is yours: raw HTML, or Markdown built
+  by pandoc, MkDocs, Hugo, md-preview or anything else, by hand or in
+  your CI. `docs/` holds a seed. A release is a sync of the built
+  folder; its index is `index.html`, and a missing page is S3's `404`.
+  Nothing secret goes here: it is as public as `www`.
 
 ## 6 A Change, From Commit to Live
 

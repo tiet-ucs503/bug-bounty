@@ -99,7 +99,7 @@ www:
 	@$(H) \
 	want "www: / $$(code "https://www.$(ZONE)/")" "www: / 200"
 
-# The documentation's index, built by make docs and released
+# The documentation's index, however the project built and released it
 docs:
 	@$(H) \
 	want "docs: /index.html $$(code "https://docs.$(ZONE)/index.html")" "docs: /index.html 200"

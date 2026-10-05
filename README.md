@@ -16,8 +16,7 @@ Start with [box/how-the-box-works.md](box/how-the-box-works.md).
     services/js-api/          a starter in Node 24: Fastify, jose
     services/py-api/          a starter in Python 3.12: FastAPI, PyJWT
     ui/                       a UI with no build step: PKCE sign-in, calls to both services
-    docs/                     your documentation, published at docs.<zone>
-    tools/md-links.lua        the docs build's link filter
+    docs/                     a seed for your documentation, published at docs.<zone>
     probes/Makefile           checks of your live hosts from outside, no AWS
 
 ## Start
@@ -40,8 +39,9 @@ Start with [box/how-the-box-works.md](box/how-the-box-works.md).
 
    Give the owner your repository's commit and `box/out/<name>/`.
    `box/out/<name>/ONBOARDING.md` is their list.
-6. **Write the documentation** in `docs/`, Markdown; `make docs`
-   builds it into `build/docs/` to check it locally. Needs pandoc.
+6. **Write the documentation** from the seed in `docs/`, as raw HTML
+   or with whatever builder you choose; `docs/README.md` says what
+   the box expects of it.
 7. **After the rollout,** the owner gives you the zone, Cognito's
    sign-in domain and your UI's client ID. Copy `ui/config.example.js`
    to `ui/config.js` and fill them in.
