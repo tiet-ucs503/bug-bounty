@@ -1,0 +1,26 @@
+# Every package, by version: pip freeze on the Dockerfile's base.
+# FastAPI, uvicorn with its standard extras, and PyJWT with its crypto
+# extra for Cognito's tokens; the rest follow from them. A new package
+# is a new line here, by version
+annotated-types==0.8.0
+anyio==4.15.1
+cffi==2.1.1
+click==8.5.0
+cryptography==50.0.2
+fastapi==0.115.0
+h11==0.16.0
+httptools==0.8.0
+idna==3.20
+pycparser==3.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+PyJWT[crypto]==2.15.1
+python-dotenv==1.2.4
+PyYAML==6.0.3
+starlette==0.38.6
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+uvicorn[standard]==0.30.0
+uvloop==0.23.0
+watchfiles==1.3.0
+websockets==17.1

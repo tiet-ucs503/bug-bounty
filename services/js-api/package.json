@@ -1,0 +1,19 @@
+{
+  "name": "js-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A starter service in JavaScript, behind the box's nginx",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "fastify": "5.12.5",
+    "jose": "6.2.12"
+  }
+}

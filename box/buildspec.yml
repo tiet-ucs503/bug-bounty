@@ -1,0 +1,9 @@
+# CodeBuild's whole part in the build: run build.sh, the one place the
+# build is written, so another provider's runner calls the same script.
+# REPOSITORY_URI comes from the project's environment
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - bash build.sh
