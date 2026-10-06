@@ -43,6 +43,11 @@ Allow-list
   names its path and method; anything else is `404`, a
   wrong method `403`
 
+Badge
+: `[OK:NATIVE]`, `[NO:PODMAN]` and the like, under a
+  tutorial's title: whether every step ran as written
+  on that stack, at the page's version
+
 Box
 : The shared host the project runs on: one arm64 EC2
   instance behind Cloudflare, with nginx, Docker and
@@ -62,6 +67,23 @@ Collector
 : py-api's thread that deletes from the static bucket
   the objects no note has referred to for a grace, then
   forgets them
+
+Concept
+: Step 1 of the cycle: what a feature is for, for whom,
+  its rules, what it will not do, and one artefact that
+  holds them. The source of truth until the contract
+  exists. [The concept](conduct/concept.md)
+
+Contract
+: Step 3 of the cycle: what a feature promises other
+  people, exactly: routes and answers, accessors'
+  signatures and refusals. Changed by adding beside,
+  never in place. [The cycle](conduct/the-cycle.md) §2
+
+Cycle
+: The five steps a feature is built in, in turns:
+  concept, tests, contract, implementation, refinement.
+  [The cycle](conduct/the-cycle.md)
 
 deny-all
 : The role that grants nothing: whoever holds it alone
@@ -141,6 +163,11 @@ Published function
   `published:` in its comment, its signature a promise.
   `users_may` is the one the template's tutorials make
 
+Refinement
+: Step 5 of the cycle: run the tests, read them, and
+  change whichever step is wrong, the concept, the
+  tests or the contract as well as the code
+
 Release
 : A tag `vX.Y.Z`: images built for what changed,
   buckets synced, and a release record written
@@ -157,6 +184,11 @@ Render
 Role
 : A row of the access control matrix. A person holds
   any number; their rights are the union
+
+Test ID
+: `T<feature>.<n>`, such as `T2.12`: a test's name on
+  its tests page and in its code, so a failure names
+  the rule it breaks
 
 UI maintainer
 : A user the box's owner makes for the project, for the
@@ -192,4 +224,5 @@ Zone
 `ci-cd`, `github`, `conduct`, `philosophy`,
 `shared-box`, `podman`, `tutorial`, `admission`,
 `authz`, `acm`, `svelte`, `uploads`, `static`, `s3`,
-`node`, `python`
+`node`, `python`, `concept`, `cycle`, `contract`,
+`workflow`, `git`, `git-flow`, `identity`, `naming`

@@ -24,12 +24,16 @@ title: 3 Make It a Migration
 version: v0.1.0
 ---
 
+`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+these mean, and what they do not: [the tutorials'
+page](README.md) §5.
+
 ## 1 Before You Start
 
 - [What you need](README.md) §2, installed and checked
 - `users-draft.sql` and `notes-draft.sql`, from
   tutorials [1](1-authentication.md) and
-  [2](2-authorisation.md)
+  [2](2-authorisation/README.md)
 - A local stack, up
 - [Write a
   migration](../migrations/write-a-migration.md) is the
@@ -79,7 +83,7 @@ to it. The file, whole:
 
 ``` sql
 -- The users unit: who may come in, and what each person may do
--- (docs/tutorials/1-authentication.md, 2-authorisation.md). Every name
+-- (docs/tutorials/1-authentication.md, 2-authorisation/). Every name
 -- carries the prefix users_. Other units call users_may alone, the one
 -- function published for them (docs/conduct/database.md §3).
 
@@ -406,7 +410,7 @@ under `-- migrate:down`, its undoing:
 ``` sql
 -- Notes under the matrix and their owners, (u=rw, a=r): everyone with
 -- notes.read reads every note; the owner alone changes theirs, and only
--- while they hold notes.write (docs/tutorials/2-authorisation.md). Each
+-- while they hold notes.write (docs/tutorials/2-authorisation/). Each
 -- accessor takes the caller first and checks before it acts. The
 -- example's py_api_note_add and py_api_notes_of stay as they are:
 -- their signatures are a promise; nothing new calls them.

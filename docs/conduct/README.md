@@ -34,9 +34,10 @@ box's. That reader might be:
 - the box's owner, checking what the project asks of
   the box
 
-Address the reader as "you". Name the project, its
-services and its files; do not name people or
-institutions.
+Address the reader as "you"; [Writing](writing.md) has
+the voice, the person and the tense, with examples.
+Name the project, its services and its files; do not
+name people or institutions.
 
 ## 2 Four Kinds of Page
 
@@ -190,7 +191,8 @@ Read every line it prints; do not explain one away.
 ### 4.4 Readable
 
 - UK English; plain words; short sentences; the active
-  voice
+  voice: [Writing](writing.md)
+- Names as [Naming](naming.md) gives them
 - Define a term where it is first used, and add it to
   [the glossary](../glossary.md)
 - Alerts only for their meaning: `[!NOTE]` for an

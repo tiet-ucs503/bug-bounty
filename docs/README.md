@@ -85,21 +85,39 @@ not yet checked; **planned** --- not yet written.
 
 ### Tutorials: From a Sign-in to Uploads
 
+Each tutorial's badges, beside its status, say where it
+ran ([the tutorials' page](tutorials/README.md) §5).
+
 - `draft` [The path, and its
   conventions](tutorials/README.md)
-- `draft` [1 Who comes in:
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [1
+  Who comes in:
   authentication](tutorials/1-authentication.md)
-- `draft` [2 What each may do:
-  authorisation](tutorials/2-authorisation.md)
-- `draft` [3 Make it a
-  migration](tutorials/3-the-migration.md)
-- `draft` [4 /users in Python, in
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [2
+  What each may do:
+  authorisation](tutorials/2-authorisation/README.md):
+  [the
+  concept](tutorials/2-authorisation/1-concept.md),
+  [the tests](tutorials/2-authorisation/2-tests.md),
+  [the
+  contract](tutorials/2-authorisation/3-contract.md),
+  [the
+  implementation](tutorials/2-authorisation/4-implementation.md),
+  [the
+  refinement](tutorials/2-authorisation/5-refinement.md)
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [3
+  Make it a migration](tutorials/3-the-migration.md)
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [4
+  /users in Python, in
   py-api](tutorials/4-users-in-python.md)
-- `draft` [5 /users in JavaScript, in
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
+  /users in JavaScript, in
   js-api](tutorials/5-users-in-javascript.md)
-- `draft` [6 A Svelte UI](tutorials/6-a-svelte-ui.md)
-- `draft` [7 Uploads](tutorials/7-uploads/README.md):
-  [the store](tutorials/7-uploads/1-the-store.md), [the
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
+  A Svelte UI](tutorials/6-a-svelte-ui.md)
+- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [7
+  Uploads](tutorials/7-uploads/README.md): [the
+  store](tutorials/7-uploads/1-the-store.md), [the
   database](tutorials/7-uploads/2-the-database.md),
   [the service](tutorials/7-uploads/3-the-service.md),
   [the UI](tutorials/7-uploads/4-the-ui.md)
@@ -140,6 +158,18 @@ not yet checked; **planned** --- not yet written.
   written](conduct/README.md)
 - `draft` [The page template](conduct/template.md)
 - `draft` [The database's conduct](conduct/database.md)
+- `draft` [The concept: before the first line of
+  code](conduct/concept.md)
+- `draft` [The tests: the questions a concept
+  raises](conduct/tests.md)
+- `draft` [The cycle: five steps, in
+  turns](conduct/the-cycle.md)
+- `draft` [From an issue to a
+  merge](conduct/workflow.md)
+- `draft` [Git and git-flow](conduct/git.md)
+- `draft` [Naming](conduct/naming.md)
+- `draft` [Writing: voice, person and
+  tense](conduct/writing.md)
 
 ## 4 Reading the Pages
 

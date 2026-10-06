@@ -27,6 +27,10 @@ title: 4 /users in Python, in py-api
 version: v0.1.0
 ---
 
+`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+these mean, and what they do not: [the tutorials'
+page](README.md) §5.
+
 ## 1 Before You Start
 
 - [What you need](README.md) §2, installed and checked

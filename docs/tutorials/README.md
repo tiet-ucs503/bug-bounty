@@ -61,8 +61,11 @@ flowchart LR
 
 1.  [Who comes in](1-authentication.md): the rules of
     who may sign in, tried in the database
-2.  [What each may do](2-authorisation.md): the access
-    control matrix, and notes as (u=rw, a=r), tried
+2.  [What each may do](2-authorisation/README.md): the
+    access control matrix, and notes as (u=rw, a=r), in
+    [the project's five
+    steps](../conduct/the-cycle.md): concept, tests,
+    contract, implementation, refinement
 3.  [Make it a migration](3-the-migration.md): both as
     migrations, each proved down and up
 4.  [/users in Python](4-users-in-python.md): who comes
@@ -81,8 +84,8 @@ are py-api's either way. The rest are in order; each
 starts where the one before ended.
 
 Every step on these pages was run, as written, in a
-fork of the template v0.1.0 on 2026-10-06: on the
-native stack, and in containers under rootless Podman.
+fork of the template v0.1.0. Where, and what that does
+not prove, is §5; each page's badges say it in short.
 
 ## 2 What You Need
 
@@ -249,14 +252,107 @@ all is well.
   both, py-api here, each with names of its own. [The
   philosophy](../conduct/philosophy.md)
 
-## 5 See Also
+## 5 Where These Pages Ran
 
-- [The database's conduct](../conduct/database.md):
-  prefixes, accessors, and the one function a unit
-  publishes
-- [Write a
-  migration](../migrations/write-a-migration.md)
-- [The UI](../ui/README.md)
+### 5.1 The Badges
+
+Each tutorial carries a badge for each stack, below its
+title, and in [the map](../README.md) §3 beside its
+status:
+
+- **`[OK:NATIVE]`:** every step run as written, on that
+  stack, at the page's version, and every answer the
+  page's
+- **`[NO:NATIVE]`:** not so: never run there, run only
+  in part, not since the page last changed, or failed
+- **`NATIVE`, `PODMAN`, `DOCKER`:** [the native
+  stack](../onboarding/shared-box.md); [the dev
+  stack](../onboarding/local-dev.md) under [rootless
+  Podman](../onboarding/podman.md); the dev stack under
+  Docker
+
+A badge is a record of a run, not a promise: a page
+changed since its run goes back to `NO`.
+
+  -----------------------------------------------------
+  Tutorial                  Badges
+  ------------------------- ---------------------------
+  1 Who comes in            `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  2 What each may do        `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  3 Make it a migration     `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  4 /users in Python        `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  5 /users in JavaScript    `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  6 A Svelte UI             `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  7 Uploads                 `[OK:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+  -----------------------------------------------------
+
+### 5.2 Where They Ran
+
+- **The native stack,** without root, in a fork of the
+  template: every step of every page. Tutorial 2's
+  tests 2026-10-07, before and after its code, and with
+  its code broken on purpose; the rest 2026-10-06
+- **The dev stack under rootless Podman,** the same
+  fork, 2026-10-06, in part: every image built, the
+  door, the notes, an upload read back through nginx,
+  the collector. Not every step of every page, and not
+  since `/users` moved into py-api and js-api, so `NO`
+- **Docker:** not yet
+- **The dashboard,** tutorials 6 and 7.4, in a headless
+  Chromium: the sign-in, a role granted, notes added
+  and edited, files chosen and dropped
+- **Every code block** on the pages is the file that
+  ran, checked by a script, character for character
+
+### 5.3 What Stood In for the Box
+
+- **Cognito:** the mock sign-in, `dev/mock-auth/`: its
+  endpoints, its tokens' shapes, and a `userInfo` that
+  answers the e-mail you gave
+- **The static bucket:** a folder, behind the mock
+  store, for `objects/`
+- **The database:** PostgreSQL 17 on your own machine
+- **nginx:** the box's servers, rendered from the
+  manifest as the box renders them, on plain HTTP at
+  `*.localhost`
+- **Cloudflare:** nothing; no edge, no TLS, no rate
+  rules
+
+### 5.4 Why They Cannot Yet Run on the Box
+
+The box does not yet take a project. Its half is being
+built: the points where nginx and Compose include a
+project's pieces, the repositories, buckets and sign-in
+client each project gets, the right to pull its images,
+and the grants tutorial 7 needs on the static bucket
+(§5 of [its overview](7-uploads/README.md)). And the
+box's own database is MariaDB until it moves to
+PostgreSQL, which these pages assume.
+
+### 5.5 What Only the Box Can Show
+
+- **Cognito itself:** a real sign-in, its Google users,
+  and its `userInfo`. The mock was written from AWS's
+  documents, not from AWS's answers
+- **S3:** a path-style `PUT` and `DELETE` from the
+  box's address, and what the bucket's policy refuses
+- **Cloudflare in front:** TLS, the size rule, and the
+  rate rule on `/objects/`
+- **A release:** the CI role, the builds, and the box
+  reading what a release records
 
 ## 6 The Tools' Security
 
@@ -317,3 +413,12 @@ you should know about.
 - **Podman's `newuidmap` and `newgidmap` are setuid
   root,** installed by the administrator. They map only
   the IDs that `/etc/subuid` and `/etc/subgid` give you
+
+## 7 See Also
+
+- [The database's conduct](../conduct/database.md):
+  prefixes, accessors, and the one function a unit
+  publishes
+- [Write a
+  migration](../migrations/write-a-migration.md)
+- [The UI](../ui/README.md)

@@ -78,7 +78,8 @@ takes the caller first, checks before it acts, and
 refuses with an SQLSTATE the service turns into HTTP
 (`42501` for `403`, `P0002` for `404`). A service that
 forgets a check cannot skip it ([2 What each may
-do](../tutorials/2-authorisation.md) §5).
+do](../tutorials/2-authorisation/1-concept.md) §4,
+R6).
 
 ## 3 What a Service May Touch
 

@@ -25,6 +25,10 @@ title: "1 Who Comes In: Authentication"
 version: v0.1.0
 ---
 
+`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+these mean, and what they do not: [the tutorials'
+page](README.md) §5.
+
 ## 1 Before You Start
 
 - [What you need](README.md) §2, installed and checked
@@ -324,7 +328,7 @@ nothing.
 
 ## 9 See Also
 
-- [2 What each may do](2-authorisation.md): next
+- [2 What each may do](2-authorisation/README.md): next
 - [How the project meets the
   box](../onboarding/README.md) §3: what nginx checks,
   and what your service does
