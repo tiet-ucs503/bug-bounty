@@ -79,8 +79,8 @@ newcomer cannot learn a habit by reading.
   `20261006130000_users_create_tables.sql`
 - **A permission:** `<unit>.<verb>`; `notes.read`,
   `users.grant`
-- **A role:** a lower-case noun; `reader`, `member`,
-  `deny-all`
+- **A role:** kebab-case, a noun or a short phrase, as
+  `users_roles` checks; `reader`, `member`, `deny-all`
 - **A route:** plural nouns, an ID between;
   `/users/people/{sub}/roles/{role}`
 - **An environment variable:** UPPER_SNAKE, the owner
@@ -91,10 +91,13 @@ newcomer cannot learn a habit by reading.
   `shared-box.md`
 - **A step's page:** its step's number first;
   `2-tests.md`
-- **A Python name:** snake_case; a class PascalCase;
-  `caller`, `APIRouter`
-- **A JavaScript name:** camelCase; a module's constant
-  UPPER_SNAKE; `caller`, `USERS`
+- **A Python name:** a function or a variable
+  snake_case, `email_of`, `note_edit`; a class
+  PascalCase, `Note`; a module's constant UPPER_SNAKE,
+  `COLLECT_GRACE`
+- **A JavaScript name:** a function or a variable
+  camelCase, `signIn`, `redirectUri`; a module's
+  constant UPPER_SNAKE, `USERS`
 - **A Svelte component:** PascalCase, a noun;
   `People.svelte`
 - **A branch:** `feature/<issue>-<slug>`;
