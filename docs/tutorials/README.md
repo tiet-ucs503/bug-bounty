@@ -269,7 +269,8 @@ status:
   stack](../onboarding/shared-box.md); [the dev
   stack](../onboarding/local-dev.md) under [rootless
   Podman](../onboarding/podman.md); the dev stack under
-  Docker
+  [Docker](../onboarding/local-dev.md), its default
+  (§1 there)
 
 A badge is a record of a run, not a promise: a page
 changed since its run goes back to `NO`.
