@@ -9,7 +9,7 @@ keywords:
 kind: reference
 sources:
 - box/project.json
-- box/how-the-box-works.md
+- docs/onboarding/README.md
 status: draft
 title: Glossary
 version: v0.1.0
@@ -21,6 +21,11 @@ Access token
 : The token a service reads, from the box's Cognito
   pool, sent as `Authorization: Bearer`. It carries
   `client_id`, not the email
+
+Accessor
+: A function or procedure in the database,
+  `<prefix>_*`, that a service calls instead of its
+  tables
 
 Allow-list
 : The box's nginx passes a request only if the manifest
@@ -37,6 +42,11 @@ Box's owner
 : Whoever keeps the box. They review and roll out what
   the project hands over
 
+CI role
+: `tu-rgb-sites-<project>-ci`, the one role a release
+  works as, assumed by GitHub's OIDC for the
+  repository's `v*` tags alone
+
 Dev stack
 : `make dev`: the box's nginx, your services, a mock
   sign-in, PostgreSQL and the buckets as folders, on
@@ -51,14 +61,20 @@ Manifest
   and their routes, as the box sees them
 
 Migration
-: One change to a service's database schema: a file in
-  `db/<service>/migrations/`, its up and its down,
-  applied by dbmate
+: One change to the project's database: a file in
+  `migrations/sql/` named for its service's prefix, its
+  up and its down, applied by dbmate
+
+Migrations image
+: dbmate and every migration,
+  `tu-rgb-sites-<project>-migrations`, which the box
+  runs once before the services at every start
 
 Migrator
-: `<service>_migrator`, the login that owns a service's
-  schema and runs its migrations; the service's own
-  login holds rows alone
+: `<project>_migrator`, the login that owns the
+  database's schema and runs the migrations; the
+  services' login, `<project>`, holds rows and
+  `EXECUTE` alone
 
 Mock sign-in
 : `mock-auth`, the dev stack's stand-in for Cognito:
@@ -73,14 +89,29 @@ PKCE
   without a client secret, by sending a hash first and
   the secret behind it later
 
+Prefix
+: A service's part of the database: `py_api` for
+  `py-api`, every object it owns named `py_api_*`
+
+Release
+: A tag `vX.Y.Z`: images built for what changed,
+  buckets synced, and a release record written
+
+Release record
+: `releases/<project>/release.json` in the box's config
+  bucket: the tag, the commit and every image's digest,
+  which the box pins from
+
 Render
 : `make render`: the box's pieces, written from the
   manifest into `box/out/<name>/`
 
 UI maintainer
-: The role or user the box's owner makes for the
-  project, which may write the `www` and `docs` buckets
-  and nothing else
+: A user the box's owner makes for the project, for the
+  rare and the urgent: it may do what a release does,
+  by hand ([A release by
+  hand](onboarding/release-by-hand.md)). Releases
+  themselves go by the CI role
 
 Zone
 : The domain the project's hosts sit under, one label
@@ -95,4 +126,5 @@ Zone
 `hand-over`, `release`, `ui`, `docs`, `probes`,
 `js-api`, `py-api`, `api`, `routes`, `auth`, `cognito`,
 `tests`, `build`, `dependencies`, `local-dev`, `mock`,
-`db`, `migration`, `dbmate`, `squawk`, `postgres`
+`db`, `migration`, `dbmate`, `squawk`, `postgres`,
+`ci-cd`, `github`, `conduct`

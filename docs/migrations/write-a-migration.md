@@ -1,10 +1,11 @@
 ---
 abstract: |
-  Change a service's database schema: write a migration
-  with dbmate, lint it with Squawk, apply and roll it
-  back in the dev stack, and commit it with the schema
-  it makes. With the patterns that change a live table
-  without locking it.
+  Change the project's database: write a migration with
+  dbmate, its names under a service's prefix, lint it
+  with Squawk, apply and roll it back in the dev stack,
+  commit it with the schema it makes, and release it.
+  With the patterns that change a live table without
+  locking it.
 date: 2026-10-06
 keywords:
 - db
@@ -14,8 +15,8 @@ keywords:
 - postgres
 kind: how-to
 sources:
-- db/py-api/migrations/20261006120000_create_notes.sql
-- .squawk.toml
+- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/.squawk.toml
 - box/render.py
 - Makefile
 status: draft
@@ -27,74 +28,32 @@ version: v0.1.0
 
 ## 1 Before You Start
 
-- **The box has no database yet.** It moves to
-  PostgreSQL first; until then a schema lives in the
-  dev stack alone, and a service that needs one runs
-  locally only. A migration written now runs on the box
-  unchanged, the same way, once the box has its
-  database
-- **The service asks for a database:**
-  `"database": true` for it in `box/project.json`, and
-  the folder `db/<service>/migrations/`. `make check`
-  refuses either without the other. In the template,
-  `py-api` asks, with one example migration
+- **The box has no database yet.** Its PostgreSQL, and
+  a project's database on it, is the last step of the
+  box's `feature/postgres` (the box's `todo.md` §50.2
+  decision 5). Until then a schema lives in the dev
+  stack alone. A migration written now runs on the box
+  unchanged, the same way, once that step is done
+- **The project asks for its database:**
+  `"database": true` in `box/project.json`.
+  `make check` then holds `migrations/sql/` to the
+  manifest
 - **The dev stack,** [A local stack that mirrors the
-  box](local-dev.md); or PostgreSQL and dbmate without
-  Docker, §10
+  box](../onboarding/local-dev.md); or PostgreSQL and
+  dbmate without Docker, §10
 - **Node,** for Squawk, which npm fetches
+- **The discipline:** [The database's
+  conduct](../conduct/database.md), names under a
+  prefix and accessors in the database
 
-## 2 How a Migration Runs
+## 2 Write One
 
-Each service with a database owns one, with two logins
-of its own:
-
-- **`<service>_migrator`:** owns the schema, and runs
-  the migrations
-- **`<service>`:** the service's own login, holding
-  rows alone: `SELECT`, `INSERT`, `UPDATE`, `DELETE`,
-  on every table the migrator makes, by default
-  privileges. It cannot create, alter or drop
-
-`py-api`'s are `py_api_migrator` and `py_api`, in the
-database `py_api`: PostgreSQL's names take no hyphen.
-
-``` mermaid
----
-config:
-  themeVariables:
-    edgeLabelBackground: "#d9eaf2"
-  themeCSS: ".edgeLabel, .edgeLabel p, .labelBkg { background-color: #d9eaf2 !important; color: #5c7a8a !important; }"
----
-flowchart LR
-  users["db-users<br/>the database, two logins"]
-  migrate["migrate-py-api<br/>dbmate up, as the migrator"]
-  svc["py-api<br/>rows alone, as py_api"]
-  db[("PostgreSQL<br/>py_api")]
-  users -->|"then"| migrate
-  migrate -->|"then"| svc
-  users --> db
-  migrate -->|"schema_migrations"| db
-  svc -->|"DATABASE_URL"| db
-  classDef compute fill:#fff6eb,stroke:#804900,color:#804900
-  class users,migrate,svc compute
-  classDef storage fill:#dcfce7,stroke:#22c55e,color:#111
-  class db storage
-```
-
-At every start of the stack, `migrate-<service>`
-applies every migration not yet in the database's
-ledger, `schema_migrations`, in the order of their
-names, and the service starts only if all of them
-succeed. A broken migration stops its own service and
-no other.
-
-## 3 Write One
-
-A file named by the time it is made, with its up and
-its down. Expect the new file's path:
+A file named by the time it is made and the prefix of
+the service whose objects it makes. Expect the new
+file's path:
 
 ``` sh
-make db-new SVC=py-api NAME=notes_add_title
+make db-new PREFIX=py_api NAME=notes_add_title
 ```
 
 Write the change under `-- migrate:up`, and its undoing
@@ -105,15 +64,20 @@ file starts with, in both halves:
 -- migrate:up
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
-ALTER TABLE notes ADD COLUMN IF NOT EXISTS title text;
+ALTER TABLE py_api_notes ADD COLUMN IF NOT EXISTS title text;
 
 -- migrate:down
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
 -- squawk-ignore ban-drop-column
-ALTER TABLE notes DROP COLUMN IF EXISTS title;
+ALTER TABLE py_api_notes DROP COLUMN IF EXISTS title;
 ```
 
+- **Every name under the file's prefix:** tables,
+  views, functions, procedures, indexes, sequences,
+  types, triggers. `make check` refuses a file whose
+  objects are not `py_api_*`, or whose name carries no
+  service's prefix
 - **`lock_timeout`:** a change that waits for a lock
   gives up after two seconds, rather than queueing
   every request behind it
@@ -124,7 +88,7 @@ ALTER TABLE notes DROP COLUMN IF EXISTS title;
 - **One change a file.** dbmate runs each file in a
   transaction, so a file is applied whole or not at all
 
-## 4 Lint It
+## 3 Lint It
 
 Squawk reads every migration for what locks, rewrites
 or breaks a live table. Expect `Found 0 issues`:
@@ -138,26 +102,26 @@ migration; if the statement is meant, as a drop in a
 down is, put `-- squawk-ignore <rule>` on the line
 above it.
 
-## 5 Apply It
+## 4 Apply It
 
 With the stack up, expect `Applied:` and the file's
 name:
 
 ``` sh
-make db SVC=py-api CMD=up
+make db CMD=up
 ```
 
 Then expect your migration among `[X]`, and
 `Pending: 0`:
 
 ``` sh
-make db SVC=py-api CMD=status
+make db CMD=status
 ```
 
 `make dev` applies pending migrations too, at every
 start.
 
-## 6 Prove Its Down
+## 5 Prove Its Down
 
 Roll the newest back, then apply it again. Expect
 `Rolled back:`, then `Applied:`, for the same file:
@@ -168,30 +132,40 @@ Roll the newest back, then apply it again. Expect
 > alone.
 
 ``` sh
-make db SVC=py-api CMD=rollback
+make db CMD=rollback
 ```
 
 ``` sh
-make db SVC=py-api CMD=up
+make db CMD=up
 ```
 
 The down is for your machine and for a mistake caught
 before release. Once a migration has run anywhere that
 matters, the way back is a new migration forward.
 
-## 7 Commit It with Its Schema
+## 6 Commit It with Its Schema
 
 Write the schema the migrations make to
-`db/py-api/schema.sql`. Expect
-`Writing: /db/schema.sql`:
+`migrations/schema.sql`. Expect
+`Writing: /work/schema.sql`:
 
 ``` sh
-make db SVC=py-api CMD=dump
+make db CMD=dump
 ```
 
 Commit the migration, `schema.sql` and the code that
-uses the change, together. `schema.sql` is the schema
-to read; the migrations are how it was made.
+uses the change, together, in one pull request.
+`schema.sql` is the schema to read; the migrations are
+how it was made.
+
+## 7 Release It
+
+A tag `vX.Y.Z` whose changes include `migrations/`
+builds the migrations image and records its digest:
+[How a release reaches the
+box](../onboarding/ci-cd.md). The box runs it before
+any service starts, so the new schema is there before
+the code that needs it.
 
 ## 8 Change a Live Table Without Locking It
 
@@ -216,6 +190,10 @@ to read; the migrations are how it was made.
                       release each
 
   Drop a column       Once no released code reads it
+
+  Change an accessor  A new function beside the old; the
+                      old dropped once no released code
+                      calls it
   ---------------------------------------------------------
 
 `VALIDATE` reads every row, but blocks only other
@@ -230,11 +208,11 @@ statement, with no `SET`, and says why to Squawk:
 ``` sql
 -- migrate:up transaction:false
 -- squawk-ignore ban-concurrent-index-creation-in-transaction, require-lock-timeout, require-statement-timeout
-CREATE INDEX CONCURRENTLY IF NOT EXISTS notes_owner_idx ON notes (owner);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS py_api_notes_created_idx ON py_api_notes (created_at);
 
 -- migrate:down transaction:false
 -- squawk-ignore ban-concurrent-index-creation-in-transaction, require-lock-timeout, require-statement-timeout
-DROP INDEX CONCURRENTLY IF EXISTS notes_owner_idx;
+DROP INDEX CONCURRENTLY IF EXISTS py_api_notes_created_idx;
 ```
 
 ## 9 The Rules
@@ -257,24 +235,24 @@ DROP INDEX CONCURRENTLY IF EXISTS notes_owner_idx;
   SELECT max(version) FROM schema_migrations;
   ```
 
-  So a deploy in the wrong order fails loudly, not
+  So a release in the wrong order fails loudly, not
   quietly wrong
 
-- **One database per service.** A service never reads
-  another's; it calls the other service
+- **Names and accessors:** [the database's
+  conduct](../conduct/database.md)
 
 ## 10 Without Docker
 
 PostgreSQL in your own directory, and dbmate's single
-binary, need no root (see [the local stack's
-page](local-dev.md), §11). With the database and logins
-made by `dev/out/db-users.sql`, from
-`python3 box/render.py --dev`, run dbmate as the
+binary, need no root ([the local stack's
+page](../onboarding/local-dev.md), §11). With the
+database and logins made by `dev/out/db-users.sql`,
+from `python3 box/render.py --dev`, run dbmate as the
 migrator. Expect `Applied:`, and `schema.sql` written:
 
 ``` sh
-DATABASE_URL='postgres://py_api_migrator:dev-only@127.0.0.1:55432/py_api?sslmode=disable'
-dbmate --url "${DATABASE_URL}" -d db/py-api/migrations -s db/py-api/schema.sql up
+DATABASE_URL='postgres://example_migrator:dev-only@127.0.0.1:55432/example?sslmode=disable'
+dbmate --url "${DATABASE_URL}" -d migrations/sql -s migrations/schema.sql up
 ```
 
 dbmate's `dump` needs `pg_dump` on your `PATH`, of
@@ -282,6 +260,9 @@ PostgreSQL's version or later.
 
 ## 11 What Can Go Wrong
 
+- **`make check`: `TABLE notes is not py_api_*`.** An
+  object without its file's prefix. Rename it; nothing
+  has run yet
 - **`CREATE INDEX CONCURRENTLY cannot run inside a transaction block (25001)`.**
   Another statement shares its file, a `SET` among
   them. Leave it alone in the file, as §8
@@ -295,14 +276,15 @@ PostgreSQL's version or later.
   the migration shows `[X]`.** The file was edited
   after it ran. Write the change as a new migration
 - **Squawk warns of a drop in a down.** Meant: put
-  `-- squawk-ignore ban-drop-table` or
-  `ban-drop-column` above it
+  `-- squawk-ignore ban-drop-table`, `ban-drop-column`
+  or `ban-drop-function` above it
 
 ## 12 See Also
 
-- [A local stack that mirrors the box](local-dev.md):
-  the stack the migrations run in
-- [The manifest, key by key](manifest.md): `database`
+- [The database](README.md): one database, its logins
+  and its image
+- [The database's conduct](../conduct/database.md):
+  prefixes and accessors
 - [dbmate](https://github.com/amacneil/dbmate) and
   [Squawk's rules](https://squawkhq.com/docs/rules),
   read 2026-10-06

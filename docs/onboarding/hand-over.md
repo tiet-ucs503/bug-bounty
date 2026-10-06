@@ -1,67 +1,74 @@
 ---
 abstract: |
-  What to hand the box's owner for each kind of change,
-  and what they do with it. A change to code, to the
-  manifest, or to the UI and these pages takes a
-  different path.
+  The one change a release cannot make: a change to the
+  manifest. What the release hands over, and what the
+  box's owner does with it.
 date: 2026-10-06
 keywords:
 - hand-over
 - render
 - manifest
-- build
 kind: how-to
 sources:
 - box/render.py
-- box/how-the-box-works.md
+- .github/workflows/release.yml
 status: draft
 title: Hand a Change to the Box's Owner
 version: v0.1.0
 ---
 
-## 1 Before You Start
+## 1 What Needs a Hand-over
 
-- The change committed, and `make check` and
-  `make test` passing
-- Which kind of change it is: §2, §3 or §4
+A release builds images and syncs buckets alone ([How a
+release reaches the box](ci-cd.md)). A change to
+`box/project.json` changes what the box runs around
+them:
 
-## 2 A Change to a Service's Code
+- a new route, or a new method on one: nginx's
+  allow-list
+- a new service: its repository, its build, its host,
+  its compose piece
+- a new port, memory or prefix, or the database turned
+  on
 
-No new route, no new service. Hand over the commit and
-the service's name. The owner uploads the service's
-folder, builds it, pins the new digest, uploads the
-stack and reloads. Nothing else changes on the box.
+The box's owner reviews and rolls those out; a release
+never can.
 
-## 3 A Change to the Manifest
+## 2 What the Release Does
 
-A new route, a new method on one, a new service, a new
-port or memory. Render, and expect `box/out/<name>/`
-written:
+A tag whose changes include `box/project.json` renders
+the box's pieces and attaches them to the release on
+GitHub, `box-<name>-<tag>.tgz`, with a warning. Its
+images and buckets go out as usual. To see the pieces
+before the tag, expect `box/out/<name>/` written:
 
 ``` sh
 make render
 ```
 
-Hand over the commit and `box/out/<name>/`. The owner
-reads the rendered `nginx.conf.in` above all, copies
-the folder into the box's repository, and rolls it out;
-a new service also needs its repository and build, one
-Terraform plan and apply.
+## 3 What the Owner Does
 
-## 4 A Change to the UI or These Pages
+Reads the rendered `nginx.conf.in`, `compose.yml` and
+`ci-policy.json.in`, copies the folder into the box's
+repository, and rolls it out: a reload for a route; one
+Terraform plan and apply for a new service.
 
-No hand-over: your UI maintainer syncs it. See [Release
-the UI and these pages](release-ui-and-docs.md).
+## 4 Until Then
+
+The new image may run before its route is out: the
+route answers `404`, from nginx, until the owner's
+rollout. A new service has no image until its
+repository and build exist: release it again after.
 
 ## 5 What Can Go Wrong
 
-- **The owner's upload is refused, "not yet built and
-  pinned".** A new service in the compose piece has no
-  build yet; the owner builds and pins it first
 - **The new route still answers `404` after the
   rollout.** The route in the manifest and the route in
   the code differ: a path is exact, and `/items` is not
   `/items/`
+- **A new service's build fails, `project not found`.**
+  The owner's Terraform has not run yet; release again
+  after it
 
 ## 6 See Also
 

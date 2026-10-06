@@ -4,6 +4,7 @@
     python3 box/render.py            check the manifest, write box/out/<name>/
     python3 box/render.py --check    check it alone, write nothing
     python3 box/render.py --dev      write dev/out/, the local stack
+    python3 box/render.py --units    list what a release builds: services, migrations
 
 Into box/out/<name>/, for the box's owner to copy into the box's
 repository as projects/<name>/ and review there:
@@ -24,7 +25,7 @@ a compose file that builds each service from services/ beside a mock
 Cognito, PostgreSQL and the buckets as folders.
 
 Python's standard library alone, so it runs anywhere. Nothing here
-talks to AWS or Cloudflare. box/how-the-box-works.md says what each
+talks to AWS or Cloudflare. docs/onboarding/README.md says what each
 piece does on the box.
 """
 
@@ -46,6 +47,8 @@ LANGUAGES = {
 RESERVED_LABELS = {"www", "static", "docs"}
 
 NAME = re.compile(r"^[a-z][a-z0-9]{1,15}$")
+GITHUB = re.compile(r"^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$")
+PREFIX = re.compile(r"^[a-z][a-z0-9_]{1,20}$")
 SERVICE = re.compile(r"^[a-z][a-z0-9-]{0,18}[a-z0-9]$")
 SEGMENT = re.compile(r"^(?:[A-Za-z0-9._-]+|\{[a-z][a-z0-9_]{0,19}\})$")
 
@@ -66,10 +69,17 @@ def check(m: dict) -> dict:
     for u in dev:
         if not re.match(r"^http://localhost(:[0-9]{2,5})?/[A-Za-z0-9._/-]*$", u):
             raise Bad(f"ui.dev_callback_urls: {u!r} is not http://localhost[:port]/...; Cognito allows http there alone")
+    github = m.get("github", "")
+    if not GITHUB.match(github):
+        raise Bad(f"github {github!r}: the repository as owner/name, which the box's CI role trusts")
+    database = m.get("database", False)
+    if not isinstance(database, bool):
+        raise Bad(f"database {database!r}, true or false")
     services = m.get("services") or []
     if not services:
         raise Bad("no services")
     seen = set()
+    prefixes = set()
     out = []
     for s in services:
         sn = s.get("name", "")
@@ -108,13 +118,45 @@ def check(m: dict) -> dict:
             routes.append({"method": meth, "path": path, "signed_in": bool(r.get("signed_in", True))})
         if ("GET", "/health") not in keys or any(r["path"] == "/health" and r["signed_in"] for r in routes):
             raise Bad(f"{sn}: needs GET /health, signed_in false: the box and the probes check it")
-        database = s.get("database", False)
-        if not isinstance(database, bool):
-            raise Bad(f"{sn}: database {database!r}, true or false")
-        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "database": database,
+        prefix = s.get("prefix", sn.replace("-", "_"))
+        if not PREFIX.match(prefix) or prefix in prefixes:
+            raise Bad(f"{sn}: prefix {prefix!r}: lower case, digits and _, a letter first, and no other service's")
+        prefixes.add(prefix)
+        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "prefix": prefix,
                     "routes": routes})
-    return {"name": name, "description": m.get("description", ""), "ui": {"dev_callback_urls": dev},
-            "services": out}
+    return {"name": name, "description": m.get("description", ""), "github": github, "database": database,
+            "ui": {"dev_callback_urls": dev}, "services": out}
+
+
+# Every object a migration makes, by kind and name; comments out first
+CREATE = re.compile(r"\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:UNIQUE\s+)?"
+                    r"(TABLE|VIEW|MATERIALIZED\s+VIEW|FUNCTION|PROCEDURE|INDEX|SEQUENCE|TYPE|TRIGGER|DOMAIN)\s+"
+                    r"(?:CONCURRENTLY\s+)?(?:IF\s+NOT\s+EXISTS\s+)?([A-Za-z0-9_.\"]+)", re.I)
+MIGRATION = re.compile(r"^([0-9]{14})_([a-z][a-z0-9_]*)\.sql$")
+
+
+def check_migrations(p: dict) -> int:
+    """The one database's migrations, against the manifest: each file
+    named <version>_<prefix>_<what>.sql for a service's prefix, and
+    every table, view, function, procedure, index, sequence, type,
+    trigger and domain it makes named with that prefix (conduct's
+    database page). The count checked; Bad otherwise"""
+    d = HERE.parent / "migrations" / "sql"
+    files = sorted(d.glob("*.sql")) if d.is_dir() else []
+    if p["database"] != bool(files):
+        raise Bad("database true needs migrations/sql/*.sql, and migrations need database true")
+    prefixes = sorted((s["prefix"] for s in p["services"]), key=len, reverse=True)
+    for f in files:
+        m = MIGRATION.match(f.name)
+        own = m and next((x for x in prefixes if m.group(2).startswith(x + "_")), None)
+        if not own:
+            raise Bad(f"migrations/sql/{f.name}: not <14-digit version>_<prefix>_<what>.sql for a prefix of {prefixes}")
+        sql = re.sub(r"--[^\n]*", "", f.read_text())
+        for kind, obj in CREATE.findall(sql):
+            bare = obj.replace('"', "").split(".")[-1]
+            if not bare.startswith(own + "_"):
+                raise Bad(f"migrations/sql/{f.name}: {kind.upper()} {bare} is not {own}_*, the file's prefix")
+    return len(files)
 
 
 def var(*parts: str) -> str:
@@ -263,19 +305,46 @@ server {{
     return "".join(out)
 
 
+def units(p: dict) -> list[str]:
+    """What the project builds into images, each a repository and a
+    build on the box: its services, and its migrations if it has a
+    database"""
+    return [s["name"] for s in p["services"]] + (["migrations"] if p["database"] else [])
+
+
 def compose(p: dict) -> str:
     n = p["name"]
     lines = [f"""# Project {n}, rendered by its box/render.py from box/project.json: do
-# not edit here but for the digests, which the box's pin writes after
-# each build. Each service at {UNPINNED[:9]}...0 until then, which the
-# box's upload refuses. Stateless, bounded in memory, on the box's
-# network; the Cognito issuer and the project's client from the env
-# file the box writes for the project at upload.
+# not edit here but for the digests, which the box pins from the
+# project's release record, releases/{n}/release.json. Each image at
+# {UNPINNED[:9]}...0 until its first release, which the box's upload
+# refuses. Bounded in memory, on the box's network; the Cognito issuer
+# and the project's client from an env file the box writes for it.
 services:
 """]
+    if p["database"]:
+        lines.append(f"""  # The project's one database to the newest migration, as its migrator,
+  # before any service starts; the database is the box's PostgreSQL
+  {n}-migrate:
+    image: ${{APP_REGISTRY:?no APP_REGISTRY in .env}}/{BOX}-{n}-migrations@{UNPINNED}
+    container_name: {n}-migrate
+    command: ["--wait", "up"]
+    env_file:
+      - path: ./projects/{n}/db-migrator.env
+    networks:
+      - app-network
+    restart: "no"
+
+""")
     for s in p["services"]:
         sn = s["name"]
         hc = json.dumps([a.replace("{port}", str(s["port"])) for a in LANGUAGES[s["language"]]])
+        db = (f"""
+      - path: ./projects/{n}/db-app.env""" if p["database"] else "")
+        dep = (f"""
+    depends_on:
+      {n}-migrate:
+        condition: service_completed_successfully""" if p["database"] else "")
         lines.append(f"""  {n}-{sn}:
     image: ${{APP_REGISTRY:?no APP_REGISTRY in .env}}/{BOX}-{n}-{sn}@{UNPINNED}
     container_name: {n}-{sn}
@@ -283,13 +352,13 @@ services:
       SERVICE: {sn}
     env_file:
       - path: ./projects/{n}/cognito.env
-        required: false
+        required: false{db}
     networks:
       - app-network
     expose:
       - "{s["port"]}"
     mem_limit: {s["memory_mib"]}m
-    restart: unless-stopped
+    restart: unless-stopped{dep}
     healthcheck:
       test: {hc}
       interval: 30s
@@ -300,23 +369,78 @@ services:
     return "".join(lines).rstrip("\n") + "\n"
 
 
+def ci_trust(p: dict) -> str:
+    """The project's CI role's trust: GitHub's OIDC provider, for this
+    repository's release tags alone. ${ACCOUNT_ID} filled by the box's
+    owner"""
+    return json.dumps({
+        "Version": "2012-10-17",
+        "Statement": [{
+            "Sid": "ReleaseTagsOfOneRepository",
+            "Effect": "Allow",
+            "Principal": {"Federated": "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com"},
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+                "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
+                "StringLike": {"token.actions.githubusercontent.com:sub": f"repo:{p['github']}:ref:refs/tags/v*"},
+            },
+        }],
+    }, indent=2) + "\n"
+
+
+def ci_policy(p: dict) -> str:
+    """What a release may do, and nothing else: put its sources and its
+    release record under releases/<name>/ in the config bucket, which
+    the box never runs; start its own builds and read them; read its own
+    images' digests; sync www and docs, and add to static without
+    deleting. ${ACCOUNT_ID} and ${ZONE} filled by the box's owner"""
+    n = p["name"]
+    cfg = "arn:aws:s3:::tu-rgb-sites-config-${ACCOUNT_ID}"
+    region = "ap-south-1"
+    return json.dumps({
+        "Version": "2012-10-17",
+        "Statement": [
+            {"Sid": "PutTheRelease", "Effect": "Allow",
+             "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+             "Resource": f"{cfg}/releases/{n}/*"},
+            {"Sid": "ListTheRelease", "Effect": "Allow", "Action": "s3:ListBucket", "Resource": cfg,
+             "Condition": {"StringLike": {"s3:prefix": f"releases/{n}/*"}}},
+            {"Sid": "RunItsBuilds", "Effect": "Allow",
+             "Action": ["codebuild:StartBuild", "codebuild:BatchGetBuilds"],
+             "Resource": f"arn:aws:codebuild:{region}:${{ACCOUNT_ID}}:project/{BOX}-{n}-*"},
+            {"Sid": "ReadItsImages", "Effect": "Allow", "Action": "ecr:DescribeImages",
+             "Resource": f"arn:aws:ecr:{region}:${{ACCOUNT_ID}}:repository/{BOX}-{n}-*"},
+            {"Sid": "ListItsSites", "Effect": "Allow", "Action": "s3:ListBucket",
+             "Resource": ["arn:aws:s3:::www.${ZONE}", "arn:aws:s3:::docs.${ZONE}", "arn:aws:s3:::static.${ZONE}"]},
+            {"Sid": "ReleaseWwwAndDocs", "Effect": "Allow",
+             "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+             "Resource": ["arn:aws:s3:::www.${ZONE}/*", "arn:aws:s3:::docs.${ZONE}/*"]},
+            {"Sid": "AddToStatic", "Effect": "Allow", "Action": ["s3:PutObject", "s3:GetObject"],
+             "Resource": "arn:aws:s3:::static.${ZONE}/*"},
+        ],
+    }, indent=2) + "\n"
+
+
 def onboarding(p: dict) -> str:
     n = p["name"]
     svcs = [s["name"] for s in p["services"]]
     hosts = ", ".join(f"`{h}.<zone>`" for h in ["www", "static", "docs", *svcs])
-    builds = "\n".join(
-        f"       make -f probes/40-project.Makefile ACT-build PROJECT={n} SVC={s} CONFIRM=project" for s in svcs
-    )
+    images = ", ".join(f"`{BOX}-{n}-{u}`" for u in units(p))
     mem = sum(s["memory_mib"] for s in p["services"])
+    db = (f"""
+   - **the database:** `{n}`, its logins `{n}_migrator` and `{n}`, and
+     the env files `projects/{n}/db-migrator.env` and `db-app.env`;
+     after the box's `feature/postgres`""" if p["database"] else "")
     return f"""# Onboarding `{n}`
 
 Rendered by `box/render.py`; the box owner's steps, on the box's
 repository. Every name below is `{BOX}-{n}-*`. The hosts: {hosts}.
-Memory asked for: {mem} MiB in all, of the box's 1 GiB.
+The images: {images}. Memory asked for: {mem} MiB in all, of the
+box's 1 GiB. The repository: `{p["github"]}`.
 
 1. **Review and copy.** This folder to the box's repository as
-   `projects/{n}/`: `project.json`, `nginx.conf.in`, `compose.yml`.
-   Read the allow-list in `nginx.conf.in` above all. Commit.
+   `projects/{n}/`. Read the allow-list in `nginx.conf.in` and the CI
+   role's `ci-policy.json.in` above all. Commit.
 2. **The zone.** Your zone for `{n}` in the box's ignored
    `terraform/.envrc.local`, in `TF_VAR_project_zones`, a JSON object
    by project name.
@@ -333,23 +457,27 @@ Memory asked for: {mem} MiB in all, of the box's 1 GiB.
      `ACT-store-cert` and a reload).
 4. **Before:** `make -f probes/40-project.Makefile PROJECT={n}`.
 5. **Terraform:** `plan-check`, then `ACT-apply CONFIRM=project`, both
-   with `PROJECT={n}`: the repositories and builds, the `www`,
-   `static` and `docs` buckets, the UI's Cognito client.
-6. **Builds,** after `ACT-upload-sources PROJECT={n} CONFIRM=project`:
+   with `PROJECT={n}`:
+   - a repository and a build for each image, sourced from
+     `releases/{n}/src/<image>/` in the config bucket, with a push role
+     of the project's own;
+   - the `www`, `static` and `docs` buckets, and the UI's Cognito
+     client;
+   - the CI role `{BOX}-{n}-ci`, from `ci-trust.json.in` and
+     `ci-policy.json.in`, trusted by GitHub's OIDC provider for
+     `{p["github"]}`'s `v*` tags alone;{db}
+6. **Tell the project** its role's ARN, its zone, Cognito's sign-in
+   domain and its UI's client ID, for the repository's variables.
+7. **The first release** is the project's: a tag `v0.1.0`. Its
+   workflow builds every image, writes `releases/{n}/release.json`, and
+   syncs `www`, `docs` and `static`. The box pins the record's digests
+   into `projects/{n}/compose.yml` and reloads.
+8. **After:** `make -f probes/40-project.Makefile after PROJECT={n}`,
+   then the project's own, `make -C probes ZONE=<zone>`.
 
-{builds}
-
-   then `ACT-pin PROJECT={n} CONFIRM=project`.
-7. **The stack:** the box's upload and reload, then
-   `make -f probes/40-project.Makefile after PROJECT={n}`.
-8. **The first releases** of the UI and the documentation, by the
-   project's UI maintainer: `ui/` synced to `www`, and the project's
-   built documentation, however it builds it, synced to `docs`.
-9. **The project's own probes,** from its repository:
-   `make -C probes ZONE=<zone>`.
-
-Steps 4 to 7 name the box's probe 40, which the box's `todo.md` §51
-subtasks 2 to 5 make.
+Steps 4, 5, 7 and 8 name the box's probe 40, its Terraform over
+projects, and its reading of release records: the box's
+`todo-project-template.md` subtasks 2 to 5, 12 and 13.
 """
 
 
@@ -429,84 +557,39 @@ http {{
 DBMATE = "ghcr.io/amacneil/dbmate@sha256:520c740c6e0ad73fde2cd1ea7e2b779aaf789d22aca8858f87a478e7094535fb"  # 2.36.0
 
 
-def db_name(service: str) -> str:
-    """A service's database, and its two logins' stem: PostgreSQL's
-    names take no hyphen unquoted"""
-    return service.replace("-", "_")
-
-
-def db_env(s: dict) -> str:
-    if not s["database"]:
-        return ""
-    d = db_name(s["name"])
-    return f"""
-      # Its own database, as its app login: rows alone (db/README.md)
-      DATABASE_URL: postgres://{d}:dev-only@db:5432/{d}?sslmode=disable"""
-
-
-def db_dep(s: dict) -> str:
-    if not s["database"]:
-        return ""
-    return f"""
-      migrate-{s["name"]}:
-        condition: service_completed_successfully"""
-
-
 def dev_db_users(p: dict) -> str:
-    """For each service with a database: the database, owned by its
-    migrator, and its app login holding rows alone, on the tables the
-    migrator makes from now on. Idempotent: run at every up"""
-    out = ["-- Rendered by box/render.py --dev: each service's database and its two",
-           "-- logins, after the box's future.md §7. Local development only.", ""]
-    for s in p["services"]:
-        if not s["database"]:
-            continue
-        d = db_name(s["name"])
-        out.append(f"""-- {s["name"]}
-SELECT 'CREATE ROLE {d}_migrator LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{d}_migrator')\\gexec
-SELECT 'CREATE ROLE {d} LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{d}')\\gexec
-ALTER ROLE {d}_migrator PASSWORD 'dev-only';
-ALTER ROLE {d} PASSWORD 'dev-only';
-SELECT 'CREATE DATABASE {d} OWNER {d}_migrator' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{d}')\\gexec
-REVOKE ALL ON DATABASE {d} FROM PUBLIC;
-GRANT CONNECT ON DATABASE {d} TO {d};
-\\connect {d}
-GRANT USAGE ON SCHEMA public TO {d};
-ALTER DEFAULT PRIVILEGES FOR ROLE {d}_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {d};
-ALTER DEFAULT PRIVILEGES FOR ROLE {d}_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {d};
-\\connect postgres
-""")
-    return "\n".join(out)
-
-
-def dev_migrate(p: dict) -> str:
-    out = []
-    for s in p["services"]:
-        if not s["database"]:
-            continue
-        d = db_name(s["name"])
-        out.append(f"""  # {s["name"]}'s schema to the newest migration, as its migrator, at every up
-  migrate-{s["name"]}:
-    image: {DBMATE}
-    environment:
-      DATABASE_URL: postgres://{d}_migrator:dev-only@db:5432/{d}?sslmode=disable
-      DBMATE_MIGRATIONS_DIR: /db/migrations
-      DBMATE_SCHEMA_FILE: /db/schema.sql
-    command: ["--wait", "--no-dump-schema", "up"]
-    volumes:
-      - ../../db/{s["name"]}:/db
-    depends_on:
-      db-users:
-        condition: service_completed_successfully
-    restart: "no"
-
-""")
-    return "".join(out)
+    """The project's one database, owned by its migrator, and its app
+    login: rows on every table, and every function and procedure, that
+    the migrator makes from now on. Idempotent: run at every up"""
+    n = p["name"]
+    if not p["database"]:
+        return "-- No database: database false in box/project.json\n"
+    return f"""-- Rendered by box/render.py --dev: the project's database and its two
+-- logins (docs/migrations/README.md). Local development only.
+SELECT 'CREATE ROLE {n}_migrator LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{n}_migrator')\\gexec
+SELECT 'CREATE ROLE {n} LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{n}')\\gexec
+ALTER ROLE {n}_migrator PASSWORD 'dev-only';
+ALTER ROLE {n} PASSWORD 'dev-only';
+SELECT 'CREATE DATABASE {n} OWNER {n}_migrator' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{n}')\\gexec
+REVOKE ALL ON DATABASE {n} FROM PUBLIC;
+GRANT CONNECT ON DATABASE {n} TO {n};
+\\connect {n}
+GRANT USAGE ON SCHEMA public TO {n};
+ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {n};
+ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {n};
+ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT EXECUTE ON ROUTINES TO {n};
+"""
 
 
 def dev_compose(p: dict) -> str:
     n = p["name"]
     origins = sorted({re.match(r"^http://localhost(:[0-9]+)?", u).group(0) for u in p["ui"]["dev_callback_urls"]})
+    db_env = (f"""
+      # The project's one database, as its app login (docs/migrations/README.md)
+      DATABASE_URL: postgres://{n}:dev-only@db:5432/{n}?sslmode=disable""" if p["database"] else "")
+    db_dep = ("""
+      migrate:
+        condition: service_completed_successfully""" if p["database"] else "")
     svcs = []
     for s in p["services"]:
         hc = json.dumps([a.replace("{port}", str(s["port"])) for a in LANGUAGES[s["language"]]])
@@ -516,13 +599,13 @@ def dev_compose(p: dict) -> str:
       SERVICE: {s["name"]}
       COGNITO_ISSUER: http://mock-auth:9000
       COGNITO_UI_CLIENT_ID: dev-ui
-      COGNITO_PROBE_CLIENT_ID: dev-probe{db_env(s)}
+      COGNITO_PROBE_CLIENT_ID: dev-probe{db_env}
     expose:
       - "{s["port"]}"
     mem_limit: {s["memory_mib"]}m
     depends_on:
       mock-auth:
-        condition: service_started{db_dep(s)}
+        condition: service_started{db_dep}
     healthcheck:
       test: {hc}
       interval: 10s
@@ -530,37 +613,9 @@ def dev_compose(p: dict) -> str:
       retries: 3
 """)
     deps = "".join(f"      - {n}-{s['name']}\n" for s in p["services"])
-    return f"""# The dev stack, rendered by box/render.py --dev from box/project.json.
-# Local development only: every port on 127.0.0.1, the database's
-# password a constant, the sign-in a mock that admits anyone.
-#
-#   docker compose -f dev/out/compose.yml up --build
-name: {n}-dev
-services:
-  nginx:
-    image: {NGINX}
-    ports:
-      - "127.0.0.1:{DEV_PORT}:{DEV_PORT}"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../static:/srv/static:ro
-      - ../../docs/_site:/srv/docs:ro
-    depends_on:
-{deps}
-  # Cognito's part, mocked: its tokens name the issuer the services
-  # reach it by, http://mock-auth:9000; the browser reaches it on
-  # localhost:9000, and never reads the issuer
-  mock-auth:
-    build: ../mock-auth
-    environment:
-      ISSUER: http://mock-auth:9000
-      CLIENTS: dev-ui,dev-probe
-      ORIGINS: {",".join(origins)}
-    ports:
-      - "127.0.0.1:9000:9000"
-
-  # PostgreSQL, as the box will have it: a database per service that
-  # asks for one, each with a migrator and an app login
+    database = f"""
+  # PostgreSQL, as the box will have it after its feature/postgres: the
+  # project's one database, its migrator and its app login
   db:
     image: {POSTGRES}
     environment:
@@ -587,7 +642,52 @@ services:
         condition: service_healthy
     restart: "no"
 
-{dev_migrate(p)}
+  # migrations/ to the newest, as the migrator, at every up: dbmate's
+  # own image on the folder, so a new migration needs no build here.
+  # The release builds migrations/ into the image the box runs
+  migrate:
+    image: {DBMATE}
+    environment:
+      DATABASE_URL: postgres://{n}_migrator:dev-only@db:5432/{n}?sslmode=disable
+      DBMATE_MIGRATIONS_DIR: /work/sql
+      DBMATE_SCHEMA_FILE: /work/schema.sql
+    command: ["--wait", "--no-dump-schema", "up"]
+    volumes:
+      - ../../migrations:/work
+    depends_on:
+      db-users:
+        condition: service_completed_successfully
+    restart: "no"
+""" if p["database"] else ""
+    return f"""# The dev stack, rendered by box/render.py --dev from box/project.json.
+# Local development only: every port on 127.0.0.1, the database's
+# password a constant, the sign-in a mock that admits anyone.
+#
+#   docker compose -f dev/out/compose.yml up --build
+name: {n}-dev
+services:
+  nginx:
+    image: {NGINX}
+    ports:
+      - "127.0.0.1:{DEV_PORT}:{DEV_PORT}"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../../static:/srv/static:ro
+      - ../../docs/_site:/srv/docs:ro
+    depends_on:
+{deps}
+  # Cognito's part, mocked: its tokens name the issuer the services
+  # reach it by, http://mock-auth:9000; the browser reaches it on
+  # localhost:9000, and never reads the issuer
+  mock-auth:
+    build: ../mock-auth
+    environment:
+      ISSUER: http://mock-auth:9000
+      CLIENTS: dev-ui,dev-probe
+      ORIGINS: {",".join(origins)}
+    ports:
+      - "127.0.0.1:9000:9000"
+{database}
 {"".join(svcs)}
 volumes:
   db:
@@ -598,11 +698,15 @@ def main(argv: list[str]) -> int:
     only_check = "--check" in argv
     try:
         p = check(json.loads((HERE / "project.json").read_text()))
+        k = check_migrations(p)
     except (Bad, json.JSONDecodeError) as e:
         print(f"box/project.json: {e}", file=sys.stderr)
         return 1
     if only_check:
-        print(f"box/project.json: {p['name']}, {len(p['services'])} services, checked")
+        print(f"box/project.json: {p['name']}, {len(p['services'])} services, {k} migrations, checked")
+        return 0
+    if "--units" in argv:
+        print("\n".join(units(p)))
         return 0
     if "--dev" in argv:
         out = HERE.parent / "dev" / "out"
@@ -618,6 +722,8 @@ def main(argv: list[str]) -> int:
         "project.json": json.dumps(p, indent=2) + "\n",
         "nginx.conf.in": nginx(p),
         "compose.yml": compose(p),
+        "ci-trust.json.in": ci_trust(p),
+        "ci-policy.json.in": ci_policy(p),
         "ONBOARDING.md": onboarding(p),
     }
     for f, text in files.items():

@@ -27,6 +27,9 @@ rolls them out. Its parts:
 - **`py-api.<zone>`:** a service in Python
 - **`www.<zone>`:** the UI, a single-page app
 - **`docs.<zone>`:** these pages
+- **`static.<zone>`:** public files
+- **One database,** each service's part under its
+  prefix
 
 Replace this section with what your project does, once
 you have named it in `box/project.json`.
@@ -63,16 +66,16 @@ not yet checked; **planned** --- not yet written.
   box](onboarding/README.md)
 - `draft` [From a fork to a live
   project](onboarding/first-rollout.md)
+- `draft` [How a release reaches the
+  box](onboarding/ci-cd.md)
+- `draft` [A release by
+  hand](onboarding/release-by-hand.md)
 - `draft` [Hand a change to the box's
   owner](onboarding/hand-over.md)
-- `draft` [Release the UI and these
-  pages](onboarding/release-ui-and-docs.md)
 - `draft` [Probe your
   hosts](onboarding/run-the-probes.md)
 - `draft` [A local stack that mirrors the
   box](onboarding/local-dev.md)
-- `draft` [Write a
-  migration](onboarding/write-a-migration.md)
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
 
@@ -92,11 +95,24 @@ not yet checked; **planned** --- not yet written.
 - `draft` [Develop and change
   py-api](py-api/develop.md)
 
-### Conduct: Writing These Pages
+### Migrations: the Database
+
+- `draft` [The database](migrations/README.md)
+- `draft` [Write a
+  migration](migrations/write-a-migration.md)
+
+### UI
+
+- `draft` [The UI](ui/README.md)
+- `draft` [Develop the UI](ui/develop.md)
+- `draft` [Release the UI](ui/release.md)
+
+### Conduct
 
 - `draft` [How these pages are
   written](conduct/README.md)
 - `draft` [The page template](conduct/template.md)
+- `draft` [The database's conduct](conduct/database.md)
 
 ## 4 Reading the Pages
 

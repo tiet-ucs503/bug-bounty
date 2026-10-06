@@ -12,8 +12,8 @@ keywords:
 - auth
 kind: explanation
 sources:
-- box/how-the-box-works.md
 - box/render.py
+- .github/workflows/release.yml
 status: draft
 subtitle: Cloudflare, nginx, your containers and three
   buckets
@@ -99,22 +99,29 @@ already decided:
   -------------------------- --------------------------
   The services' code,        The instance, nginx,
   Dockerfiles and pinned     Docker, the compose file
-  packages                   
+  packages; the migrations   
 
   The manifest: services,    Whether and when a
-  ports, memory, routes      manifest is rolled out
+  ports, memory, routes,     manifest is rolled out
+  prefixes                   
 
-  The UI and these pages,    The buckets, the Cognito
-  and their releases         clients, the records at
+  The UI, these pages and    The buckets, the Cognito
+  static files               clients, the records at
                              Cloudflare
 
-  The probes, from outside   Builds, pins, uploads and
-                             reloads; logs and alarms
+  Releases: a tag, and the   The CI role a release
+  workflow it runs           works as; the reading of
+                             its record
+
+  The probes, from outside   Logs and alarms
   -----------------------------------------------------
 
 You never write nginx, compose or IAM. `make render`
 writes the box's pieces from the manifest; the owner
-reads them and copies them into the box's repository.
+reads them and copies them into the box's repository. A
+release tag builds images and syncs buckets through one
+role, and the box takes nothing from it but digests:
+[How a release reaches the box](ci-cd.md).
 
 ## 5 The Limits
 
@@ -122,12 +129,13 @@ reads them and copies them into the box's repository.
   its database. Each service is held to its
   `memory_mib`, so a leak takes its own container and
   no other
-- **State:** none yet. A container's disk goes at every
-  recreate; a database per project waits for the box's
-  PostgreSQL
+- **State:** one database per project, each service's
+  part under its prefix ([The
+  database](../migrations/README.md)), on the box once
+  its `feature/postgres` is done. A container's disk
+  goes at every recreate
 - **Builds:** arm64, by the box's CodeBuild from your
-  service's folder, run by the owner until your code
-  host and its CI exist
+  service's folder, started by a release tag
 
 ## 6 What Can Go Wrong
 

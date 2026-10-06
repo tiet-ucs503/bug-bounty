@@ -175,8 +175,8 @@ Read every line it prints; do not explain one away.
 - **Complete commands,** run from the repository's
   root, as they will be typed: no `<...>` inside a
   command, no step left to the reader. A command that
-  needs AWS is the UI maintainer's or the box owner's;
-  say whose
+  needs AWS is the release's, by its CI role, or the
+  box owner's; say whose
 - **Inputs as variables,** set at the top of the block,
   written with braces, `${PROJECT}`, so that a colon
   after one cannot be read as a shell modifier

@@ -30,9 +30,9 @@ Expect a `PASS` line per check, and exit status 0:
 make -C probes ZONE=example.org
 ```
 
-  -----------------------------------------------------
+  ----------------------------------------------------
   Target       What it checks
-  ------------ ----------------------------------------
+  ------------ ---------------------------------------
   hosts        Every host answers through Cloudflare
 
   health       Each `/health` names its own service
@@ -54,7 +54,7 @@ make -C probes ZONE=example.org
   docs         `index.html`, `200`
 
   static       A missing key, `404`
-  -----------------------------------------------------
+  ----------------------------------------------------
 
 ## 3 Signed In
 

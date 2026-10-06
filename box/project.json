@@ -1,6 +1,8 @@
 {
   "name": "example",
   "description": "The template's own example: two starter services and a UI",
+  "github": "your-org/your-project",
+  "database": true,
   "ui": {
     "dev_callback_urls": [
       "http://localhost:5173/"
@@ -12,7 +14,7 @@
       "language": "node",
       "port": 3000,
       "memory_mib": 192,
-      "database": false,
+      "prefix": "js_api",
       "routes": [
         {
           "method": "GET",
@@ -36,7 +38,7 @@
       "language": "python",
       "port": 8000,
       "memory_mib": 192,
-      "database": true,
+      "prefix": "py_api",
       "routes": [
         {
           "method": "GET",

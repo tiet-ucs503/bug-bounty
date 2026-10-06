@@ -2,18 +2,19 @@
 abstract: |
   The whole path once, from forking the template to a
   project answering on its hosts: what you do, what the
-  box's owner does, and what you should see at each
-  step.
+  box's owner does, and the first release tag that puts
+  it live.
 date: 2026-10-06
 keywords:
 - rollout
 - manifest
-- render
-- probes
+- release
+- github
 kind: tutorial
 sources:
 - README.md
 - box/render.py
+- .github/workflows/release.yml
 - probes/Makefile
 status: draft
 title: From a Fork to a Live Project
@@ -22,6 +23,7 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- **A GitHub repository,** forked from the template
 - **Tools:** git, Node 24, Python 3.12 or later, `jq`,
   `curl`, and md-preview for these pages
 - **The box's owner,** willing to roll the project out,
@@ -30,14 +32,18 @@ version: v0.1.0
 - **No AWS access** is needed for any step that is
   yours
 
-## 2 Fork and Name
+## 2 Name the Project
 
-Fork the template, then set `name` in
-`box/project.json`: 2 to 16 characters, lower case and
-digits, a letter first. Every name on the box becomes
-`tu-rgb-sites-<name>-<service>`.
+In `box/project.json`:
 
-Expect `box/project.json: <name>, 2 services, checked`:
+- `name`: 2 to 16 characters, lower case and digits, a
+  letter first. Every name on the box becomes
+  `tu-rgb-sites-<name>-*`
+- `github`: this repository, `owner/name`
+- `database`: `true` if any service keeps state
+
+Expect
+`box/project.json: <name>, 2 services, 1 migrations, checked`:
 
 ``` sh
 make check
@@ -45,14 +51,12 @@ make check
 
 ## 3 Shape the Services
 
-Keep, rename or remove `js-api` and `py-api`. A folder
-in `services/` and an entry in the manifest go
-together; `make check` refuses either without the
-other. A new service starts as a copy of the starter in
-its language.
-
-Expect each suite's tests passing, 4 of 4 for the
-starters:
+Keep, rename or remove `js-api` and `py-api`, and give
+each its `prefix`. A folder in `services/` and an entry
+in the manifest go together; `make check` refuses
+either without the other. A new service starts as a
+copy of the starter in its language. Expect each
+suite's tests passing:
 
 ``` sh
 make test
@@ -60,42 +64,37 @@ make test
 
 ## 4 Render and Hand Over
 
-Expect
-`box/out/<name>/: project.json, nginx.conf.in, compose.yml, ONBOARDING.md`:
+Expect `box/out/<name>/:` and its six files:
 
 ``` sh
 make render
 ```
 
-Give the box's owner your commit and the folder
-`box/out/<name>/`. Its `ONBOARDING.md` is their list:
-the records and rules at Cloudflare, one Terraform plan
-and apply, the builds, the pins, an upload and a
-reload, and their probes.
+Give the box's owner the folder `box/out/<name>/`. Its
+`ONBOARDING.md` is their list: the records and rules at
+Cloudflare, one Terraform plan and apply, the project's
+CI role from `ci-trust.json.in` and
+`ci-policy.json.in`, and their probes.
 
-## 5 Configure the UI
+## 5 Set the Repository's Variables
 
-When the owner is done, they give you three things that
-are not secret: Cognito's sign-in domain, your UI's
-client ID, and the zone confirmed. Copy the example and
-fill them in:
+The owner gives you four values, none a secret. Set
+them as repository variables: [How a release reaches
+the box](ci-cd.md), §4.
 
-``` sh
-cp ui/config.example.js ui/config.js
-```
+## 6 The First Release
 
-Expect a page at `http://localhost:5173/` that signs
-you in and calls both services:
+Expect the tag pushed, and **Release** building every
+image, writing the record, and syncing `www`, `docs`
+and `static`:
 
 ``` sh
-make ui
+TAG=v0.1.0
+git tag -a "${TAG}" -m "${TAG}"
+git push origin "${TAG}"
 ```
 
-## 6 Release the UI and These Pages
-
-Your UI maintainer syncs `ui/` to `www` and the built
-pages to `docs`: [Release the UI and these
-pages](release-ui-and-docs.md).
+The box pins the record's digests and reloads.
 
 ## 7 Probe the Hosts
 
@@ -107,16 +106,19 @@ hosts](run-the-probes.md).
 - **`make check` refuses the manifest.** It names the
   key and the rule; [the manifest](manifest.md) lists
   every rule
+- **The release cannot assume its role.** A variable is
+  wrong, or the owner has not yet made the role; [How a
+  release reaches the box](ci-cd.md), §6
 - **The sign-in returns to an error page.** The page's
   origin is not among the client's callbacks:
   `https://www.<zone>/` and `ui.dev_callback_urls`
 - **A host times out or shows Cloudflare's error
-  page.** Its record is not there yet, or the owner's
-  reload has not run; ask the owner
+  page.** Its record is not there yet, or the box has
+  not reloaded; ask the owner
 
 ## 9 See Also
 
 - [How the project meets the box](README.md): why each
   step is there
-- [Hand a change to the box's owner](hand-over.md):
-  every change after this one
+- [How a release reaches the box](ci-cd.md): every
+  release after

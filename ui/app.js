@@ -1,9 +1,9 @@
 // The UI's starter: sign in through the box's Cognito by the
 // authorisation code with PKCE, then call your services with the access
 // token as a Bearer. No build step and no package: ui/ is what is
-// released, synced to your www bucket (box/how-the-box-works.md §5).
+// released, synced to your www bucket by a release (docs/ui/release.md).
 //
-// What the box asks of a UI (box/how-the-box-works.md §5):
+// What the box asks of a UI (docs/ui/README.md):
 //   - call the APIs at https://<service>.<zone>, never the box itself;
 //   - send the access token, not the ID token, as Authorization: Bearer;
 //   - expect 429 with Retry-After on writes, and wait and retry;

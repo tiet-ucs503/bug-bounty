@@ -26,6 +26,17 @@ name
 description
 : Free text, for the reader
 
+github
+: This repository, `owner/name`. The project's CI role
+  trusts its `v*` tags alone
+
+database
+: `true` for the project's one database, with its
+  migrations in `migrations/sql/`; `false` if left out.
+  The dev stack makes it today; the box at the last
+  step of its `feature/postgres`. See [The
+  database](../migrations/README.md)
+
 ui.dev_callback_urls
 : `http://localhost:<port>/` addresses where a
   developer runs the UI. Each is a sign-in callback,
@@ -50,12 +61,13 @@ memory_mib
 : 64 to 512; 192 if left out. A hard limit: past it the
   container is killed and restarted
 
-database
-: `true` for a database of its own, with its migrations
-  in `db/<name>/migrations/`; `false` if left out. The
-  dev stack makes it today; the box, once it has
-  PostgreSQL. See [Write a
-  migration](write-a-migration.md)
+prefix
+: The service's part of the database: every object its
+  migrations make is named `<prefix>_*`, and every
+  migration file carries it. Lower case, digits and
+  `_`; the name with `_` for `-` if left out; no other
+  service's. See [The database's
+  conduct](../conduct/database.md)
 
 routes
 : The allow-list, each with `method`, `path` and

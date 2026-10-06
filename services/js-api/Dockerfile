@@ -2,7 +2,7 @@
 # from AWS's mirror of Docker's official images, which CodeBuild pulls
 # without Docker Hub's limits. The digest is the index's, so the build,
 # on arm64 as the box is, takes its arm64 image. A new base is a new
-# digest here, read with box/how-the-box-works.md §6
+# digest here (docs/js-api/develop.md §6)
 FROM public.ecr.aws/docker/library/node:24-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
 
 ENV NODE_ENV=production

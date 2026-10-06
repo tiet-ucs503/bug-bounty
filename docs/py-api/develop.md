@@ -59,7 +59,11 @@ def item(id: str):
 3.  Name it in `box/project.json`, with its method and
     whether it is signed in:
     `{"method": "GET", "path": "/items/{id}", "signed_in": false}`.
-4.  Render and hand over: [Hand a change to the box's
+4.  Release it, a tag: the image is built and its
+    digest recorded ([How a release reaches the
+    box](../onboarding/ci-cd.md)). The new route
+    answers once the box's owner has rolled the
+    manifest out: [Hand a change to the box's
     owner](../onboarding/hand-over.md).
 
 ## 5 Change a Package

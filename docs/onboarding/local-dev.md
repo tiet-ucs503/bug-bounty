@@ -84,14 +84,14 @@ flowchart LR
   pool                 and token shapes, a key made at
                        start, any name admitted
 
-  No database yet      PostgreSQL 17: a database and
-                       two logins for each service
-                       that asks, its migrations
+  No database yet      PostgreSQL 17: the project's
+                       one database and its two
+                       logins, `migrations/sql/`
                        applied by dbmate at every
                        start
 
-  `static` and `docs`  Folders, read-only:
-  buckets              `dev/static/`, `docs/_site/`
+  `static` and `docs`  Folders, read-only: `static/`,
+  buckets              `docs/_site/`
 
   Images built on      Built here, for your machine's
   arm64 by CodeBuild   architecture
@@ -160,18 +160,19 @@ before a release.
 
 ## 6 Use the Database
 
-The box has no database yet; the stack has one, so a
-service can be readied for it. Each service with
-`"database": true` in the manifest gets its own
-database and two logins, and its migrations applied
-before it starts: [Write a
-migration](write-a-migration.md). It finds its own
-login in `DATABASE_URL`. In the template, `py-api`.
-From your machine, as `py-api`'s own login, expect a
-`psql` prompt:
+The box has no database yet; the stack has one, as the
+box will have it after its `feature/postgres`. With
+`"database": true` in the manifest, the project's one
+database and its two logins are made, and
+`migrations/sql/` applied before any service starts:
+[Write a
+migration](../migrations/write-a-migration.md). Every
+service finds the project's login in `DATABASE_URL`.
+From your machine, as that login, expect a `psql`
+prompt:
 
 ``` sh
-psql 'postgres://py_api:dev-only@localhost:5432/py_api'
+psql 'postgres://example:dev-only@localhost:5432/example'
 ```
 
 The data lives in the stack's volume, `db`, between
@@ -187,8 +188,8 @@ curl -s -o /dev/null -w '%{http_code}\n' http://docs.localhost:8080/
 ```
 
 Put what your UI reads from `static.<zone>` in
-`dev/static/`. Writes to `static` are not wired on the
-box, so the folder is read-only here too.
+`static/`. Writes to `static` are not wired on the box,
+so the folder is read-only here too.
 
 ## 8 After a Change
 
@@ -264,7 +265,7 @@ Everything installs in your own directory:
 - **dbmate:** its single binary, from its releases
   page, checked against the release's published
   SHA-256; then [Write a
-  migration](write-a-migration.md), §10
+  migration](../migrations/write-a-migration.md), §10
 
 - **The mock and the services,** run as programs:
   `python3 dev/mock-auth/server.py`, and each service
