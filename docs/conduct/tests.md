@@ -152,9 +152,12 @@ test is a reader that never tires and never skims.
 - **A test breaks whenever the code is tidied.** It
   tests how, not what. Test through the contract: the
   route, the accessor, not the private function
-- **A test that sometimes fails.** It depends on time,
-  order or another test's data. Fix it the day it is
-  seen; a flaky test teaches everyone to ignore red
+- **A test that sometimes fails,** with nothing
+  changed. It depends on the clock, on the order the
+  tests run in, or on data another test left behind.
+  Fix it the day you see it. Once people learn that a
+  failure may be noise, they rerun until it passes, and
+  the day a failure is real, they rerun that one too
 
 ## 7 See Also
 
