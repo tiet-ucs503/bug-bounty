@@ -330,8 +330,8 @@ nothing.
 
 - [2 What each may do](2-authorisation/README.md): next
 - [How the project meets the
-  box](../onboarding/README.md) §3: what nginx checks,
-  and what your service does
+  box](../onboarding/README.md) §3 and §4: what nginx
+  checks, and what your service does
 - [Cognito's userInfo
   endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html),
   read 2026-10-06

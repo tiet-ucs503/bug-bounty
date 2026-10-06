@@ -62,8 +62,8 @@ not yet checked; **planned** --- not yet written.
 
 ### Onboarding: the Project and the Box
 
-- `draft` [How the project meets the
-  box](onboarding/README.md)
+- `draft` [Onboarding: every page, and how the project
+  meets the box](onboarding/README.md)
 - `draft` [From a fork to a live
   project](onboarding/first-rollout.md)
 - `draft` [How a release reaches the

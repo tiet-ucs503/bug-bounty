@@ -1,11 +1,10 @@
 ---
 abstract: |
-  How a request reaches the project, what the box
-  decides before your code does, and who controls what.
-  Read it before you change a route, a service or the
-  UI.
-date: 2026-10-06
+  Every page a newcomer needs, then how a request
+  reaches the project and who controls what.
+date: 2026-10-07
 keywords:
+- onboarding
 - the-box
 - nginx
 - cloudflare
@@ -15,13 +14,35 @@ sources:
 - box/render.py
 - .github/workflows/release.yml
 status: draft
-subtitle: Cloudflare, nginx, your containers and three
-  buckets
-title: How the Project Meets the Box
+subtitle: Every page, then how a request reaches the
+  box
+title: "Onboarding: the Project and the Box"
 version: v0.1.0
 ---
 
-## 1 The Path of a Request
+## 1 Onboarding, Page by Page
+
+In the order a newcomer reads them.
+
+1.  **How the project meets the box:** this page, §2 to
+    §7: the path of a request, and who controls what
+2.  [From a fork to a live project](first-rollout.md):
+    the whole path once
+3.  [A local stack that mirrors the box](local-dev.md):
+    develop with Docker
+    - [Run the stack with rootless Podman](podman.md)
+    - [Develop on a shared box without
+      root](shared-box.md)
+4.  [The manifest, key by key](manifest.md): what the
+    box reads from you
+5.  [How a release reaches the box](ci-cd.md): a tag,
+    and only what changed
+    - [A release by hand](release-by-hand.md)
+6.  [Hand a change to the box's owner](hand-over.md)
+7.  [Probe your hosts](run-the-probes.md): check them
+    from outside
+
+## 2 The Path of a Request
 
 ``` mermaid
 ---
@@ -58,7 +79,7 @@ flowchart LR
 - **`www`, `docs` and `static`** are buckets named for
   their hosts, readable only through Cloudflare
 
-## 2 What nginx Decides First
+## 3 What nginx Decides First
 
 Before a request reaches your service, nginx has
 already decided:
@@ -80,7 +101,7 @@ already decided:
   are not counted
 - **The size of a body,** 1 MiB at most
 
-## 3 What Your Service Decides
+## 4 What Your Service Decides
 
 - **Who the caller is:** a Bearer access token from the
   box's Cognito pool, verified by the service: its
@@ -96,7 +117,7 @@ already decided:
   tutorials](../tutorials/README.md) build the door and
   an access control matrix in your database
 
-## 4 Who Controls What
+## 5 Who Controls What
 
   -----------------------------------------------------
   You, in this repository    The box's owner
@@ -127,7 +148,7 @@ release tag builds images and syncs buckets through one
 role, and the box takes nothing from it but digests:
 [How a release reaches the box](ci-cd.md).
 
-## 5 The Limits
+## 6 The Limits
 
 - **Memory:** the box has 1 GiB for every project and
   its database. Each service is held to its
@@ -141,7 +162,7 @@ role, and the box takes nothing from it but digests:
 - **Builds:** arm64, by the box's CodeBuild from your
   service's folder, started by a release tag
 
-## 6 What Can Go Wrong
+## 7 What Can Go Wrong
 
 - **A new route answers `404`.** The manifest does not
   name it yet, or the owner has not rolled the manifest
@@ -154,7 +175,7 @@ role, and the box takes nothing from it but digests:
   designed: wait for `Retry-After` and try again, as
   `ui/app.js` does
 
-## 7 See Also
+## 8 See Also
 
 - [From a fork to a live project](first-rollout.md):
   the whole path once

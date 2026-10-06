@@ -95,7 +95,7 @@ version: v0.1.0
 - **Nothing generated,** nothing secret: no `.env`, no
   key, no `node_modules`, no `dev/out/`. Scan what is
   staged before every commit, [the conduct](README.md)
-  §4.2
+  §5.2
 
 ## 4 Your Identity, and Your Address
 
