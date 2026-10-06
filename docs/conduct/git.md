@@ -2,10 +2,11 @@
 abstract: |
   The project's conduct in git: git-flow's branches by
   its tool, one change a commit, messages that say why,
-  nothing secret staged. And your identity in every
-  commit without your e-mail address: the forge's
-  no-reply address, set for each repository, and
-  commits signed by a key the forge has verified.
+  nothing secret staged. And the e-mail address in your
+  commits, which is your choice: the forge's no-reply
+  address is advised, to keep yours private, never
+  required. Commits signed by a key the forge has
+  verified, whichever address you use.
 date: 2026-10-07
 keywords:
 - conduct
@@ -34,24 +35,27 @@ version: v0.1.0
 
 ## 2 The Branches
 
-  ----------------------------------------------------------------------------
-  Branch                      Holds                Made by
-  --------------------------- -------------------- ---------------------------
-  `master`                    What is released,    `git flow release finish`
-                              each release tagged  
-                              `vX.Y.Z`             
+  ----------------------------------------------------------------------
+  Branch                      Holds          Made by
+  --------------------------- -------------- ---------------------------
+  `master`                    What is        `git flow release finish`
+                              released, each 
+                              release tagged 
+                              `vX.Y.Z`       
 
-  `develop`                   The next release     `git flow init`, once
+  `develop`                   The next       `git flow init`, once
+                              release        
 
-  `feature/<issue>- <slug>`   One feature, its     `git flow feature start`
-                              turns                
+  `feature/<issue>- <slug>`   One feature,   `git flow feature start`
+                              its turns      
 
-  `release/vX.Y.Z`            A release being made `git flow release start`
-                              ready                
+  `release/vX.Y.Z`            A release      `git flow release start`
+                              being made     
+                              ready          
 
-  `hotfix/vX.Y.Z`             A fix to what is     `git flow hotfix start`
-                              released             
-  ----------------------------------------------------------------------------
+  `hotfix/vX.Y.Z`             A fix to what  `git flow hotfix start`
+                              is released    
+  ----------------------------------------------------------------------
 
 - **By the tool, never by hand.**
   `git flow feature start`, not `git checkout -b`: the
@@ -93,22 +97,34 @@ version: v0.1.0
   staged before every commit, [the conduct](README.md)
   §4.2
 
-## 4 Your Identity, Without Your Address
+## 4 Your Identity, and Your Address
 
 Every commit carries an author's name and e-mail
-address, and the forge publishes both. Your name
-identifies you; your address need not. Each forge gives
-you a no-reply address that it ties to your account, so
-your commits still link to your profile.
+address, and the forge publishes both, to anyone who
+clones the repository, for good.
 
-### 4.1 Find Your No-reply Address
+> [!NOTE]
+> **Which address you commit with is yours to choose.**
+> The project requires none in particular: any address
+> your forge account has verified links your commits to
+> your profile. A no-reply address is optional. It is
+> advised, and preferred, only because it keeps your
+> own address out of public history.
+
+Each forge gives you a no-reply address, tied to your
+account, so your commits still link to your profile
+without your own address in them. If you are content
+for your address to be public, use it, and skip §4.1.
+
+### 4.1 If You Choose a No-reply Address
 
 - **GitHub:** Settings, Emails, under "Keep my email
   addresses private". It is
   `ID+USERNAME@users.noreply.github.com`, `ID` a
-  number. Tick that box, and "Block command line pushes
-  that expose my email": a push whose latest commit
-  carries your private address is refused
+  number. Tick that box; and, if you want the forge to
+  guard you, "Block command line pushes that expose my
+  email", which refuses a push whose latest commit
+  carries your private address
 - **GitLab:** Preferences, Profile, "Commit email",
   "Use a private email". It is
   `ID-USERNAME@users.noreply.gitlab.com`
@@ -122,14 +138,15 @@ commits](https://docs.gitlab.com/user/project/repository/signed_commits/).
 
 ### 4.2 Set It for This Repository
 
-In the repository, not globally, so another forge's
-repository keeps its own. Expect no output:
+The address you chose, no-reply or your own, in the
+repository, not globally, so another forge's repository
+keeps its own. Expect no output:
 
 ``` sh
 NAME='Your Name'
-NOREPLY='12345678+your-username@users.noreply.github.com'
+EMAIL='12345678+your-username@users.noreply.github.com'
 git config --local user.name "${NAME}"
-git config --local user.email "${NOREPLY}"
+git config --local user.email "${EMAIL}"
 ```
 
 For every repository under one folder at once, in
@@ -144,8 +161,10 @@ with `user.email` in `~/.gitconfig-github`.
 
 ### 4.3 Sign Your Commits
 
-The address no longer proves anything; a signature
-does. Sign with the SSH key you already have:
+An address proves nothing, whichever you use: anyone
+can type any address into a commit. A signature does.
+Signing is advised too; sign with the SSH key you
+already have:
 
 ``` sh
 git config --local gpg.format ssh
@@ -159,7 +178,7 @@ key is whose. Expect no output:
 
 ``` sh
 mkdir -p "${HOME}/.config/git"
-printf '%s %s\n' "${NOREPLY}" "$(cat "${HOME}/.ssh/id_ed25519.pub")" >> "${HOME}/.config/git/allowed_signers"
+printf '%s %s\n' "${EMAIL}" "$(cat "${HOME}/.ssh/id_ed25519.pub")" >> "${HOME}/.config/git/allowed_signers"
 git config --global gpg.ssh.allowedSignersFile "${HOME}/.config/git/allowed_signers"
 ```
 
@@ -175,7 +194,7 @@ mark before relying on it.
 
 ### 4.4 Check Before a Push
 
-Expect only your no-reply address, twice on each line,
+Expect only the address you chose, twice on each line,
 author and committer, and `G`, a good signature:
 
 ``` sh
@@ -183,7 +202,7 @@ git log --format='%ae %ce %G?' develop | sort | uniq -c
 ```
 
 `N` is unsigned, or `gpg.ssh.allowedSignersFile` is not
-set; your own address means a commit made before §4.2.
+set; any other address means a commit made before §4.2.
 
 ## 5 What Can Go Wrong
 
@@ -194,9 +213,10 @@ set; your own address means a commit made before §4.2.
 - **`Unverified`.** The key is added for authentication
   only, or the commit's address is not verified on the
   account
-- **A push refused for exposing your e-mail.** The
-  latest commit carries your private address. Amend it,
-  if it is not yet pushed anywhere:
+- **A push refused for exposing your e-mail,** if you
+  ticked GitHub's box. The latest commit carries your
+  private address. Amend it, if it is not yet pushed
+  anywhere:
   `git commit --amend --reset-author --no-edit`
 
 ## 6 Commits Already Made
@@ -208,8 +228,9 @@ set; your own address means a commit made before §4.2.
 > before the first push, or agree it with everyone
 > first.
 
-Before a repository's first push, its commits' old
-address can be replaced by the no-reply one, with
+If you change address after committing, say to a
+no-reply one before a repository's first push, the
+commits' old address can be replaced with
 [git-filter-repo](https://github.com/newren/git-filter-repo)
 and a mailmap, `NEW-NAME <NEW-ADDRESS> <OLD-ADDRESS>` a
 line. In a fresh clone, never the original:
@@ -220,8 +241,8 @@ git filter-repo --mailmap ../mailmap
 git log --format='%ae' --all | sort -u
 ```
 
-Expect only the no-reply address. Signatures do not
-survive the rewrite; old commits stay unsigned.
+Expect only the new address. Signatures do not survive
+the rewrite; old commits stay unsigned.
 
 ## 7 See Also
 
