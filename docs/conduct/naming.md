@@ -79,8 +79,8 @@ newcomer cannot learn a habit by reading.
   `20261006130000_users_create_tables.sql`
 - **A permission:** `<unit>.<verb>`; `notes.read`,
   `users.grant`
-- **A role:** kebab-case, a noun or a short phrase, as
-  `users_roles` checks; `reader`, `member`, `deny-all`
+- **A role:** kebab-case, a noun or a short phrase;
+  `reader`, `member`, `deny-all`
 - **A route:** plural nouns, an ID between;
   `/users/people/{sub}/roles/{role}`
 - **An environment variable:** UPPER_SNAKE, the owner
