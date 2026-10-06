@@ -3,6 +3,7 @@
 
     python3 box/render.py            check the manifest, write box/out/<name>/
     python3 box/render.py --check    check it alone, write nothing
+    python3 box/render.py --dev      write dev/out/, the local stack
 
 Into box/out/<name>/, for the box's owner to copy into the box's
 repository as projects/<name>/ and review there:
@@ -16,6 +17,11 @@ repository as projects/<name>/ and review there:
     compose.yml     a service per service, unpinned until its first
                     build: sha256:0...0, which the box refuses to upload
     ONBOARDING.md   the box owner's steps for this project, by name
+
+With --dev, into dev/out/ instead, for docs/onboarding/local-dev.md:
+the same nginx servers on plain HTTP at <service>.localhost:8080, and
+a compose file that builds each service from services/ beside a mock
+Cognito, PostgreSQL and the buckets as folders.
 
 Python's standard library alone, so it runs anywhere. Nothing here
 talks to AWS or Cloudflare. box/how-the-box-works.md says what each
@@ -343,6 +349,152 @@ subtasks 2 to 5 make.
 """
 
 
+# The box's nginx, as the box's compose file pins it, from AWS's mirror
+NGINX = "public.ecr.aws/docker/library/nginx@sha256:abe47724e466aeab9a345d8e46a221c2fa8953c7848bb4a3bd9976a7199f8cf2"
+# PostgreSQL 17.11, Alpine: what the box moves to, not what it has
+POSTGRES = "public.ecr.aws/docker/library/postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24"
+DEV_PORT = 8080
+
+
+def dev_nginx(p: dict) -> str:
+    """The box's servers for the project, on plain HTTP at
+    <service>.localhost, inside a whole nginx.conf with what the box
+    defines around them: the write limits, by the client's address
+    here since no Cloudflare header comes, and Docker's resolver"""
+    lines = [l if l.lstrip().startswith("#") else l.replace("${ZONE}", "localhost")
+             for l in nginx(p).splitlines() if not l.startswith("    ssl_")]
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines))
+    body = body.replace("    listen 443 ssl;\n", f"    listen {DEV_PORT};\n")
+    servers = "\n".join("    " + l if l else l for l in body.splitlines())
+    return f"""# The dev stack's nginx, rendered by box/render.py --dev from
+# box/project.json: the box's servers for the project, on plain HTTP,
+# with the box's limits around them. Local development only.
+worker_processes 1;
+events {{
+    worker_connections 256;
+}}
+
+http {{
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    # As the box's, but by the client's address: no CF-Connecting-IP here
+    map $request_method $api_write_ip {{
+        default  $binary_remote_addr;
+        GET      "";
+        HEAD     "";
+        OPTIONS  "";
+    }}
+
+    map $request_method $api_write_all {{
+        default  all;
+        GET      "";
+        HEAD     "";
+        OPTIONS  "";
+    }}
+
+    limit_req_zone $api_write_ip  zone=api_write_ip:1m  rate=10r/s;
+    limit_req_zone $api_write_all zone=api_write_all:1m rate=100r/s;
+
+{servers}
+
+    # The buckets, as folders: static.localhost from dev/static/, and
+    # docs.localhost from md-preview's build, docs/_site/
+    server {{
+        listen {DEV_PORT};
+        server_name static.localhost;
+        root /srv/static;
+    }}
+
+    server {{
+        listen {DEV_PORT};
+        server_name docs.localhost;
+        root /srv/docs;
+        index index.html;
+    }}
+
+    server {{
+        listen {DEV_PORT} default_server;
+        return 404;
+    }}
+}}
+"""
+
+
+def dev_compose(p: dict) -> str:
+    n = p["name"]
+    origins = sorted({re.match(r"^http://localhost(:[0-9]+)?", u).group(0) for u in p["ui"]["dev_callback_urls"]})
+    svcs = []
+    for s in p["services"]:
+        hc = json.dumps([a.replace("{port}", str(s["port"])) for a in LANGUAGES[s["language"]]])
+        svcs.append(f"""  {n}-{s["name"]}:
+    build: ../../services/{s["name"]}
+    environment:
+      SERVICE: {s["name"]}
+      COGNITO_ISSUER: http://mock-auth:9000
+      COGNITO_UI_CLIENT_ID: dev-ui
+      COGNITO_PROBE_CLIENT_ID: dev-probe
+      # Not on the box yet: for a service that is ready for its database
+      DATABASE_URL: postgres://{n}:dev-only@db:5432/{n}
+    expose:
+      - "{s["port"]}"
+    mem_limit: {s["memory_mib"]}m
+    depends_on:
+      - mock-auth
+    healthcheck:
+      test: {hc}
+      interval: 10s
+      timeout: 5s
+      retries: 3
+""")
+    deps = "".join(f"      - {n}-{s['name']}\n" for s in p["services"])
+    return f"""# The dev stack, rendered by box/render.py --dev from box/project.json.
+# Local development only: every port on 127.0.0.1, the database's
+# password a constant, the sign-in a mock that admits anyone.
+#
+#   docker compose -f dev/out/compose.yml up --build
+name: {n}-dev
+services:
+  nginx:
+    image: {NGINX}
+    ports:
+      - "127.0.0.1:{DEV_PORT}:{DEV_PORT}"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../static:/srv/static:ro
+      - ../../docs/_site:/srv/docs:ro
+    depends_on:
+{deps}
+  # Cognito's part, mocked: its tokens name the issuer the services
+  # reach it by, http://mock-auth:9000; the browser reaches it on
+  # localhost:9000, and never reads the issuer
+  mock-auth:
+    build: ../mock-auth
+    environment:
+      ISSUER: http://mock-auth:9000
+      CLIENTS: dev-ui,dev-probe
+      ORIGINS: {",".join(origins)}
+    ports:
+      - "127.0.0.1:9000:9000"
+
+  db:
+    image: {POSTGRES}
+    environment:
+      POSTGRES_USER: {n}
+      POSTGRES_PASSWORD: dev-only
+      POSTGRES_DB: {n}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+
+{"".join(svcs)}
+volumes:
+  db:
+"""
+
+
 def main(argv: list[str]) -> int:
     only_check = "--check" in argv
     try:
@@ -352,6 +504,13 @@ def main(argv: list[str]) -> int:
         return 1
     if only_check:
         print(f"box/project.json: {p['name']}, {len(p['services'])} services, checked")
+        return 0
+    if "--dev" in argv:
+        out = HERE.parent / "dev" / "out"
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "nginx.conf").write_text(dev_nginx(p))
+        (out / "compose.yml").write_text(dev_compose(p))
+        print("dev/out/: nginx.conf, compose.yml")
         return 0
     out = HERE / "out" / p["name"]
     out.mkdir(parents=True, exist_ok=True)

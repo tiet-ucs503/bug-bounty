@@ -69,6 +69,8 @@ not yet checked; **planned** --- not yet written.
   pages](onboarding/release-ui-and-docs.md)
 - `draft` [Probe your
   hosts](onboarding/run-the-probes.md)
+- `draft` [A local stack that mirrors the
+  box](onboarding/local-dev.md)
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
 

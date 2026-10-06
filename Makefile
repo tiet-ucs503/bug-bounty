@@ -4,6 +4,9 @@
 #   make render    the box's pieces, into box/out/<name>/
 #   make test      each service's tests, offline
 #   make ui        the UI on http://localhost:5173/, for development
+#   make dev       the dev stack: nginx, the services, a mock sign-in,
+#                  PostgreSQL, the buckets as folders (needs Docker)
+#   make dev-down  stop it; make dev-token, a token from the mock
 #
 # The outside probes, against your live hosts, are probes/Makefile.
 
@@ -12,7 +15,7 @@ SHELL       := /bin/bash
 SERVICES    := $(notdir $(wildcard services/*))
 PY_VENV     := services/py-api/.venv
 
-.PHONY: check render test test-js test-py ui
+.PHONY: check render test test-js test-py ui dev dev-down dev-token
 .DEFAULT_GOAL := check
 
 # The manifest, each service folder named in it and each in it a
@@ -49,3 +52,23 @@ ui:
 	@[ -f ui/config.js ] || { echo "no ui/config.js: copy ui/config.example.js" >&2; exit 1; }
 	python3 -m http.server 5173 --bind 127.0.0.1 -d ui
 
+
+# The dev stack, rendered from the manifest (docs/onboarding/local-dev.md).
+# docs/_site/ is mounted as docs.localhost; md-preview builds it if it
+# is there, and an empty folder stands in if not
+dev: check
+	@python3 box/render.py --dev
+	@mkdir -p docs/_site; command -v md-preview > /dev/null && md-preview build docs > /dev/null || true
+	docker compose -f dev/out/compose.yml up --build -d
+
+dev-down:
+	docker compose -f dev/out/compose.yml down
+
+# An access token from the mock, for curl, as the probe client:
+#   make dev-token SUB=alice GROUPS=admin
+SUB    ?= dev-user
+GROUPS ?=
+dev-token:
+	@curl -s -H 'Content-Type: application/json' \
+	  -d "$$(jq -nc --arg s '$(SUB)' --arg g '$(GROUPS)' '{sub: $$s, client_id: "dev-probe", groups: ($$g | split(",") | map(select(. != "")))}')" \
+	  http://localhost:9000/dev/token | jq -r .access_token

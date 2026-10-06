@@ -1,0 +1,3 @@
+A public object, served at http://static.localhost:8080/hello.txt by the
+dev stack: the static bucket, as a folder. Put what your UI reads from
+static.<zone> here.

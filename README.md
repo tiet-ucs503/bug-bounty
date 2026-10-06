@@ -16,6 +16,7 @@ Start with [box/how-the-box-works.md](box/how-the-box-works.md).
     services/js-api/          a starter in Node 24: Fastify, jose
     services/py-api/          a starter in Python 3.12: FastAPI, PyJWT
     ui/                       a UI with no build step: PKCE sign-in, calls to both services
+    dev/                      the local stack: the mock sign-in, the static folder; dev/out/ rendered
     docs/                     the project's documentation, for md-preview, published at docs.<zone>
     probes/Makefile           checks of your live hosts from outside, no AWS
 
@@ -59,6 +60,10 @@ Start with [box/how-the-box-works.md](box/how-the-box-works.md).
 - **The UI:** `make ui` serves it on `http://localhost:5173/`, which
   the manifest lists as a callback and a CORS origin, so it signs in
   and calls your live services.
+- **The whole stack, locally:** `make dev` runs the box's nginx in
+  front of your services, with a mock sign-in, PostgreSQL, and the
+  `static` and `docs` buckets as folders. Needs Docker.
+  `docs/onboarding/local-dev.md` is the guide.
 - **A new route** is code in the service and a line in the manifest.
   Until the owner rolls the manifest out, nginx answers it `404`.
 

@@ -20,6 +20,12 @@ try {
   throw new Error("no config.js");
 }
 
+// The sign-in's base: Cognito's domain, over HTTPS; or, for the dev
+// stack's mock, a whole URL (ui/config.dev.example.js). And each
+// service's base: https://<service>.<zone>, or config.apiUrl's
+const authBase = config.authDomain.includes("://") ? config.authDomain : `https://${config.authDomain}`;
+const apiBase = (service) => (config.apiUrl ? config.apiUrl(service) : `https://${service}.${config.zone}`);
+
 // The callback is the page's own root, on www or a developer's
 // localhost: both are the client's callbacks, from box/project.json
 const redirectUri = `${location.origin}/`;
@@ -44,13 +50,13 @@ async function signIn() {
     code_challenge: challenge,
     state,
   });
-  location.assign(`https://${config.authDomain}/oauth2/authorize?${q}`);
+  location.assign(`${authBase}/oauth2/authorize?${q}`);
 }
 
 function signOut() {
   store.clear();
   const q = new URLSearchParams({ client_id: config.clientId, logout_uri: redirectUri });
-  location.assign(`https://${config.authDomain}/logout?${q}`);
+  location.assign(`${authBase}/logout?${q}`);
 }
 
 // Back from the sign-in: the code for tokens, the state checked, the
@@ -60,7 +66,7 @@ async function callback() {
   if (!q.has("code")) return;
   history.replaceState(null, "", location.pathname);
   if (q.get("state") !== store.getItem("pkce_state")) return show("Sign-in refused: the state does not match.");
-  const r = await fetch(`https://${config.authDomain}/oauth2/token`, {
+  const r = await fetch(`${authBase}/oauth2/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -100,7 +106,7 @@ export async function api(service, path, { method = "GET", body } = {}) {
   for (let attempt = 1; ; attempt++) {
     let r;
     try {
-      r = await fetch(`https://${service}.${config.zone}${path}`, {
+      r = await fetch(`${apiBase(service)}${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),

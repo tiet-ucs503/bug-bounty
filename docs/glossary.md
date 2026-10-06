@@ -37,6 +37,11 @@ Box's owner
 : Whoever keeps the box. They review and roll out what
   the project hands over
 
+Dev stack
+: `make dev`: the box's nginx, your services, a mock
+  sign-in, PostgreSQL and the buckets as folders, on
+  your own machine
+
 Digest
 : An image's `sha256:` name. The box pulls images by
   digest alone, so what runs is exactly what was built
@@ -44,6 +49,10 @@ Digest
 Manifest
 : `box/project.json`: the project's name, its services
   and their routes, as the box sees them
+
+Mock sign-in
+: `mock-auth`, the dev stack's stand-in for Cognito:
+  its endpoints and token shapes, admitting anyone
 
 Pin
 : Writing a new build's digest into the box's compose
@@ -75,4 +84,5 @@ Zone
 `cloudflare`, `manifest`, `render`, `rollout`,
 `hand-over`, `release`, `ui`, `docs`, `probes`,
 `js-api`, `py-api`, `api`, `routes`, `auth`, `cognito`,
-`tests`, `build`, `dependencies`
+`tests`, `build`, `dependencies`, `local-dev`, `mock`,
+`db`
