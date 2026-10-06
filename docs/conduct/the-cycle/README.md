@@ -102,29 +102,29 @@ any code, read the concept and ask its questions again:
 what was learnt last turn may have changed either. The
 signs, and which step they point to:
 
-  -----------------------------------------------------
-  You see                            Refine
-  ---------------------------------- ------------------
-  A test you cannot write            The concept: a
-                                     rule too vague to
-                                     test
+  ----------------------------------------------------
+  You see                           Refine
+  --------------------------------- ------------------
+  A test you cannot write           The concept: a
+                                    rule too vague to
+                                    test
 
-  A test that passes with no code    The test
+  A test that passes with no code   The test
 
-  The contract cannot be met, or met The contract, or
-  only by a contortion               the concept behind
-                                     it
+  The contract cannot be met, or    The contract, or
+  met only by a contortion          the concept behind
+                                    it
 
-  The code is awkward where the      The contract
-  contract meets it                  
+  The code is awkward where the     The contract
+  contract meets it                 
 
-  A user asks for something the      The concept: a
-  concept never imagined             missing person or
-                                     rule
+  A user asks for something the     The concept: a
+  concept never imagined            missing person or
+                                    rule
 
-  Everything passes, and it is still The concept, first
-  wrong                              
-  -----------------------------------------------------
+  Everything passes, and it is      The concept, first
+  still wrong                       
+  ----------------------------------------------------
 
 **Refinement is not only of the code.** The concept,
 the tests and the contract are drafts too, until a turn
@@ -147,7 +147,7 @@ is settled:
 
 1.  **On your machine,** the dev stack: every test, at
     every layer
-2.  **In review,** [the workflow](workflow.md): the
+2.  **In review,** [the workflow](../workflow.md): the
     contract read by someone who will rely on it
 3.  **A release:** git-flow's release puts a tag such
     as `v0.2.0` on `master`, and the release's CI
@@ -161,8 +161,8 @@ may not know. The next turn adds beside it.
 
 - [The concept](concept.md) and [the tests](tests.md):
   steps 1 and 2
-- [From an issue to a merge](workflow.md): the cycle in
-  git
+- [From an issue to a merge](../workflow.md): the cycle
+  in git
 - [2 What each may
-  do](../tutorials/2-authorisation/README.md): the five
-  steps, in a tutorial
+  do](../../tutorials/2-authorisation/README.md): the
+  five steps, in a tutorial

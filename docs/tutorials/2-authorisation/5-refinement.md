@@ -66,8 +66,8 @@ wants, and what it got. What it got says where to look:
                 signature than [the
                 contract](3-contract.md)'s
 
-  `42P01`       A table is not there: the same, for
-                a table
+  `42P01`       A table is not there: the same, for a
+                table
 
   Another       The accessor refused for the wrong
   SQLSTATE      reason, or refused when it should have
@@ -176,5 +176,5 @@ passes 23 of 24.
 
 - [3 Make it a migration](../3-the-migration.md): next,
   the drafts as migrations, as they are
-- [The cycle](../../conduct/the-cycle.md) §3: what to
-  refine, in general
+- [The cycle](../../conduct/the-cycle/README.md) §3:
+  what to refine, in general

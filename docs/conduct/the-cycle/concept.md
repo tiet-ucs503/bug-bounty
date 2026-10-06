@@ -30,9 +30,9 @@ sentence crossed out, not a migration rolled back.
 Written after, it describes the code, and nobody can
 tell what the code was meant to do.
 
-It is step 1 of [the cycle](the-cycle.md). The
-questions it raises become [the tests](tests.md); its
-promises to other people become the contract.
+It is step 1 of [the cycle](README.md). The questions
+it raises become [the tests](tests.md); its promises to
+other people become the contract.
 
 ## 2 What a Concept Holds
 
@@ -66,26 +66,18 @@ list of routes, a header of signatures. It is the
 **source of truth until the contract exists**, and
 whenever the contract is silent.
 
-  ---------------------------------------------------------------
-  Tutorial        Its artefact
-  --------------- -----------------------------------------------
-  1 Who comes in  The admission rules: a position, a pattern and
-                  a role, the first match wins
-
-  2 What each may The access control matrix: roles by
-  do              permissions, a cell yes or nothing; and notes
-                  as (u=rw, a=r)
-
-  4 /users        The five routes, each with the permission it
-                  needs
-
-  6 A Svelte UI   The dashboard's three panels: who you are, the
-                  notes, the people
-
-  7 Uploads       The key,
-                  `objects/<owner's tag>/<the bytes' SHA-256>`,
-                  and an object's life, drawn
-  ---------------------------------------------------------------
+- **1 Who comes in:** the admission rules, a position,
+  a pattern and a role each, the first match winning
+- **2 What each may do:** the access control matrix,
+  roles by permissions, a cell yes or nothing; and
+  notes as (u=rw, a=r)
+- **4 /users:** the five routes, each with the
+  permission it needs
+- **6 A Svelte UI:** the dashboard's three panels: who
+  you are, the notes, the people
+- **7 Uploads:** the key,
+  `objects/<owner's tag>/<the bytes' SHA-256>`, and an
+  object's life, drawn
 
 Every concept page carries this note, so nobody takes
 the artefact for a promise:
@@ -127,14 +119,14 @@ And the one that costs most:
 - **Nobody reads it.** It is too long, or the artefact
   is missing. Lead with the artefact
 - **The code and the concept disagree.** One is wrong.
-  Decide which in [the refinement](the-cycle.md), and
+  Decide which in [the refinement](README.md), and
   change it; never leave both standing
 
 ## 6 See Also
 
 - [The tests](tests.md): the questions a concept raises
-- [The cycle](the-cycle.md): where the concept sits,
-  and when to revisit it
+- [The cycle](README.md): where the concept sits, and
+  when to revisit it
 - [2 What each may
-  do](../tutorials/2-authorisation/1-concept.md): a
+  do](../../tutorials/2-authorisation/1-concept.md): a
   concept, written out

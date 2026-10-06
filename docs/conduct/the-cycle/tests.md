@@ -31,8 +31,8 @@ and they fail until it does. Written after, they pass
 by construction, and they keep the code's mistakes as
 carefully as its intentions.
 
-The tests are step 2 of [the cycle](the-cycle.md),
-beside the contract, and both follow from [the
+The tests are step 2 of [the cycle](README.md), beside
+the contract, and both follow from [the
 concept](concept.md).
 
 ## 2 The Questions That Follow
@@ -163,7 +163,6 @@ test is a reader that never tires and never skims.
 
 - [The concept](concept.md): where the questions come
   from
-- [The cycle](the-cycle.md): what to do when a test
-  fails
+- [The cycle](README.md): what to do when a test fails
 - [2 What each may do: its
-  tests](../tutorials/2-authorisation/2-tests.md)
+  tests](../../tutorials/2-authorisation/2-tests.md)

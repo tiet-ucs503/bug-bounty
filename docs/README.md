@@ -159,11 +159,11 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 - `draft` [The page template](conduct/template.md)
 - `draft` [The database's conduct](conduct/database.md)
 - `draft` [The concept: before the first line of
-  code](conduct/concept.md)
+  code](conduct/the-cycle/concept.md)
 - `draft` [The tests: the questions a concept
-  raises](conduct/tests.md)
+  raises](conduct/the-cycle/tests.md)
 - `draft` [The cycle: five steps, in
-  turns](conduct/the-cycle.md)
+  turns](conduct/the-cycle/README.md)
 - `draft` [From an issue to a
   merge](conduct/workflow.md)
 - `draft` [Git and git-flow](conduct/git.md)

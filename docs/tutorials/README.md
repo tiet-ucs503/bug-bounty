@@ -64,8 +64,8 @@ flowchart LR
 2.  [What each may do](2-authorisation/README.md): the
     access control matrix, and notes as (u=rw, a=r), in
     [the project's five
-    steps](../conduct/the-cycle.md): concept, tests,
-    contract, implementation, refinement
+    steps](../conduct/the-cycle/README.md): concept,
+    tests, contract, implementation, refinement
 3.  [Make it a migration](3-the-migration.md): both as
     migrations, each proved down and up
 4.  [/users in Python](4-users-in-python.md): who comes

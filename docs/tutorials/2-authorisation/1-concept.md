@@ -34,29 +34,29 @@ people in. This decides what they may do once in.
 
 ## 2 Three Sizes of Rule
 
-  ------------------------------------------------------
-  Size            What decides        Where
-  --------------- ------------------- ------------------
-  **Trivial**     Signed in or not;   The manifest's
-                  the owner or not    `signed_in`;
-                                      `owner = caller`
-                                      in an accessor
+  ----------------------------------------------------
+  Size           What decides       Where
+  -------------- ------------------ ------------------
+  **Trivial**    Signed in or not;  The manifest's
+                 the owner or not   `signed_in`;
+                                    `owner = caller`
+                                    in an accessor
 
-  **Low           A role's            An access control
-  complexity, the permissions: the    matrix in the
-  general case**  access control      database: this
-                  matrix, plus the    tutorial
-                  trivial rules where 
-                  an object has an    
-                  owner               
+  **Low          A role's           An access control
+  complexity,    permissions: the   matrix in the
+  the general    access control     database: this
+  case**         matrix, plus the   tutorial
+                 trivial rules      
+                 where an object    
+                 has an owner       
 
-  **Medium to     Relations between   A policy engine:
-  high**          people and objects, §5
-                  groups of groups,   
-                  sharing,            
-                  delegation,         
-                  attributes, time    
-  ------------------------------------------------------
+  **Medium to    Relations between  A policy engine:
+  high**         people and         §5
+                 objects, groups of 
+                 groups, sharing,   
+                 delegation,        
+                 attributes, time   
+  ----------------------------------------------------
 
 Most small projects never need the third. Start with
 the second; move when you find yourself writing a role
@@ -140,8 +140,8 @@ tests](2-tests.md) can say which each one checks:
 
 - [The tests](2-tests.md): next, beside [the
   contract](3-contract.md)
-- [The concept](../../conduct/concept.md): what a
-  concept holds, in general
+- [The concept](../../conduct/the-cycle/concept.md):
+  what a concept holds, in general
 - [OWASP's Authorization Cheat
   Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html):
   deny by default, check every request, and the rest,

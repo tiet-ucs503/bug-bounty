@@ -24,8 +24,9 @@ version: v0.1.0
 
 Each rule of [the concept](1-concept.md) §4, asked the
 questions of [the tests'
-conduct](../../conduct/tests.md) §2. Three people: you,
-the first admin; alice; and bob, both in as `deny-all`.
+conduct](../../conduct/the-cycle/tests.md) §2. Three
+people: you, the first admin; alice; and bob, both in
+as `deny-all`.
 
   -------------------------------------------------------------
   Rule              Test    Asks                 Expects
@@ -237,5 +238,5 @@ whatever you wrote next.
 - [The contract](3-contract.md): beside this step
 - [The implementation](4-implementation.md): what makes
   these pass
-- [The tests](../../conduct/tests.md): the questions,
+- [The tests](../../conduct/the-cycle/tests.md): the questions,
   in general

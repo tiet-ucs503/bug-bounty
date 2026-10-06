@@ -72,18 +72,19 @@ Concept
 : Step 1 of the cycle: what a feature is for, for whom,
   its rules, what it will not do, and one artefact that
   holds them. The source of truth until the contract
-  exists. [The concept](conduct/concept.md)
+  exists. [The concept](conduct/the-cycle/concept.md)
 
 Contract
 : Step 3 of the cycle: what a feature promises other
   people, exactly: routes and answers, accessors'
   signatures and refusals. Changed by adding beside,
-  never in place. [The cycle](conduct/the-cycle.md) §2
+  never in place. [The
+  cycle](conduct/the-cycle/README.md) §2
 
 Cycle
 : The five steps a feature is built in, in turns:
   concept, tests, contract, implementation, refinement.
-  [The cycle](conduct/the-cycle.md)
+  [The cycle](conduct/the-cycle/README.md)
 
 deny-all
 : The role that grants nothing: whoever holds it alone

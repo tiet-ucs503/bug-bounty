@@ -45,9 +45,10 @@ back, so your database is as it was.
 ## 2 Five Steps
 
 This tutorial follows [the project's
-cycle](../../conduct/the-cycle.md), one page a step.
-Read them in order; steps 2 and 3 run side by side,
-both from the concept, neither waiting for the other.
+cycle](../../conduct/the-cycle/README.md), one page a
+step. Read them in order; steps 2 and 3 run side by
+side, both from the concept, neither waiting for the
+other.
 
 1.  **[The concept](1-concept.md).** Who may do what,
     drawn as one table, the matrix, and nine rules read
@@ -86,8 +87,8 @@ tests and contract grow with it.
 
 ## 4 See Also
 
-- [The cycle](../../conduct/the-cycle.md), [the
-  concept](../../conduct/concept.md) and [the
-  tests](../../conduct/tests.md): the five steps in
-  general
+- [The cycle](../../conduct/the-cycle/README.md), [the
+  concept](../../conduct/the-cycle/concept.md) and [the
+  tests](../../conduct/the-cycle/tests.md): the five
+  steps in general
 - [3 Make it a migration](../3-the-migration.md): next

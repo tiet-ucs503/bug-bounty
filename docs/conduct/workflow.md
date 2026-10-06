@@ -45,15 +45,15 @@ flowchart LR
   class I,B,M,D,R step
 ```
 
-Each piece holds one step of [the cycle](the-cycle.md)
-or carries it.
+Each piece holds one step of [the
+cycle](the-cycle/README.md) or carries it.
 
 ## 2 The Issue: the Concept
 
 An issue opens a feature, and holds [its
-concept](concept.md) as it stands: the goal in a
-sentence, the people, the rules, what it will not do,
-and the artefact. Then the questions still open.
+concept](the-cycle/concept.md) as it stands: the goal
+in a sentence, the people, the rules, what it will not
+do, and the artefact. Then the questions still open.
 
 Write it before the branch. A feature without an issue
 is a feature whose concept nobody else has read.
@@ -102,7 +102,8 @@ accessor. They check:
   philosophy](philosophy.md)
 
 A request that changes a released contract in place is
-refused: add beside it ([the cycle](the-cycle.md) §2).
+refused: add beside it ([the
+cycle](the-cycle/README.md) §2).
 
 ## 5 The Merge, and the Release
 
@@ -140,4 +141,4 @@ and hands the release to the box.
 
 - [Git and git-flow](git.md): the branches, commits and
   identity
-- [The cycle](the-cycle.md)
+- [The cycle](the-cycle/README.md)

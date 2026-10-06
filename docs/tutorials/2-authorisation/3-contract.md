@@ -135,5 +135,5 @@ turns into HTTP:
 
 - [The tests](2-tests.md): beside this step, and [the
   implementation](4-implementation.md): after it
-- [The cycle](../../conduct/the-cycle.md) §2: what a
-  contract is for, and how it changes
+- [The cycle](../../conduct/the-cycle/README.md) §2:
+  what a contract is for, and how it changes
