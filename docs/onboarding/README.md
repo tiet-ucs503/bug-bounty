@@ -23,9 +23,30 @@ version: v0.1.0
 
 ## 1 The Path of a Request
 
-    browser ──▶ Cloudflare ──▶ the box's nginx ──▶ your service, a container
-       │
-       └─────▶ Cloudflare ──▶ S3: www, docs, static
+``` mermaid
+---
+config:
+  themeVariables:
+    edgeLabelBackground: "#d9eaf2"
+  themeCSS: ".edgeLabel, .edgeLabel p, .labelBkg { background-color: #d9eaf2 !important; color: #5c7a8a !important; }"
+---
+flowchart LR
+  browser(["Browser"])
+  cf["Cloudflare<br/>your zone"]
+  nginx["The box's nginx<br/>allow-list, CORS, limits"]
+  svc["Your service<br/>a container"]
+  s3[("S3<br/>www, docs, static")]
+  browser -->|"HTTPS"| cf
+  cf -->|"HTTPS, its client certificate"| nginx
+  nginx --> svc
+  cf -->|"HTTP, a secret Referer"| s3
+  classDef network fill:#dbeafe,stroke:#3b82f6,color:#111
+  class cf network
+  classDef compute fill:#fff6eb,stroke:#804900,color:#804900
+  class nginx,svc compute
+  classDef storage fill:#dcfce7,stroke:#22c55e,color:#111
+  class s3 storage
+```
 
 - **Cloudflare is the only way in.** The box admits
   Cloudflare's addresses alone, and nginx requires

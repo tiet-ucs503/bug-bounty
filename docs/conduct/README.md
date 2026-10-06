@@ -196,6 +196,11 @@ Read every line it prints; do not explain one away.
 - Alerts only for their meaning: `[!NOTE]` for an
   aside, `[!WARNING]` for a trap, `[!CAUTION]` for a
   loss. A page with an alert in every section has none
+- **Diagrams in Mermaid,** a fenced `mermaid` block,
+  which md-preview draws; never ASCII art, which breaks
+  at the wrap and reads badly aloud. Give the edges
+  labels, and reuse the colour classes of [How the
+  project meets the box](../onboarding/README.md)
 - Wrap to 55 columns before committing (§5)
 
 ### 4.5 Linked
