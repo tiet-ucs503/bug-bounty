@@ -8,4 +8,5 @@ export default {
   zone: "localhost",
   apis: ["js-api", "py-api"],
   apiUrl: (service) => `http://${service}.localhost:8080`,
+  staticUrl: "http://static.localhost:8080",
 };

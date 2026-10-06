@@ -4,7 +4,7 @@
 #
 #   make check     the manifest, and what the box will refuse
 #   make render    the box's pieces, into box/out/<name>/
-#   make test      each service's tests, offline
+#   make test      every service's tests, offline, by its language
 #   make ui        the UI on http://localhost:5173/, for development
 #   make dev       the dev stack: nginx, the services, a mock sign-in,
 #                  PostgreSQL, the buckets as folders (needs Docker)
@@ -24,9 +24,8 @@ COMPOSE     ?= docker compose
 SHELL       := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 SERVICES    := $(notdir $(wildcard services/*))
-PY_VENV     := services/py-api/.venv
 
-.PHONY: check render test test-js test-py ui dev dev-down dev-token db-new db-lint db docs-build plan
+.PHONY: check render test ui dev dev-down dev-token db-new db-lint db docs-build plan
 .DEFAULT_GOAL := check
 
 # The manifest and the migrations' prefixes (render --check), each
@@ -50,23 +49,32 @@ check:
 render: check
 	@python3 box/render.py
 
-test: test-js test-py
-
-test-js:
-	cd services/js-api && npm ci --no-audit --no-fund && npm test
-
-$(PY_VENV):
-	python3 -m venv $@ && $@/bin/pip install -q -r services/py-api/requirements.txt httpx
-
-test-py: $(PY_VENV)
-	cd services/py-api && .venv/bin/python -m unittest discover -s test
+# Every service's tests, by its language in the manifest: Node's by
+# npm test, Python's by unittest in a venv of the service's own, with
+# httpx for FastAPI's test client
+test:
+	@set -e; jq -r '.services[] | "\(.name) \(.language)"' box/project.json | while read -r name lang; do \
+	  echo "== $$name ($$lang)"; \
+	  case $$lang in \
+	    node) (cd services/$$name && npm ci --no-audit --no-fund --silent && npm test) ;; \
+	    python) (cd services/$$name && { [ -d .venv ] || python3 -m venv .venv; } \
+	      && .venv/bin/pip install -q -r requirements.txt httpx \
+	      && .venv/bin/python -m unittest discover -s test) ;; \
+	  esac; done
 
 # 5173, a callback and an origin in the manifest; the native stack's
-# own, UI_PORT from tools/native-dev.sh ports
+# own, UI_PORT from tools/native-dev.sh ports. The starter, ui/ as it
+# is; or, once ui/ has a package.json (docs/tutorials/6-a-svelte-ui.md),
+# its dev server, the config in ui/public/
 UI_PORT ?= 5173
 ui:
-	@[ -f ui/config.js ] || { echo "no ui/config.js: copy ui/config.example.js" >&2; exit 1; }
-	python3 -m http.server $(UI_PORT) --bind 127.0.0.1 -d ui
+	@if [ -f ui/package.json ]; then \
+	  [ -f ui/public/config.js ] || { echo "no ui/public/config.js: copy ui/config.dev.example.js" >&2; exit 1; }; \
+	  cd ui && npm ci --no-audit --no-fund --silent && npx vite --host 127.0.0.1 --port $(UI_PORT) --strictPort; \
+	else \
+	  [ -f ui/config.js ] || { echo "no ui/config.js: copy ui/config.example.js" >&2; exit 1; }; \
+	  python3 -m http.server $(UI_PORT) --bind 127.0.0.1 -d ui; \
+	fi
 
 
 # The dev stack, rendered from the manifest (docs/onboarding/local-dev.md).
@@ -80,14 +88,18 @@ dev: check
 dev-down:
 	$(COMPOSE) -f dev/out/compose.yml down
 
-# An access token from the mock, for curl, as the probe client:
-#   make dev-token SUB=alice GROUPS=admin
-SUB    ?= dev-user
-GROUPS ?=
+# An access token from the mock, for curl, as the probe client, with
+# the e-mail its userInfo answers:
+#   make dev-token SUB=alice EMAIL=alice@example.org GROUPS=admin
+SUB      ?= dev-user
+EMAIL    ?= $(SUB)@example.org
+VERIFIED ?= true
+GROUPS   ?=
+MOCK_URL ?= http://localhost:9000
 dev-token:
 	@curl -s -H 'Content-Type: application/json' \
-	  -d "$$(jq -nc --arg s '$(SUB)' --arg g '$(GROUPS)' '{sub: $$s, client_id: "dev-probe", groups: ($$g | split(",") | map(select(. != "")))}')" \
-	  http://localhost:9000/dev/token | jq -r .access_token
+	  -d "$$(jq -nc --arg s '$(SUB)' --arg e '$(EMAIL)' --argjson v $(VERIFIED) --arg g '$(GROUPS)' '{sub: $$s, email: $$e, email_verified: $$v, client_id: "dev-probe", groups: ($$g | split(",") | map(select(. != "")))}')" \
+	  $(MOCK_URL)/dev/token | jq -r .access_token
 
 # Migrations (docs/migrations/write-a-migration.md): the project's one
 # database, every file named for the service whose objects it makes.

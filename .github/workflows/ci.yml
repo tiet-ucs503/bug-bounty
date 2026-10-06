@@ -27,6 +27,9 @@ jobs:
         run: make check
       - name: The services' tests
         run: make test
+      - name: The UI builds, if ui/ has a package.json
+        run: |
+          if [ -f ui/package.json ]; then cd ui && npm ci --no-audit --no-fund && npm run build; fi
       - name: The migrations, by Squawk
         run: make db-lint
       - name: The box's pieces and the dev stack render

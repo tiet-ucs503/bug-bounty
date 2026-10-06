@@ -26,7 +26,9 @@ served as they are from the `www` bucket at
 `https://www.<zone>`. No package and no build: a module
 the browser loads. It is a starter, to be replaced by
 yours, in any framework that writes a folder of static
-files.
+files. Once `ui/` has a `package.json`, the release
+builds it and syncs `ui/dist/`; [A Svelte
+UI](../tutorials/6-a-svelte-ui.md) does so.
 
 ## 2 Sign-in
 

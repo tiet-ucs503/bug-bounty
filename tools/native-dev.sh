@@ -6,13 +6,14 @@
 #   tools/native-dev.sh init     once: the database, its logins, the
 #                                services' packages
 #   tools/native-dev.sh start    PostgreSQL, the migrations, the mock
-#                                sign-in, the services, nginx
+#                                sign-in and store, the services, nginx
 #   tools/native-dev.sh status   each process, and each service's health
 #   tools/native-dev.sh stop     all of it
 #
 # The same pieces as the dev stack, as programs of yours: nginx with the
 # box's servers on 127.0.0.1, each service on its own port, the mock
-# sign-in, PostgreSQL with the project's database. Everything listens on
+# sign-in, the mock static bucket's objects/, PostgreSQL with the
+# project's database. Everything listens on
 # 127.0.0.1, and everything it writes is in dev/out/native/.
 #
 # Needs on PATH: python3, node and npm, PostgreSQL's initdb, pg_ctl and
@@ -97,6 +98,13 @@ start)
   need python3 node pg_ctl nginx curl
   password
   render
+  # Settings of your own, read as the dev stack's compose reads them:
+  # dev/dev.env, KEY=value a line, the value whole to the line's end
+  if [ -f dev/dev.env ]; then
+    while IFS= read -r line; do
+      [[ $line =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] && export "${BASH_REMATCH[1]}=${BASH_REMATCH[2]}"
+    done < dev/dev.env
+  fi
   mkdir -p "$OUT/tmp"
   if [ "$(database)" = true ]; then
     need dbmate
@@ -107,6 +115,8 @@ start)
   alive mock-auth || BIND=127.0.0.1 PORT=$MOCK_PORT ISSUER=$COGNITO_ISSUER \
     ORIGINS="http://localhost:$UI_PORT,http://localhost:5173" \
     spawn mock-auth "$VENV/bin/python" dev/mock-auth/server.py
+  alive mock-store || BIND=127.0.0.1 PORT=$STORE_PORT BUCKET=static.localhost ROOT=$ABS/store \
+    spawn mock-store "$VENV/bin/python" dev/mock-store/server.py
   while read -r name lang; do
     alive "$name" && continue
     p=$(port_of "$name")
@@ -131,12 +141,13 @@ start)
   done
   [ $ok = 1 ] || die "a service is not answering; tools/native-dev.sh status, and $OUT/*.log"
   say "up. Through nginx: http://<service>.localhost:$NGINX_PORT; the mock sign-in, http://localhost:$MOCK_PORT"
-  say "the UI: cp $OUT/config.js ui/config.js; make ui UI_PORT=$UI_PORT"
+  if [ -f ui/package.json ]; then ui=ui/public/config.js; else ui=ui/config.js; fi
+  say "the UI: cp $OUT/config.js $ui; make ui UI_PORT=$UI_PORT"
   ;;
 
 status)
   render
-  for name in mock-auth $(units | cut -d' ' -f1); do
+  for name in mock-auth mock-store $(units | cut -d' ' -f1); do
     if alive "$name"; then say "$name running"; else say "$name stopped"; fi
   done
   if [ -f "$OUT/nginx.pid" ] && kill -0 "$(cat "$OUT/nginx.pid")" 2> /dev/null; then say "nginx running"; else say "nginx stopped"; fi
@@ -153,7 +164,7 @@ stop)
   if [ -f "$OUT/nginx.pid" ] && kill -0 "$(cat "$OUT/nginx.pid")" 2> /dev/null; then
     nginx -p "$ABS" -e "$ABS/nginx-error.log" -c "$ABS/nginx.conf" -s quit
   fi
-  for name in mock-auth $(units | cut -d' ' -f1); do
+  for name in mock-auth mock-store $(units | cut -d' ' -f1); do
     if alive "$name"; then kill "$(cat "$OUT/$name.pid")"; fi
     rm -f "$OUT/$name.pid"
   done

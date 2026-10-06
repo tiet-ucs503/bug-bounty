@@ -52,12 +52,15 @@ flowchart LR
   nginx["nginx<br/>*.localhost:8080"]
   svc["Your services<br/>built from services/"]
   auth["mock-auth<br/>localhost:9000"]
+  store[("mock-store<br/>static's objects/")]
   db[("PostgreSQL<br/>localhost:5432")]
   files[("Folders<br/>static, docs")]
   browser -->|"signs in"| auth
   browser -->|"Bearer token"| nginx
   nginx --> svc
   nginx --> files
+  nginx -->|"GET objects/"| store
+  svc -.->|"PUT, DELETE"| store
   svc -->|"the pool's keys"| auth
   svc -.->|"DATABASE_URL"| db
   classDef network fill:#dbeafe,stroke:#3b82f6,color:#111
@@ -65,7 +68,7 @@ flowchart LR
   classDef compute fill:#fff6eb,stroke:#804900,color:#804900
   class nginx,svc compute
   classDef storage fill:#dcfce7,stroke:#22c55e,color:#111
-  class db,files storage
+  class db,files,store storage
 ```
 
   ----------------------------------------------------
@@ -80,9 +83,11 @@ flowchart LR
                        by your address, not
                        Cloudflare's header
 
-  Cognito, the box's   `mock-auth`: the same endpoints
-  pool                 and token shapes, a key made at
-                       start, any name admitted
+  Cognito, the box's   `mock-auth`: the same
+  pool                 endpoints, `userInfo` among
+                       them, and token shapes, a key
+                       made at start, any name
+                       admitted
 
   No database yet      PostgreSQL 17: the project's
                        one database and its two
@@ -92,6 +97,11 @@ flowchart LR
 
   `static` and `docs`  Folders, read-only: `static/`,
   buckets              `docs/_site/`
+
+  The `static`         `mock-store`, on
+  bucket's `objects/`, `localhost:9100`: S3's unsigned
+  written by services  writes and its checksum check;
+                       read through nginx
 
   Images built on      Built here, for your machine's
   arm64 by CodeBuild   architecture
@@ -188,8 +198,12 @@ curl -s -o /dev/null -w '%{http_code}\n' http://docs.localhost:8080/
 ```
 
 Put what your UI reads from `static.<zone>` in
-`static/`. Writes to `static` are not wired on the box,
-so the folder is read-only here too.
+`static/`, which a release adds to the bucket. The
+bucket's `objects/` is the other half, written by your
+services at run time, never by a release: here the mock
+store holds it, and nginx serves it at
+`static.localhost:8080/objects/` ([7.1 The
+store](../tutorials/7-uploads/1-the-store.md)).
 
 ## 8 After a Change
 
@@ -210,7 +224,15 @@ so the folder is read-only here too.
   ```
 
 - **The UI:** reload the page; `make ui` serves `ui/`
-  as it is
+  as it is, or runs Vite's dev server once `ui/` has a
+  `package.json`
+
+- **A setting of your own** for every service, such as
+  a shorter interval to try something: `KEY=value`
+  lines in `dev/dev.env`, which git ignores, then
+  `make dev`. The native stack reads the same file at
+  `start`. The value runs to the line's end, spaces and
+  all; no quotes
 
 ## 9 Stop
 

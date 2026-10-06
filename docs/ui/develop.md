@@ -54,8 +54,11 @@ make ui
 ## 4 Change It
 
 Edit `ui/`, reload the page. A framework of your own is
-welcome: build into a folder, and point the release at
-it ([Release the UI](release.md)).
+welcome: give `ui/` a `package.json` whose `build`
+writes `ui/dist/`, and the release builds it; `make ui`
+then runs Vite's dev server, its config in
+`ui/public/config.js` ([A Svelte
+UI](../tutorials/6-a-svelte-ui.md)).
 
 ## 5 What Can Go Wrong
 

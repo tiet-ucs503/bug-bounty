@@ -5,13 +5,17 @@ The parts of Cognito the project touches, and no more:
     GET  /.well-known/jwks.json   the pool's public keys
     GET  /oauth2/authorize        the hosted sign-in: a form, then a code
     POST /oauth2/token            the code and its PKCE verifier for tokens
+    GET  /oauth2/userInfo         the caller's e-mail, by their access token
     GET  /logout                  back to the logout URI
     POST /dev/token               a token for curl and the tests:
-                                  {"sub", "groups", "client_id", "email"}
+                                  {"sub", "groups", "client_id", "email",
+                                   "email_verified"}
 
 Its tokens have Cognito's shape: an access token with token_use
 "access", client_id, cognito:groups and username; an ID token with
-token_use "id", aud and email. Both signed RS256 by a key made at
+token_use "id", aud and email. An access token carries no e-mail, as
+Cognito's carries none: a service asks userInfo for it, which answers
+email_verified as a string, "true" or "false", as Cognito does. Both signed RS256 by a key made at
 start, so a restart signs out everyone. The issuer is ISSUER, the
 name the services reach this server by, whatever name the browser
 used.
@@ -49,14 +53,17 @@ KID = secrets.token_hex(8)
 JWKS = {"keys": [{**json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(KEY.public_key())), "kid": KID, "alg": "RS256",
                   "use": "sig"}]}
 CODES: dict[str, dict] = {}
+# Each user's e-mail, as the pool would hold it, for userInfo
+PEOPLE: dict[str, dict] = {}
 
 
-def tokens(sub: str, client_id: str, groups: list[str], email: str) -> dict:
+def tokens(sub: str, client_id: str, groups: list[str], email: str, verified: bool = True) -> dict:
+    PEOPLE[sub] = {"email": email, "email_verified": verified}
     now = int(time.time())
     base = {"iss": ISSUER, "sub": sub, "iat": now, "exp": now + LIFE}
     access = {**base, "token_use": "access", "client_id": client_id, "username": sub, "cognito:groups": groups,
               "scope": "openid email"}
-    ident = {**base, "token_use": "id", "aud": client_id, "email": email, "email_verified": True,
+    ident = {**base, "token_use": "id", "aud": client_id, "email": email, "email_verified": verified,
              "cognito:groups": groups}
     sign = lambda c: jwt.encode(c, KEY, algorithm="RS256", headers={"kid": KID})  # noqa: E731
     return {"access_token": sign(access), "id_token": sign(ident), "token_type": "Bearer", "expires_in": LIFE}
@@ -74,6 +81,7 @@ input{{font:inherit;width:100%;margin:.25rem 0 1rem}}</style>
 <label>User <input name="sub" value="dev-user"></label>
 <label>Email <input name="email" value="dev-user@example.org"></label>
 <label>Groups, comma-separated <input name="groups" value=""></label>
+<label><input type="checkbox" name="verified" value="true" checked style="width:auto"> E-mail verified</label>
 <button>Sign in</button></form>"""
 
 
@@ -115,11 +123,27 @@ class Handler(BaseHTTPRequestHandler):
             if q.get("client_id") not in CLIENTS or q.get("response_type") != "code":
                 return self._json(400, {"error": "unauthorized_client"})
             return self._send(200, FORM.format(query=html.escape(u.query)).encode(), "text/html; charset=utf-8")
+        if u.path == "/oauth2/userInfo":
+            return self._userinfo()
         if u.path == "/logout":
             return self._send(302, headers={"Location": q.get("logout_uri", "/")})
         if u.path == "/health":
             return self._json(200, {"status": "ok", "service": "mock-auth"})
         self._json(404, {"error": "not found"})
+
+    # As Cognito's: the access token as a Bearer, the user's attributes
+    # back, email_verified a string; 401 for any other token
+    def _userinfo(self):
+        h = self.headers.get("Authorization", "")
+        try:
+            c = jwt.decode(h.removeprefix("Bearer "), KEY.public_key(), algorithms=["RS256"], issuer=ISSUER)
+        except jwt.PyJWTError:
+            c = {}
+        if not h.startswith("Bearer ") or c.get("token_use") != "access":
+            return self._send(401, b'{"error": "invalid_token"}', headers={"WWW-Authenticate": 'Bearer error="invalid_token"'})
+        who = PEOPLE.get(c["sub"], {"email": "", "email_verified": False})
+        self._json(200, {"sub": c["sub"], "username": c.get("username", c["sub"]), "email": who["email"],
+                         "email_verified": "true" if who["email_verified"] else "false"})
 
     def do_POST(self):
         u = urlparse(self.path)
@@ -129,6 +153,7 @@ class Handler(BaseHTTPRequestHandler):
             code = secrets.token_urlsafe(24)
             CODES[code] = {"sub": f.get("sub") or "dev-user", "email": f.get("email", ""),
                            "groups": [g.strip() for g in f.get("groups", "").split(",") if g.strip()],
+                           "verified": f.get("verified") == "true",
                            "client_id": q.get("client_id"), "redirect_uri": q.get("redirect_uri"),
                            "challenge": q.get("code_challenge", ""), "at": time.time()}
             back = f"{q.get('redirect_uri', '/')}?{urlencode({'code': code, 'state': q.get('state', '')})}"
@@ -139,13 +164,13 @@ class Handler(BaseHTTPRequestHandler):
                     or f.get("client_id") != c["client_id"] or f.get("redirect_uri") != c["redirect_uri"]
                     or challenge(f.get("code_verifier", "")) != c["challenge"]):
                 return self._json(400, {"error": "invalid_grant"})
-            return self._json(200, tokens(c["sub"], c["client_id"], c["groups"], c["email"]))
+            return self._json(200, tokens(c["sub"], c["client_id"], c["groups"], c["email"], c["verified"]))
         if u.path == "/dev/token":
             client = f.get("client_id", "dev-probe")
             if client not in CLIENTS:
                 return self._json(400, {"error": "unauthorized_client"})
             return self._json(200, tokens(f.get("sub", "dev-user"), client, list(f.get("groups", [])),
-                                          f.get("email", "dev-user@example.org")))
+                                          f.get("email", "dev-user@example.org"), f.get("email_verified", True) is True))
         self._json(404, {"error": "not found"})
 
     def log_message(self, fmt, *args):

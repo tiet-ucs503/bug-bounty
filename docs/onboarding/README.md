@@ -90,7 +90,11 @@ already decided:
   Another project's token carries another `client_id`,
   and is refused
 - **What the caller may do:** yours. `sub` names the
-  user, `cognito:groups` their groups
+  user, `cognito:groups` their groups. The access token
+  carries no e-mail; Cognito's `userInfo` gives it, to
+  the caller's own token. [The
+  tutorials](../tutorials/README.md) build the door and
+  an access control matrix in your database
 
 ## 4 Who Controls What
 

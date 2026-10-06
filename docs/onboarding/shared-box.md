@@ -37,11 +37,12 @@ version: v0.1.0
 - **What you get:** the same pieces as [the dev
   stack](local-dev.md), each run as a program of yours.
   nginx with the box's servers, each service on its own
-  port, the mock sign-in, and PostgreSQL with the
-  project's database. All of it listens on `127.0.0.1`
-  alone, and writes only in `dev/out/native/`. A Python
-  service runs as `main:app` from its folder, a Node
-  service as `server.js`, the starters' shape
+  port, the mock sign-in, the mock static bucket, and
+  PostgreSQL with the project's database. All of it
+  listens on `127.0.0.1` alone, and writes only in
+  `dev/out/native/`. A Python service runs as
+  `main:app` from its folder, a Node service as
+  `server.js`, the starters' shape
 
 > [!WARNING]
 > Everyone on the box can reach `127.0.0.1`, and the
@@ -201,6 +202,16 @@ cp dev/out/native/config.js ui/config.js
 make ui UI_PORT="${UI_PORT}"
 ```
 
+A Svelte UI ([6 A Svelte
+UI](../tutorials/6-a-svelte-ui.md)) reads its config
+from `ui/public/` instead:
+
+``` sh
+. dev/out/native/env.sh
+cp dev/out/native/config.js ui/public/config.js
+make ui UI_PORT="${UI_PORT}"
+```
+
 On your machine, in another terminal, with the box's
 name and your three ports from §4; expect it to wait,
 saying nothing:
@@ -232,6 +243,9 @@ to the box's nginx.
   afresh and reloads it
 
 - **The UI:** reload the page
+
+- **A setting of your own** for every service:
+  `KEY=value` lines in `dev/dev.env`, read at `start`
 
 ## 12 Stop
 

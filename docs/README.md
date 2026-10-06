@@ -83,6 +83,27 @@ not yet checked; **planned** --- not yet written.
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
 
+### Tutorials: From a Sign-in to Uploads
+
+- `draft` [The path, and its
+  conventions](tutorials/README.md)
+- `draft` [1 Who comes in:
+  authentication](tutorials/1-authentication.md)
+- `draft` [2 What each may do:
+  authorisation](tutorials/2-authorisation.md)
+- `draft` [3 Make it a
+  migration](tutorials/3-the-migration.md)
+- `draft` [4 The users service in
+  Python](tutorials/4-users-in-python.md)
+- `draft` [5 The users service in
+  JavaScript](tutorials/5-users-in-javascript.md)
+- `draft` [6 A Svelte UI](tutorials/6-a-svelte-ui.md)
+- `draft` [7 Uploads](tutorials/7-uploads/README.md):
+  [the store](tutorials/7-uploads/1-the-store.md), [the
+  database](tutorials/7-uploads/2-the-database.md),
+  [the service](tutorials/7-uploads/3-the-service.md),
+  [the UI](tutorials/7-uploads/4-the-ui.md)
+
 ### js-api
 
 - `draft` [What js-api is, and who may call

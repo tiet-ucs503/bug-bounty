@@ -2,7 +2,8 @@
 # before it, and nothing else (docs/onboarding/ci-cd.md):
 #   - a service or migrations/ changed: its image built on the box's
 #     CodeBuild, its digest in the release record the box pins from
-#   - ui/, docs/ or static/ changed: a sync to www, docs or static
+#   - ui/, docs/ or static/ changed: a sync to www, docs or static; ui/
+#     built first if it has a package.json
 #   - box/project.json changed: the box's pieces rendered and attached
 #     to the release, for the box's owner to roll out
 # One role, the project's CI role, by GitHub's OIDC: no AWS key here.
@@ -96,6 +97,17 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: The UI, built if ui/ has a package.json; ui/ as it is if not
+        run: |
+          if [ -f ui/package.json ]; then
+            (cd ui && npm ci --no-audit --no-fund && npm run build)
+            echo "UI_OUT=ui/dist" >> "${GITHUB_ENV}"
+          else
+            echo "UI_OUT=ui" >> "${GITHUB_ENV}"
+          fi
       - name: The UI's config, from the repository's variables
         env:
           ZONE: ${{ vars.ZONE }}
@@ -105,11 +117,11 @@ jobs:
           [ -n "${ZONE}" ] && [ -n "${AUTH_DOMAIN}" ] && [ -n "${CLIENT_ID}" ] || { echo "::error::ZONE, COGNITO_AUTH_DOMAIN or COGNITO_UI_CLIENT_ID unset"; exit 1; }
           apis=$(python3 -c 'import json; print(json.dumps([s["name"] for s in json.load(open("box/project.json"))["services"]]))')
           printf 'export default {\n  authDomain: "%s",\n  clientId: "%s",\n  zone: "%s",\n  apis: %s,\n};\n' \
-            "${AUTH_DOMAIN}" "${CLIENT_ID}" "${ZONE}" "${apis}" > ui/config.js
-      - name: Sync ui/ to www
+            "${AUTH_DOMAIN}" "${CLIENT_ID}" "${ZONE}" "${apis}" > "${UI_OUT}/config.js"
+      - name: Sync the UI to www
         env:
           ZONE: ${{ vars.ZONE }}
-        run: aws s3 sync ui/ "s3://www.${ZONE}/" --delete --exclude 'config.example.js' --exclude 'config.dev.example.js'
+        run: aws s3 sync "${UI_OUT}/" "s3://www.${ZONE}/" --delete --exclude 'config.example.js' --exclude 'config.dev.example.js' --exclude 'node_modules/*'
 
   docs:
     needs: [check, plan]

@@ -51,10 +51,14 @@ make -C probes www ZONE=example.org
 
 ## 4 Another Build of the UI
 
-A framework that builds into a folder: change the job
-**www** in `.github/workflows/release.yml` to build
-first and sync that folder. The bucket expects static
-files with `index.html` at the root.
+A `ui/package.json` is the sign: the job **www** in
+`.github/workflows/release.yml` runs `npm ci` and
+`npm run build`, writes `config.js` into `ui/dist/`,
+and syncs that folder instead of `ui/`; CI builds it on
+every push. A framework that builds elsewhere: change
+the job to sync that folder. The bucket expects static
+files with `index.html` at the root. [A Svelte
+UI](../tutorials/6-a-svelte-ui.md) is the worked case.
 
 ## 5 What Can Go Wrong
 

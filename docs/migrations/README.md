@@ -45,7 +45,9 @@ discipline that makes it hold.
 - **`<project>`** is the services' login. It holds, by
   default privileges, rows on every table and `EXECUTE`
   on every function and procedure the migrator makes.
-  It cannot create, alter or drop
+  It cannot create, alter or drop, nor touch dbmate's
+  ledger, `schema_migrations`, which the migrator makes
+  before the first migration and keeps from it
 
 In the template, `example_migrator` and `example`. A
 service finds its login in `DATABASE_URL`.

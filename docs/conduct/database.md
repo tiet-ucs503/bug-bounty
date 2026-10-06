@@ -35,7 +35,9 @@ careful.
 
 A service reads and writes its own objects alone.
 Another service's data is that service's to give,
-through its API, not through its tables.
+through its API, not through its tables, with one
+exception: a function the other unit **publishes**
+(§3).
 
 ## 2 Accessors in the Database
 
@@ -62,16 +64,38 @@ The service calls the accessor,
   behind an accessor that keeps its signature
 
 Keep in the service what is not data: the caller's
-identity and rights, the HTTP, calls to other services.
+identity, from their token; the HTTP; calls to other
+services. The caller's **rights** are data, and are
+checked beside it: an accessor that acts for a caller
+takes the caller first, checks before it acts, and
+refuses with an SQLSTATE the service turns into HTTP
+(`42501` for `403`, `P0002` for `404`). A service that
+forgets a check cannot skip it ([2 What each may
+do](../tutorials/2-authorisation.md) §5).
 
 ## 3 What a Service May Touch
 
 - **Its own accessors,** first
 - **Its own tables,** for what no accessor yet does;
   then write the accessor
-- **Never** another service's objects, and never the
-  schema: the project's login holds rows and `EXECUTE`,
-  and only the migrator changes the schema
+- **Another unit's published functions,** and nothing
+  else of that unit. A unit publishes a function by
+  saying so in its comment,
+  `COMMENT ON FUNCTION ... IS 'published: ...'`, and
+  keeps its signature as a promise to every caller. The
+  users unit's `users_may` is the example: every unit
+  asks it whether a person may do a thing, and none
+  reads `users_*` tables
+- **Never** another service's other objects, and never
+  the schema: the project's login holds rows and
+  `EXECUTE`, and only the migrator changes the schema.
+  Nor dbmate's ledger, `schema_migrations`, which the
+  project's login may not touch
+
+The fence is discipline, not a lock: one login holds
+`EXECUTE` on everything. A login per unit would make it
+a lock; the box's `feature/postgres` has not chosen
+that yet.
 
 ## 4 Migrations
 

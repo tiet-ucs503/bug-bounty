@@ -23,7 +23,8 @@ repository as projects/<name>/ and review there:
 With --dev, into dev/out/ instead, for docs/onboarding/local-dev.md:
 the same nginx servers on plain HTTP at <service>.localhost:8080, and
 a compose file that builds each service from services/ beside a mock
-Cognito, PostgreSQL and the buckets as folders.
+Cognito, PostgreSQL, the buckets as folders, and a mock of the static
+bucket's objects/, which services write at run time.
 
 Python's standard library alone, so it runs anywhere. Nothing here
 talks to AWS or Cloudflare. docs/onboarding/README.md says what each
@@ -77,6 +78,9 @@ def check(m: dict) -> dict:
     database = m.get("database", False)
     if not isinstance(database, bool):
         raise Bad(f"database {database!r}, true or false")
+    if (HERE.parent / "static" / "objects").exists():
+        raise Bad("static/objects/: the static bucket's objects/ is written at run time, by the services; "
+                  "a release's static/ must not hold it")
     services = m.get("services") or []
     if not services:
         raise Bad("no services")
@@ -320,8 +324,10 @@ def compose(p: dict) -> str:
 # not edit here but for the digests, which the box pins from the
 # project's release record, releases/{n}/release.json. Each image at
 # {UNPINNED[:9]}...0 until its first release, which the box's upload
-# refuses. Bounded in memory, on the box's network; the Cognito issuer
-# and the project's client from an env file the box writes for it.
+# refuses. Bounded in memory, on the box's network. From env files the
+# box writes for it: the Cognito issuer, the project's clients and
+# userInfo's URL (cognito.env); the static bucket's write and read
+# addresses (store.env).
 services:
 """]
     if p["database"]:
@@ -354,6 +360,8 @@ services:
       SERVICE: {sn}
     env_file:
       - path: ./projects/{n}/cognito.env
+        required: false
+      - path: ./projects/{n}/store.env
         required: false{db}
     networks:
       - app-network
@@ -395,7 +403,8 @@ def ci_policy(p: dict) -> str:
     release record under releases/<name>/ in the config bucket, which
     the box never runs; start its own builds and read them; read its own
     images' digests; sync www and docs, and add to static without
-    deleting. ${ACCOUNT_ID} and ${ZONE} filled by the box's owner"""
+    deleting, and never into its objects/, which the services write at
+    run time. ${ACCOUNT_ID} and ${ZONE} filled by the box's owner"""
     n = p["name"]
     cfg = "arn:aws:s3:::tu-rgb-sites-config-${ACCOUNT_ID}"
     region = "ap-south-1"
@@ -419,6 +428,9 @@ def ci_policy(p: dict) -> str:
              "Resource": ["arn:aws:s3:::www.${ZONE}/*", "arn:aws:s3:::docs.${ZONE}/*"]},
             {"Sid": "AddToStatic", "Effect": "Allow", "Action": ["s3:PutObject", "s3:GetObject"],
              "Resource": "arn:aws:s3:::static.${ZONE}/*"},
+            {"Sid": "NeverTheRunTimesObjects", "Effect": "Deny",
+             "Action": ["s3:PutObject", "s3:DeleteObject"],
+             "Resource": "arn:aws:s3:::static.${ZONE}/objects/*"},
         ],
     }, indent=2) + "\n"
 
@@ -432,7 +444,8 @@ def onboarding(p: dict) -> str:
     db = (f"""
    - **the database:** `{n}`, its logins `{n}_migrator` and `{n}`, and
      the env files `projects/{n}/db-migrator.env` and `db-app.env`;
-     after the box's `feature/postgres`""" if p["database"] else "")
+     dbmate's ledger made by the migrator and kept from `{n}`; after
+     the box's `feature/postgres`""" if p["database"] else "")
     return f"""# Onboarding `{n}`
 
 Rendered by `box/render.py`; the box owner's steps, on the box's
@@ -464,7 +477,14 @@ box's 1 GiB. The repository: `{p["github"]}`.
      `releases/{n}/src/<image>/` in the config bucket, with a push role
      of the project's own;
    - the `www`, `static` and `docs` buckets, and the UI's Cognito
-     client;
+     client; the `static` bucket admitting `PUT` and `DELETE` on
+     `objects/*` from the box's Elastic IP, as the box's own does,
+     for the services' uploads;
+   - the env files: `projects/{n}/cognito.env`, the issuer, the
+     clients and `COGNITO_USERINFO_URL`, Cognito's domain's
+     `/oauth2/userInfo`; `projects/{n}/store.env`,
+     `STORE_URL=https://s3.ap-south-1.amazonaws.com/static.<zone>` and
+     `STATIC_URL=https://static.<zone>`;
    - the CI role `{BOX}-{n}-ci`, from `ci-trust.json.in` and
      `ci-policy.json.in`, trusted by GitHub's OIDC provider for
      `{p["github"]}`'s `v*` tags alone;{db}
@@ -536,12 +556,22 @@ http {{
 
 {servers}
 
-    # The buckets, as folders: static.localhost from dev/static/, and
-    # docs.localhost from md-preview's build, docs/_site/
+    # The buckets, as folders: static.localhost from static/, and
+    # docs.localhost from md-preview's build, docs/_site/. The static
+    # bucket's objects/, which services write at run time, from the mock
+    # store, read alone here
     server {{
         listen {DEV_PORT};
         server_name static.localhost;
         root /srv/static;
+
+        location /objects/ {{
+            limit_except GET {{
+                deny all;
+            }}
+            set $store mock-store:9100;
+            proxy_pass http://$store/static.localhost$uri;
+        }}
     }}
 
     server {{
@@ -583,6 +613,14 @@ GRANT USAGE ON SCHEMA public TO {n};
 ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {n};
 ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {n};
 ALTER DEFAULT PRIVILEGES FOR ROLE {n}_migrator IN SCHEMA public GRANT EXECUTE ON ROUTINES TO {n};
+-- dbmate's ledger, made here as the migrator, as dbmate would make it,
+-- and kept from the app login, which the default privileges above
+-- would otherwise let rewrite which migrations have run
+SET client_min_messages = warning;
+SET ROLE {n}_migrator;
+CREATE TABLE IF NOT EXISTS schema_migrations (version varchar NOT NULL PRIMARY KEY);
+REVOKE ALL ON TABLE schema_migrations FROM {n};
+RESET ROLE;
 """
 
 
@@ -600,11 +638,21 @@ def dev_compose(p: dict) -> str:
         hc = json.dumps([a.replace("{port}", str(s["port"])) for a in LANGUAGES[s["language"]]])
         svcs.append(f"""  {n}-{s["name"]}:
     build: ../../services/{s["name"]}
+    # Settings of your own for the dev stack, in dev/dev.env, which git
+    # ignores: KEY=value lines, read by every service
+    env_file:
+      - path: ../dev.env
+        required: false
     environment:
       SERVICE: {s["name"]}
       COGNITO_ISSUER: http://mock-auth:9000
       COGNITO_UI_CLIENT_ID: dev-ui
-      COGNITO_PROBE_CLIENT_ID: dev-probe{db_env}
+      COGNITO_PROBE_CLIENT_ID: dev-probe
+      COGNITO_USERINFO_URL: http://mock-auth:9000/oauth2/userInfo
+      # The static bucket: written at S3's path-style address, read
+      # through static.<zone> (docs/tutorials/7-uploads/)
+      STORE_URL: http://mock-store:9100/static.localhost
+      STATIC_URL: http://static.localhost:{DEV_PORT}{db_env}
     expose:
       - "{s["port"]}"
     mem_limit: {s["memory_mib"]}m
@@ -703,19 +751,34 @@ services:
       ORIGINS: {",".join(origins)}
     ports:
       - "127.0.0.1:9000:9000"
+
+  # S3's part, mocked: the static bucket's objects/, which a service
+  # writes at run time; the rest of the bucket is static/, as above
+  mock-store:
+    build: ../mock-store
+    environment:
+      BUCKET: static.localhost
+      BIND: 0.0.0.0
+      ROOT: /store
+    ports:
+      - "127.0.0.1:9100:9100"
+    volumes:
+      - store:/store
 {database}
 {"".join(svcs)}
 volumes:
   db:
+  store:
 """
 
 
 def native_ports(p: dict, base: int) -> dict:
-    """Every port the native stack uses, from one base: four in a row
+    """Every port the native stack uses, from one base: five in a row
     for the stack, then one per service from base + 10. On a shared box
     each user's base differs (tools/native-dev.sh), so no two users'
     ports meet"""
-    ports = {"NGINX_PORT": base, "MOCK_PORT": base + 1, "PG_PORT": base + 2, "UI_PORT": base + 3}
+    ports = {"NGINX_PORT": base, "MOCK_PORT": base + 1, "PG_PORT": base + 2, "UI_PORT": base + 3,
+             "STORE_PORT": base + 4}
     for i, s in enumerate(p["services"]):
         ports["PORT_" + s["name"].replace("-", "_").upper()] = base + 10 + i
     return ports
@@ -798,6 +861,13 @@ http {{
         listen 127.0.0.1:{n};
         server_name static.localhost;
         root {(root / 'static').as_posix()};
+
+        location /objects/ {{
+            limit_except GET {{
+                deny all;
+            }}
+            proxy_pass http://127.0.0.1:{ports['STORE_PORT']}/static.localhost$uri;
+        }}
     }}
 
     server {{
@@ -823,7 +893,10 @@ def native_env(p: dict, ports: dict, password: str) -> str:
              f"export PROJECT={n}",
              f"export COGNITO_ISSUER=http://localhost:{ports['MOCK_PORT']}",
              "export COGNITO_UI_CLIENT_ID=dev-ui",
-             "export COGNITO_PROBE_CLIENT_ID=dev-probe"]
+             "export COGNITO_PROBE_CLIENT_ID=dev-probe",
+             f"export COGNITO_USERINFO_URL=http://localhost:{ports['MOCK_PORT']}/oauth2/userInfo",
+             f"export STORE_URL=http://127.0.0.1:{ports['STORE_PORT']}/static.localhost",
+             f"export STATIC_URL=http://static.localhost:{ports['NGINX_PORT']}"]
     if p["database"]:
         lines += [f"export DATABASE_URL='postgres://{n}:{password}@127.0.0.1:{ports['PG_PORT']}/{n}?sslmode=disable'",
                   f"export MIGRATOR_URL='postgres://{n}_migrator:{password}@127.0.0.1:{ports['PG_PORT']}/{n}?sslmode=disable'"]
@@ -840,6 +913,7 @@ export default {{
   zone: "localhost",
   apis: {apis},
   apiUrl: (service) => `http://${{service}}.localhost:{ports['NGINX_PORT']}`,
+  staticUrl: "http://static.localhost:{ports['NGINX_PORT']}",
 }};
 """
 
