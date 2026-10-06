@@ -41,42 +41,51 @@ Read each rule of the concept and ask it these. Most
 rules answer only some; a rule none of them touches is
 probably not a rule.
 
-  ----------------------------------------------------
-  Ask               For example, from the tutorials
-  ----------------- ----------------------------------
-  **Who may?**      A `member` writes a note
+Each question below comes with an example from the
+tutorials: what someone does, and what the test
+expects.
 
-  **Who may not?**  A `reader` writes a note: refused
+- **Who may?** A `member` writes a note. Expect the
+  note saved
+- **Who may not?** A `reader` tries to write a note.
+  Expect a refusal, `403`
+- **And by default?** Someone has just signed in and
+  holds no role but `deny-all`. They ask for the notes.
+  Expect a refusal: nobody gets anything until a role
+  says so
+- **Together?** You hold `admin` and `member` at once.
+  `admin` alone cannot read notes, `member` can. Expect
+  you can read them: roles add up, and one role never
+  takes away what another gives
+- **Whose?** Bob, a `member`, edits a note alice wrote.
+  Expect a refusal, `not your note`: being allowed to
+  write notes is not being allowed to write hers
+- **Absent?** Alice edits a note that does not exist.
+  Expect `404`, which is a different answer from
+  editing someone else's note (`403`), so the caller
+  can tell the two apart
+- **Twice?** Does doing the same thing again change
+  anything? An admin gives bob the `reader` role, then,
+  by mistake, gives it again. Expect no error, and bob
+  holding `reader` once, not twice
+- **The last one?** Can taking away the last of
+  something break everything? The project's only admin
+  takes away their own `admin` role. Were it allowed,
+  nobody would be left who may give roles, and nobody
+  could put it right from the app. Expect a refusal,
+  `409`. And expect any other admin's role, while
+  another admin remains, to be taken away as asked
+- **At the edge?** A body of exactly 1 MiB is sent.
+  Expect it to pass; one byte more, `413`
+- **What leaks?** Does an answer say more than it
+  should? Bob, a `reader`, lists the notes. He should
+  see every note and, on each, whether it is his own,
+  but not who wrote the others. Expect the list to
+  carry a `mine` flag, `true` or `false`, and no owner
+  at all
 
-  **And by          Someone in, with no role, reads
-  default?**        nothing: `deny-all`
-
-  **Together?**     `admin` and `member` together read
-                    notes: roles add up
-
-  **Whose?**        A member edits another's note:
-                    refused, `not your note`
-
-  **Absent?**       A note that does not exist: not
-                    found, and not the same answer as
-                    someone else's
-
-  **Twice?**        The same role given twice: no
-                    error, one membership
-
-  **The last one?** The last `users.grant` taken away:
-                    refused, or the project locks
-                    itself out
-
-  **At the edge?**  A body of 1 MiB passes; one byte
-                    more is `413`
-
-  **What leaks?**   A reader sees every note, and
-                    whether it is theirs, never whose
-  ----------------------------------------------------
-
-The last row is the one most often missed: a test that
-something is **not** there.
+The last question is the one most often missed: its
+test checks that something is **not** there.
 
 ## 3 Questions Become Tests
 

@@ -27,90 +27,88 @@ questions of [the tests'
 conduct](../../conduct/tests.md) §2. Three people: you,
 the first admin; alice; and bob, both in as `deny-all`.
 
-  ----------------------------------------------------------
-  Rule              Test    Asks              Expects
-  ----------------- ------- ----------------- --------------
-  R1 Nothing unless T2.1    bob, `deny-all`,  `false`
-                            reads notes?      
+  -------------------------------------------------------------
+  Rule              Test    Asks                 Expects
+  ----------------- ------- -------------------- --------------
+  R1 Nothing unless T2.1    bob, `deny-all`,     `false`
+                            reads notes?
 
-                    T2.2    Someone never     `false`
-                            admitted reads    
-                            notes?            
+                    T2.2    someone never        `false`
+                            admitted reads
+                            notes?
 
-  R2 Each role, its T2.3    bob, a `reader`,  `true`
-  row                       reads?            
+  R2 Each role, its T2.3    bob, a `reader`,     `true`
+  row                       reads notes?
 
-                    T2.4    bob, a `reader`,  `false`
-                            writes?           
+                    T2.4    bob, a `reader`,     `false`
+                            writes notes?
 
-                    T2.5    you, an `admin`,  `false`
-                            read notes?       
+                    T2.5    you, an `admin`,     `false`
+                            read notes?
 
-                    T2.6    you list the      `3`
-                            people            
+                    T2.6    you list the people: `3`
+                            how many?
 
-  R3 Roles add up   T2.7    you, `admin` and  `true`
-                            `member`, read    
-                            notes and grant?  
+  R3 Roles add up   T2.7    you, `admin` and     `true`
+                            `member`, read notes
+                            and grant?
 
-  R4 Only           T2.8    bob makes himself `42501`
-  `users.grant`             admin             
+  R4 Only           T2.8    bob makes himself    `42501`
+  `users.grant`             `admin`
 
-                    T2.9    a role to someone `P0002`
-                            not in            
+                    T2.9    a role given to      `P0002`
+                            someone not in
 
-                    T2.10   a role that does  `P0002`
-                            not exist         
+                    T2.10   a role that does not `P0002`
+                            exist given
 
-                    T2.11   the same role     `1`
-                            twice:            
-                            memberships       
+                    T2.11   bob given `reader` a `1`
+                            second time: how
+                            many times does he
+                            hold it?
 
-  R5 No lock-out    T2.12   you take away the `23001`
-                            last              
-                            `users.grant`     
+  R5 No lock-out    T2.12   you, the only admin, `23001`
+                            take away your own
+                            `admin`
 
-                    T2.13   any other         `false`
-                            `users.grant`     
-                            taken away: alice 
-                            still grants?     
+                    T2.13   alice made `admin`,  `false`
+                            then unmade: may she
+                            still grant?
 
-  R2, R6 The        T2.14   bob lists the     `42501`
-  database decides          people            
+  R2, R6 The        T2.14   bob lists the people `42501`
+  database decides
 
-                    T2.15   bob's own roles   his two, and
-                            and permissions   `notes.read`
+                    T2.15   bob's own roles and  his two, and
+                            permissions          `notes.read`
 
-  R7 (u=rw, a=r)    T2.16   bob, a `reader`,  `42501`
-                            writes a note     
+  R7 (u=rw, a=r)    T2.16   bob, a `reader`,     `42501`
+                            writes a note
 
-                    T2.17   alice, a          `true`
-                            `member`, writes  
-                            one: hers?        
+                    T2.17   alice, a `member`,   `true`
+                            writes one: is it
+                            hers?
 
-                    T2.18   alice edits hers; `edited`
-                            bob reads it      
+                    T2.18   alice edits hers;    `edited`
+                            bob reads it
 
-                    T2.19   bob, a `member`   `42501`
-                            now, edits        
-                            alice's           
+                    T2.19   bob, a `member` now, `42501`
+                            edits alice's
 
-                    T2.20   bob deletes       `42501`
-                            alice's           
+                    T2.20   bob deletes alice's  `42501`
 
-                    T2.21   alice edits a     `P0002`
-                            note that does    
-                            not exist         
+                    T2.21   alice edits a note   `P0002`
+                            that does not exist
 
-  R8 Whether, never T2.22   bob reads alice's `false`
-  whose                     note: his?        
+  R8 Whether, never T2.22   bob lists the notes: `false`
+  whose                     is alice's marked
+                            his?
 
-                    T2.23   the notes' answer `true`
-                            has no owner      
+                    T2.23   the notes' list has  `true`
+                            no owner in it
 
-  R9                T2.24   a permission      `23514`
-  `<unit>.<verb>`           `Notes`           
-  ----------------------------------------------------------
+  R9                T2.24   a permission named   `23514`
+  `<unit>.<verb>`           `Notes`
+  -------------------------------------------------------------
 
 An SQLSTATE is the refusal [the
 contract](3-contract.md) §4 names. Note the pairs that
