@@ -84,8 +84,11 @@ flowchart LR
   pool                 and token shapes, a key made at
                        start, any name admitted
 
-  No database yet      PostgreSQL 17, `DATABASE_URL`
-                       given to every service
+  No database yet      PostgreSQL 17: a database and
+                       two logins for each service
+                       that asks, its migrations
+                       applied by dbmate at every
+                       start
 
   `static` and `docs`  Folders, read-only:
   buckets              `dev/static/`, `docs/_site/`
@@ -158,16 +161,21 @@ before a release.
 ## 6 Use the Database
 
 The box has no database yet; the stack has one, so a
-service can be readied for it. Each service has
-`DATABASE_URL` in its environment. From your machine,
-expect a `psql` prompt:
+service can be readied for it. Each service with
+`"database": true` in the manifest gets its own
+database and two logins, and its migrations applied
+before it starts: [Write a
+migration](write-a-migration.md). It finds its own
+login in `DATABASE_URL`. In the template, `py-api`.
+From your machine, as `py-api`'s own login, expect a
+`psql` prompt:
 
 ``` sh
-psql postgres://example:dev-only@localhost:5432/example
+psql 'postgres://py_api:dev-only@localhost:5432/py_api'
 ```
 
-The user and database are your project's `name`. The
-data lives in the stack's volume, `db`, between runs.
+The data lives in the stack's volume, `db`, between
+runs.
 
 ## 7 Read the Buckets
 
@@ -220,24 +228,88 @@ make dev-down
 docker compose -f dev/out/compose.yml down -v
 ```
 
-## 10 Without Docker
+## 10 Without Docker, or Without Root
 
-The services and the mock run on your machine alone,
-with no nginx: no allow-list and no CORS, so `curl` and
-the tests only. With the mock's packages installed,
-`dev/mock-auth/requirements.txt`:
+The tests need nothing but the languages: [js-api's
+development page](../js-api/develop.md) and
+[py-api's](../py-api/develop.md). For more, there are
+three ways, by what your machine allows: §11 to §13.
+
+## 11 A Shared Box Without Root
+
+Everything installs in your own directory:
+
+- **The tools:**
+  [micromamba](https://mamba.readthedocs.io/) needs no
+  root, and installs `nodejs`, `python`, `postgresql`
+  and `nginx` from conda-forge into a folder of yours
+
+- **PostgreSQL:** your own data directory, on a port no
+  one else uses, on `127.0.0.1` alone. Expect
+  `server started`:
+
+  ``` sh
+  PGDIR="${HOME}/.local/share/example-pg"
+  initdb -D "${PGDIR}" -U postgres --auth=scram-sha-256 --pwprompt
+  pg_ctl -D "${PGDIR}" -o "-p 55432 -c listen_addresses=127.0.0.1 -c unix_socket_directories=" -l "${PGDIR}.log" start
+  ```
+
+  Then the logins, from `python3 box/render.py --dev`,
+  with the password you chose:
+
+  ``` sh
+  psql -h 127.0.0.1 -p 55432 -U postgres -v ON_ERROR_STOP=1 -f dev/out/db-users.sql
+  ```
+
+- **dbmate:** its single binary, from its releases
+  page, checked against the release's published
+  SHA-256; then [Write a
+  migration](write-a-migration.md), §10
+
+- **The mock and the services,** run as programs:
+  `python3 dev/mock-auth/server.py`, and each service
+  with `COGNITO_ISSUER=http://localhost:9000`,
+  `COGNITO_UI_CLIENT_ID=dev-ui` and
+  `COGNITO_PROBE_CLIENT_ID=dev-probe`
+
+Without the stack's nginx there is no allow-list and no
+CORS, so `curl` and the tests work and the UI's calls
+do not. The rendered nginx names its services as
+Docker's network does, and is not for this.
+
+> [!WARNING]
+> On a shared box, every user can reach your ports on
+> `127.0.0.1`, and the mock admits anyone as anyone.
+> Choose your own database password, not `dev-only`,
+> and keep nothing real in the stack.
+
+## 12 Podman, Without Root
+
+Rootless Podman runs the same compose file if the box's
+administrator has given your user subordinate IDs,
+once:
+`podman compose -f dev/out/compose.yml up --build -d`
+for `make dev`'s last step. Not tried with this stack.
+
+## 13 A Thin Client
+
+Run the stack on a machine that has Docker, or on the
+shared box as above, and forward its ports over SSH. On
+the thin client the browser then finds
+`localhost:5173`, `js-api.localhost:8080` and
+`localhost:9000` on its own loopback, forwarded, and
+the pages' addresses work as written:
 
 ``` sh
-python3 dev/mock-auth/server.py
+DEV_HOST=dev.example.org
+ssh -N -L 5173:localhost:5173 -L 8080:localhost:8080 -L 9000:localhost:9000 "${DEV_HOST}"
 ```
 
-Then start a service with
-`COGNITO_ISSUER=http://localhost:9000`,
-`COGNITO_UI_CLIENT_ID=dev-ui` and
-`COGNITO_PROBE_CLIENT_ID=dev-probe`, as [its
-development page](../js-api/develop.md) shows.
+A cloud workspace that publishes ports under its own
+`https://` names does not fit as it is: those names are
+neither `*.localhost` nor the UI client's callbacks.
 
-## 11 What Can Go Wrong
+## 14 What Can Go Wrong
 
 - **`js-api.localhost` does not resolve.** An old curl
   or browser. Use
@@ -255,11 +327,15 @@ development page](../js-api/develop.md) shows.
 - **`docs.localhost` is `404`.** `docs/_site/` is
   empty: md-preview is not installed, or the build
   failed. `md-preview build docs`
+- **PostgreSQL will not start:
+  `Unix-domain socket path ... is too long`.** A socket
+  path has at most 107 bytes; turn the socket off, as
+  §11 does, or put it in a short directory
 - **Port 8080, 9000 or 5432 in use.** Stop what holds
   it, or change the port in `box/render.py`'s dev
   render
 
-## 12 See Also
+## 15 See Also
 
 - [How the project meets the box](README.md): what
   nginx decides before your code

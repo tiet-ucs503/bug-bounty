@@ -108,7 +108,11 @@ def check(m: dict) -> dict:
             routes.append({"method": meth, "path": path, "signed_in": bool(r.get("signed_in", True))})
         if ("GET", "/health") not in keys or any(r["path"] == "/health" and r["signed_in"] for r in routes):
             raise Bad(f"{sn}: needs GET /health, signed_in false: the box and the probes check it")
-        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "routes": routes})
+        database = s.get("database", False)
+        if not isinstance(database, bool):
+            raise Bad(f"{sn}: database {database!r}, true or false")
+        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "database": database,
+                    "routes": routes})
     return {"name": name, "description": m.get("description", ""), "ui": {"dev_callback_urls": dev},
             "services": out}
 
@@ -422,6 +426,84 @@ http {{
 """
 
 
+DBMATE = "ghcr.io/amacneil/dbmate@sha256:520c740c6e0ad73fde2cd1ea7e2b779aaf789d22aca8858f87a478e7094535fb"  # 2.36.0
+
+
+def db_name(service: str) -> str:
+    """A service's database, and its two logins' stem: PostgreSQL's
+    names take no hyphen unquoted"""
+    return service.replace("-", "_")
+
+
+def db_env(s: dict) -> str:
+    if not s["database"]:
+        return ""
+    d = db_name(s["name"])
+    return f"""
+      # Its own database, as its app login: rows alone (db/README.md)
+      DATABASE_URL: postgres://{d}:dev-only@db:5432/{d}?sslmode=disable"""
+
+
+def db_dep(s: dict) -> str:
+    if not s["database"]:
+        return ""
+    return f"""
+      migrate-{s["name"]}:
+        condition: service_completed_successfully"""
+
+
+def dev_db_users(p: dict) -> str:
+    """For each service with a database: the database, owned by its
+    migrator, and its app login holding rows alone, on the tables the
+    migrator makes from now on. Idempotent: run at every up"""
+    out = ["-- Rendered by box/render.py --dev: each service's database and its two",
+           "-- logins, after the box's future.md §7. Local development only.", ""]
+    for s in p["services"]:
+        if not s["database"]:
+            continue
+        d = db_name(s["name"])
+        out.append(f"""-- {s["name"]}
+SELECT 'CREATE ROLE {d}_migrator LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{d}_migrator')\\gexec
+SELECT 'CREATE ROLE {d} LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{d}')\\gexec
+ALTER ROLE {d}_migrator PASSWORD 'dev-only';
+ALTER ROLE {d} PASSWORD 'dev-only';
+SELECT 'CREATE DATABASE {d} OWNER {d}_migrator' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{d}')\\gexec
+REVOKE ALL ON DATABASE {d} FROM PUBLIC;
+GRANT CONNECT ON DATABASE {d} TO {d};
+\\connect {d}
+GRANT USAGE ON SCHEMA public TO {d};
+ALTER DEFAULT PRIVILEGES FOR ROLE {d}_migrator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {d};
+ALTER DEFAULT PRIVILEGES FOR ROLE {d}_migrator IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {d};
+\\connect postgres
+""")
+    return "\n".join(out)
+
+
+def dev_migrate(p: dict) -> str:
+    out = []
+    for s in p["services"]:
+        if not s["database"]:
+            continue
+        d = db_name(s["name"])
+        out.append(f"""  # {s["name"]}'s schema to the newest migration, as its migrator, at every up
+  migrate-{s["name"]}:
+    image: {DBMATE}
+    environment:
+      DATABASE_URL: postgres://{d}_migrator:dev-only@db:5432/{d}?sslmode=disable
+      DBMATE_MIGRATIONS_DIR: /db/migrations
+      DBMATE_SCHEMA_FILE: /db/schema.sql
+    command: ["--wait", "--no-dump-schema", "up"]
+    volumes:
+      - ../../db/{s["name"]}:/db
+    depends_on:
+      db-users:
+        condition: service_completed_successfully
+    restart: "no"
+
+""")
+    return "".join(out)
+
+
 def dev_compose(p: dict) -> str:
     n = p["name"]
     origins = sorted({re.match(r"^http://localhost(:[0-9]+)?", u).group(0) for u in p["ui"]["dev_callback_urls"]})
@@ -434,14 +516,13 @@ def dev_compose(p: dict) -> str:
       SERVICE: {s["name"]}
       COGNITO_ISSUER: http://mock-auth:9000
       COGNITO_UI_CLIENT_ID: dev-ui
-      COGNITO_PROBE_CLIENT_ID: dev-probe
-      # Not on the box yet: for a service that is ready for its database
-      DATABASE_URL: postgres://{n}:dev-only@db:5432/{n}
+      COGNITO_PROBE_CLIENT_ID: dev-probe{db_env(s)}
     expose:
       - "{s["port"]}"
     mem_limit: {s["memory_mib"]}m
     depends_on:
-      - mock-auth
+      mock-auth:
+        condition: service_started{db_dep(s)}
     healthcheck:
       test: {hc}
       interval: 10s
@@ -478,17 +559,35 @@ services:
     ports:
       - "127.0.0.1:9000:9000"
 
+  # PostgreSQL, as the box will have it: a database per service that
+  # asks for one, each with a migrator and an app login
   db:
     image: {POSTGRES}
     environment:
-      POSTGRES_USER: {n}
       POSTGRES_PASSWORD: dev-only
-      POSTGRES_DB: {n}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
 
+  db-users:
+    image: {POSTGRES}
+    environment:
+      PGPASSWORD: dev-only
+    command: ["psql", "-h", "db", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-q", "-f", "/dev-out/db-users.sql"]
+    volumes:
+      - ./db-users.sql:/dev-out/db-users.sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+{dev_migrate(p)}
 {"".join(svcs)}
 volumes:
   db:
@@ -510,7 +609,8 @@ def main(argv: list[str]) -> int:
         out.mkdir(parents=True, exist_ok=True)
         (out / "nginx.conf").write_text(dev_nginx(p))
         (out / "compose.yml").write_text(dev_compose(p))
-        print("dev/out/: nginx.conf, compose.yml")
+        (out / "db-users.sql").write_text(dev_db_users(p))
+        print("dev/out/: nginx.conf, compose.yml, db-users.sql")
         return 0
     out = HERE / "out" / p["name"]
     out.mkdir(parents=True, exist_ok=True)

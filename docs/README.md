@@ -71,6 +71,8 @@ not yet checked; **planned** --- not yet written.
   hosts](onboarding/run-the-probes.md)
 - `draft` [A local stack that mirrors the
   box](onboarding/local-dev.md)
+- `draft` [Write a
+  migration](onboarding/write-a-migration.md)
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
 

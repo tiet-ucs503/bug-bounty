@@ -50,6 +50,16 @@ Manifest
 : `box/project.json`: the project's name, its services
   and their routes, as the box sees them
 
+Migration
+: One change to a service's database schema: a file in
+  `db/<service>/migrations/`, its up and its down,
+  applied by dbmate
+
+Migrator
+: `<service>_migrator`, the login that owns a service's
+  schema and runs its migrations; the service's own
+  login holds rows alone
+
 Mock sign-in
 : `mock-auth`, the dev stack's stand-in for Cognito:
   its endpoints and token shapes, admitting anyone
@@ -85,4 +95,4 @@ Zone
 `hand-over`, `release`, `ui`, `docs`, `probes`,
 `js-api`, `py-api`, `api`, `routes`, `auth`, `cognito`,
 `tests`, `build`, `dependencies`, `local-dev`, `mock`,
-`db`
+`db`, `migration`, `dbmate`, `squawk`, `postgres`

@@ -22,10 +22,12 @@ version: v0.1.0
 ## 1 What It Is
 
 A starter service in Python: Python 3.12, FastAPI, and
-PyJWT for tokens. Stateless, one process, listening on
-port 8000. Its routes show the shape every service of
-the project keeps, and are replaced by yours: see [its
-routes](api.md).
+PyJWT for tokens. One process, listening on port 8000.
+Its manifest entry asks for a database, so the dev
+stack gives it one, with an example migration in
+`db/py-api/`; the code does not use it yet. Its routes
+show the shape every service of the project keeps, and
+are replaced by yours: see [its routes](api.md).
 
 ## 2 In Front of It
 

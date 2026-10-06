@@ -50,6 +50,13 @@ memory_mib
 : 64 to 512; 192 if left out. A hard limit: past it the
   container is killed and restarted
 
+database
+: `true` for a database of its own, with its migrations
+  in `db/<name>/migrations/`; `false` if left out. The
+  dev stack makes it today; the box, once it has
+  PostgreSQL. See [Write a
+  migration](write-a-migration.md)
+
 routes
 : The allow-list, each with `method`, `path` and
   `signed_in`
