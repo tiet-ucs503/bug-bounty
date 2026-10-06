@@ -238,59 +238,20 @@ three ways, by what your machine allows: §11 to §13.
 
 ## 11 A Shared Box Without Root
 
-Everything installs in your own directory:
-
-- **The tools:**
-  [micromamba](https://mamba.readthedocs.io/) needs no
-  root, and installs `nodejs`, `python`, `postgresql`
-  and `nginx` from conda-forge into a folder of yours
-
-- **PostgreSQL:** your own data directory, on a port no
-  one else uses, on `127.0.0.1` alone. Expect
-  `server started`:
-
-  ``` sh
-  PGDIR="${HOME}/.local/share/example-pg"
-  initdb -D "${PGDIR}" -U postgres --auth=scram-sha-256 --pwprompt
-  pg_ctl -D "${PGDIR}" -o "-p 55432 -c listen_addresses=127.0.0.1 -c unix_socket_directories=" -l "${PGDIR}.log" start
-  ```
-
-  Then the logins, from `python3 box/render.py --dev`,
-  with the password you chose:
-
-  ``` sh
-  psql -h 127.0.0.1 -p 55432 -U postgres -v ON_ERROR_STOP=1 -f dev/out/db-users.sql
-  ```
-
-- **dbmate:** its single binary, from its releases
-  page, checked against the release's published
-  SHA-256; then [Write a
-  migration](../migrations/write-a-migration.md), §10
-
-- **The mock and the services,** run as programs:
-  `python3 dev/mock-auth/server.py`, and each service
-  with `COGNITO_ISSUER=http://localhost:9000`,
-  `COGNITO_UI_CLIENT_ID=dev-ui` and
-  `COGNITO_PROBE_CLIENT_ID=dev-probe`
-
-Without the stack's nginx there is no allow-list and no
-CORS, so `curl` and the tests work and the UI's calls
-do not. The rendered nginx names its services as
-Docker's network does, and is not for this.
-
-> [!WARNING]
-> On a shared box, every user can reach your ports on
-> `127.0.0.1`, and the mock admits anyone as anyone.
-> Choose your own database password, not `dev-only`,
-> and keep nothing real in the stack.
+Everything in your own directory, no containers: the
+tools from conda-forge, PostgreSQL on a port of your
+own, the box's nginx in front of your services, the
+mock sign-in, the UI through SSH. One script runs it,
+`tools/native-dev.sh`: [Develop on a shared box without
+root](shared-box.md), step by step.
 
 ## 12 Podman, Without Root
 
-Rootless Podman runs the same compose file if the box's
-administrator has given your user subordinate IDs,
-once:
-`podman compose -f dev/out/compose.yml up --build -d`
-for `make dev`'s last step. Not tried with this stack.
+The same compose stack in rootless Podman, where the
+box's administrator has given you subordinate IDs:
+`make dev COMPOSE=podman-compose`. [Run the stack with
+rootless Podman](podman.md), step by step, with how it
+differs from Docker.
 
 ## 13 A Thin Client
 
@@ -328,13 +289,12 @@ neither `*.localhost` nor the UI client's callbacks.
 - **`docs.localhost` is `404`.** `docs/_site/` is
   empty: md-preview is not installed, or the build
   failed. `md-preview build docs`
-- **PostgreSQL will not start:
-  `Unix-domain socket path ... is too long`.** A socket
-  path has at most 107 bytes; turn the socket off, as
-  §11 does, or put it in a short directory
 - **Port 8080, 9000 or 5432 in use.** Stop what holds
-  it, or change the port in `box/render.py`'s dev
-  render
+  it, or run [without containers](shared-box.md), on
+  ports of your own
+- **Under Podman, every service shows `(starting)`.**
+  Its health checks never run without systemd; harmless
+  ([rootless Podman](podman.md), §7)
 
 ## 15 See Also
 

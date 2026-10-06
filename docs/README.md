@@ -76,6 +76,10 @@ not yet checked; **planned** --- not yet written.
   hosts](onboarding/run-the-probes.md)
 - `draft` [A local stack that mirrors the
   box](onboarding/local-dev.md)
+- `draft` [Develop on a shared box without
+  root](onboarding/shared-box.md)
+- `draft` [Run the stack with rootless
+  Podman](onboarding/podman.md)
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
 

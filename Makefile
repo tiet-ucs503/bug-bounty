@@ -18,6 +18,9 @@
 #
 # The outside probes, against your live hosts, are probes/Makefile.
 
+# The compose command: Docker's, or rootless Podman's,
+# make dev COMPOSE=podman-compose (docs/onboarding/podman.md)
+COMPOSE     ?= docker compose
 SHELL       := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 SERVICES    := $(notdir $(wildcard services/*))
@@ -58,9 +61,12 @@ $(PY_VENV):
 test-py: $(PY_VENV)
 	cd services/py-api && .venv/bin/python -m unittest discover -s test
 
+# 5173, a callback and an origin in the manifest; the native stack's
+# own, UI_PORT from tools/native-dev.sh ports
+UI_PORT ?= 5173
 ui:
 	@[ -f ui/config.js ] || { echo "no ui/config.js: copy ui/config.example.js" >&2; exit 1; }
-	python3 -m http.server 5173 --bind 127.0.0.1 -d ui
+	python3 -m http.server $(UI_PORT) --bind 127.0.0.1 -d ui
 
 
 # The dev stack, rendered from the manifest (docs/onboarding/local-dev.md).
@@ -69,10 +75,10 @@ ui:
 dev: check
 	@python3 box/render.py --dev
 	@mkdir -p docs/_site; command -v md-preview > /dev/null && md-preview build docs > /dev/null || true
-	docker compose -f dev/out/compose.yml up --build -d
+	$(COMPOSE) -f dev/out/compose.yml up --build -d
 
 dev-down:
-	docker compose -f dev/out/compose.yml down
+	$(COMPOSE) -f dev/out/compose.yml down
 
 # An access token from the mock, for curl, as the probe client:
 #   make dev-token SUB=alice GROUPS=admin
@@ -105,7 +111,7 @@ db-lint:
 # dbmate, in the dev stack, as the database's migrator
 CMD ?= status
 db:
-	docker compose -f dev/out/compose.yml run --rm migrate $(CMD)
+	$(COMPOSE) -f dev/out/compose.yml run --rm migrate $(CMD)
 
 docs-build:
 	md-preview build docs

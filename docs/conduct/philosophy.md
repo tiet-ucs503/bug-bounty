@@ -48,10 +48,11 @@ read.
 
 Each answers one question, and none answers another's:
 
-  -----------------------------------------------------
+  ----------------------------------------------------
   Piece         Its one thing
-  ------------- ---------------------------------------
-  Cloudflare    The edge: certificates, the only way in
+  ------------- --------------------------------------
+  Cloudflare    The edge: certificates, the only way
+                in
 
   nginx         The gate: which routes, which origins,
                 how fast a client may write
@@ -76,7 +77,7 @@ Each answers one question, and none answers another's:
 
   GitHub        Running a release when a tag is pushed
   Actions       
-  -----------------------------------------------------
+  ----------------------------------------------------
 
 nginx does not check tokens; a service does not answer
 CORS; dbmate does not lint; Squawk does not migrate.

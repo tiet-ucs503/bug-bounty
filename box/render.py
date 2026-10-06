@@ -5,6 +5,7 @@
     python3 box/render.py --check    check it alone, write nothing
     python3 box/render.py --dev      write dev/out/, the local stack
     python3 box/render.py --units    list what a release builds: services, migrations
+    python3 box/render.py --native   write dev/out/native/, the stack without Docker or root
 
 Into box/out/<name>/, for the box's owner to copy into the box's
 repository as projects/<name>/ and review there:
@@ -30,6 +31,7 @@ piece does on the box.
 """
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -509,7 +511,10 @@ events {{
 http {{
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
-    resolver 127.0.0.11 valid=10s ipv6=off;
+    # The container's own resolver, filled in by the nginx image at start
+    # (NGINX_ENTRYPOINT_LOCAL_RESOLVERS): Docker's is 127.0.0.11,
+    # Podman's its network's gateway
+    resolver ${{NGINX_LOCAL_RESOLVERS}} valid=10s ipv6=off;
 
     # As the box's, but by the client's address: no CF-Connecting-IP here
     map $request_method $api_write_ip {{
@@ -634,12 +639,17 @@ def dev_compose(p: dict) -> str:
     image: {POSTGRES}
     environment:
       PGPASSWORD: dev-only
-    command: ["psql", "-h", "db", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-q", "-f", "/dev-out/db-users.sql"]
+    # Waits for the database itself, not for its health check: rootless
+    # Podman without systemd never runs health checks
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        for i in $$(seq 60); do pg_isready -q -h db -U postgres && break; sleep 1; done
+        exec psql -h db -U postgres -v ON_ERROR_STOP=1 -q -f /dev-out/db-users.sql
     volumes:
       - ./db-users.sql:/dev-out/db-users.sql:ro
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     restart: "no"
 
   # migrations/ to the newest, as the migrator, at every up: dbmate's
@@ -670,8 +680,13 @@ services:
     image: {NGINX}
     ports:
       - "127.0.0.1:{DEV_PORT}:{DEV_PORT}"
+    # A template, so the image fills in the resolver and nothing else
+    environment:
+      NGINX_ENTRYPOINT_LOCAL_RESOLVERS: "1"
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+      NGINX_ENVSUBST_FILTER: ^NGINX_LOCAL_RESOLVERS$$
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx.conf:/etc/nginx/templates/nginx.conf.template:ro
       - ../../static:/srv/static:ro
       - ../../docs/_site:/srv/docs:ro
     depends_on:
@@ -695,6 +710,140 @@ volumes:
 """
 
 
+def native_ports(p: dict, base: int) -> dict:
+    """Every port the native stack uses, from one base: four in a row
+    for the stack, then one per service from base + 10. On a shared box
+    each user's base differs (tools/native-dev.sh), so no two users'
+    ports meet"""
+    ports = {"NGINX_PORT": base, "MOCK_PORT": base + 1, "PG_PORT": base + 2, "UI_PORT": base + 3}
+    for i, s in enumerate(p["services"]):
+        ports["PORT_" + s["name"].replace("-", "_").upper()] = base + 10 + i
+    return ports
+
+
+def native_nginx(p: dict, ports: dict, root: Path, out: Path) -> str:
+    """The box's servers for the project, as the dev stack's, for an
+    nginx run by you, without root: plain HTTP on 127.0.0.1 at your own
+    port, each service on 127.0.0.1 at its own port, every file nginx
+    writes in dev/out/native/, and the UI's origin on your own port
+    admitted too"""
+    lines = []
+    for line in nginx(p).splitlines():
+        if line.startswith("    ssl_"):
+            continue
+        if not line.lstrip().startswith("#"):
+            line = line.replace("${ZONE}", "localhost")
+        lines.append(line)
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines))
+    body = body.replace("    listen 443 ssl;\n", f"    listen 127.0.0.1:{ports['NGINX_PORT']};\n")
+    for s in p["services"]:
+        port = ports["PORT_" + s["name"].replace("-", "_").upper()]
+        body = body.replace(f" {p['name']}-{s['name']}:{s['port']};", f" 127.0.0.1:{port};")
+    www = '    "https://www.localhost"    $http_origin;\n'
+    ui = json.dumps(f"http://localhost:{ports['UI_PORT']}")
+    body = body.replace(www, www + f"    {ui:<24} $http_origin;\n", 1)
+    servers = "\n".join("    " + line if line else line for line in body.splitlines())
+    o = out.as_posix()
+    n = ports["NGINX_PORT"]
+    return f"""# The native stack's nginx, rendered by box/render.py --native from
+# box/project.json: the box's servers for the project, on plain HTTP on
+# this machine alone, for an nginx you run without root. Local
+# development only (docs/onboarding/shared-box.md).
+pid {o}/nginx.pid;
+error_log {o}/nginx-error.log warn;
+worker_processes 1;
+events {{
+    worker_connections 256;
+}}
+
+http {{
+    default_type application/octet-stream;
+    types {{
+        text/html html;
+        text/css css;
+        application/javascript js;
+        application/json json;
+        image/svg+xml svg;
+        image/png png;
+        text/plain txt;
+    }}
+    access_log {o}/nginx-access.log;
+    client_body_temp_path {o}/tmp/body;
+    proxy_temp_path {o}/tmp/proxy;
+    fastcgi_temp_path {o}/tmp/fastcgi;
+    uwsgi_temp_path {o}/tmp/uwsgi;
+    scgi_temp_path {o}/tmp/scgi;
+
+    # As the box's, but by the client's address: no CF-Connecting-IP here
+    map $request_method $api_write_ip {{
+        default  $binary_remote_addr;
+        GET      "";
+        HEAD     "";
+        OPTIONS  "";
+    }}
+
+    map $request_method $api_write_all {{
+        default  all;
+        GET      "";
+        HEAD     "";
+        OPTIONS  "";
+    }}
+
+    limit_req_zone $api_write_ip  zone=api_write_ip:1m  rate=10r/s;
+    limit_req_zone $api_write_all zone=api_write_all:1m rate=100r/s;
+
+{servers}
+
+    server {{
+        listen 127.0.0.1:{n};
+        server_name static.localhost;
+        root {(root / 'static').as_posix()};
+    }}
+
+    server {{
+        listen 127.0.0.1:{n};
+        server_name docs.localhost;
+        root {(root / 'docs' / '_site').as_posix()};
+        index index.html;
+    }}
+
+    server {{
+        listen 127.0.0.1:{n} default_server;
+        return 404;
+    }}
+}}
+"""
+
+
+def native_env(p: dict, ports: dict, password: str) -> str:
+    n = p["name"]
+    lines = ["# Rendered by box/render.py --native: the native stack's ports and",
+             "# settings, for tools/native-dev.sh. Local development only.",
+             *[f"export {k}={v}" for k, v in ports.items()],
+             f"export PROJECT={n}",
+             f"export COGNITO_ISSUER=http://localhost:{ports['MOCK_PORT']}",
+             "export COGNITO_UI_CLIENT_ID=dev-ui",
+             "export COGNITO_PROBE_CLIENT_ID=dev-probe"]
+    if p["database"]:
+        lines += [f"export DATABASE_URL='postgres://{n}:{password}@127.0.0.1:{ports['PG_PORT']}/{n}?sslmode=disable'",
+                  f"export MIGRATOR_URL='postgres://{n}_migrator:{password}@127.0.0.1:{ports['PG_PORT']}/{n}?sslmode=disable'"]
+    return "\n".join(lines) + "\n"
+
+
+def native_ui_config(p: dict, ports: dict) -> str:
+    apis = json.dumps([s["name"] for s in p["services"]])
+    return f"""// The native stack's UI config, rendered by box/render.py --native:
+// copy to ui/config.js. The mock sign-in and nginx on your own ports.
+export default {{
+  authDomain: "http://localhost:{ports['MOCK_PORT']}",
+  clientId: "dev-ui",
+  zone: "localhost",
+  apis: {apis},
+  apiUrl: (service) => `http://${{service}}.localhost:{ports['NGINX_PORT']}`,
+}};
+"""
+
+
 def main(argv: list[str]) -> int:
     only_check = "--check" in argv
     try:
@@ -708,6 +857,27 @@ def main(argv: list[str]) -> int:
         return 0
     if "--units" in argv:
         print("\n".join(units(p)))
+        return 0
+    if "--native" in argv:
+        base = int(os.environ.get("DEV_BASE_PORT", "20000"))
+        if not 1024 <= base <= 65000:
+            print(f"DEV_BASE_PORT {base}: 1024 to 65000", file=sys.stderr)
+            return 1
+        password = os.environ.get("DEV_DB_PASSWORD", "dev-only")
+        if not re.match(r"^[A-Za-z0-9_.-]{8,64}$", password):
+            print("DEV_DB_PASSWORD: 8 to 64 letters, digits and _.-", file=sys.stderr)
+            return 1
+        root = HERE.parent
+        out = root / "dev" / "out" / "native"
+        (out / "tmp").mkdir(parents=True, exist_ok=True)
+        ports = native_ports(p, base)
+        (out / "nginx.conf").write_text(native_nginx(p, ports, root, out))
+        (out / "env.sh").write_text(native_env(p, ports, password))
+        (out / "config.js").write_text(native_ui_config(p, ports))
+        (out / "db-users.sql").write_text(dev_db_users(p).replace("'dev-only'", f"'{password}'"))
+        print("dev/out/native/: nginx.conf, env.sh, config.js, db-users.sql")
+        for k, v in ports.items():
+            print(f"  {k:<14} {v}")
         return 0
     if "--dev" in argv:
         out = HERE.parent / "dev" / "out"

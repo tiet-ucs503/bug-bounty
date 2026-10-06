@@ -169,32 +169,32 @@ the code that needs it.
 
 ## 8 Change a Live Table Without Locking It
 
-  ---------------------------------------------------------
-  To                  Do
-  ------------------- -------------------------------------
-  Add a column        Nullable, or with a constant default:
-                      no rewrite of the table
+  --------------------------------------------------------
+  To                 Do
+  ------------------ -------------------------------------
+  Add a column       Nullable, or with a constant default:
+                     no rewrite of the table
 
-  Make a column       `CHECK (col IS NOT NULL) NOT VALID`
-  required            in one migration;
-                      `VALIDATE CONSTRAINT` in the next
+  Make a column      `CHECK (col IS NOT NULL) NOT VALID`
+  required           in one migration;
+                     `VALIDATE CONSTRAINT` in the next
 
-  Limit a value       A `CHECK ... NOT VALID`, then
-                      `VALIDATE`, as above
+  Limit a value      A `CHECK ... NOT VALID`, then
+                     `VALIDATE`, as above
 
-  Index a column      `CREATE INDEX CONCURRENTLY`, alone in
-                      its file, `transaction:false`
+  Index a column     `CREATE INDEX CONCURRENTLY`, alone in
+                     its file, `transaction:false`
 
-  Rename a column     Add the new, write both, backfill,
-                      read the new, then drop the old: one
-                      release each
+  Rename a column    Add the new, write both, backfill,
+                     read the new, then drop the old: one
+                     release each
 
-  Drop a column       Once no released code reads it
+  Drop a column      Once no released code reads it
 
-  Change an accessor  A new function beside the old; the
-                      old dropped once no released code
-                      calls it
-  ---------------------------------------------------------
+  Change an accessor A new function beside the old; the
+                     old dropped once no released code
+                     calls it
+  --------------------------------------------------------
 
 `VALIDATE` reads every row, but blocks only other
 schema changes, not reads or writes; give its migration
@@ -244,10 +244,10 @@ DROP INDEX CONCURRENTLY IF EXISTS py_api_notes_created_idx;
 ## 10 Without Docker
 
 PostgreSQL in your own directory, and dbmate's single
-binary, need no root ([the local stack's
-page](../onboarding/local-dev.md), §11). With the
-database and logins made by `dev/out/db-users.sql`,
-from `python3 box/render.py --dev`, run dbmate as the
+binary, need no root ([Develop on a shared box without
+root](../onboarding/shared-box.md)). With the database
+and logins made by `dev/out/db-users.sql`, from
+`python3 box/render.py --dev`, run dbmate as the
 migrator. Expect `Applied:`, and `schema.sql` written:
 
 ``` sh
