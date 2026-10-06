@@ -1,28 +1,48 @@
 ---
 abstract: |
-  The rules for writing these pages, for anyone adding
-  or changing one. It is also the first sample of the
-  template it describes: its frontmatter, its numbered
-  sections, its "What Can Go Wrong" and its "See Also"
-  are the ones every page has.
-date: 2026-10-06
+  How the project works, page by page, and how its
+  pages are written.
+date: 2026-10-07
 keywords:
+- conduct
 - writing
 - template
 - frontmatter
 - diataxis
-- md-preview
 - masking
 kind: explanation
 sources:
 - docs/conduct/template.md
 status: draft
-subtitle: The template, and the rules every page keeps
-title: How These Pages Are Written
+subtitle: How we work, and how we write it down
+title: The Project's Conduct
 version: v0.1.0
 ---
 
-## 1 Who We Write For
+## 1 The Conduct, Page by Page
+
+In the order a newcomer reads them.
+
+1.  [The philosophy](philosophy.md): one thing, done
+    well, by each part
+2.  [The cycle](the-cycle/README.md): concept, tests,
+    contract, implementation, refinement
+    - [The concept](the-cycle/concept.md): before the
+      first line of code
+    - [The tests](the-cycle/tests.md): the questions a
+      concept raises
+3.  [From an issue to a merge](workflow.md): the cycle,
+    in git
+4.  [Git and git-flow](git.md): branches, commits, and
+    who wrote them
+5.  [Naming](naming.md): the owner, the thing, the verb
+6.  [The database's conduct](database.md): prefixes,
+    accessors, and what a service may do
+7.  [Writing](writing.md): voice, person and tense
+8.  **How these pages are written:** this page, §2 to
+    §6, and [the template](template.md) to copy
+
+## 2 Who We Write For
 
 The pages are public, at `docs.<zone>`. Write for a
 reader who reads JavaScript or Python and uses a shell,
@@ -39,7 +59,7 @@ the voice, the person and the tense, with examples.
 Name the project, its services and its files; do not
 name people or institutions.
 
-## 2 Four Kinds of Page
+## 3 Four Kinds of Page
 
 Each page is one kind, after
 [Diátaxis](https://diataxis.fr/). A page that needs two
@@ -68,7 +88,7 @@ kinds is two pages, linked.
                                            weighed
   -------------------------------------------------------
 
-## 3 The Template
+## 4 The Template
 
 Start from [the template](template.md). It has two
 parts.
@@ -126,9 +146,9 @@ the last two are always the same:
 - **See Also** --- the pages to read next, each with a
   reason
 
-## 4 The Rules
+## 5 The Rules
 
-### 4.1 True
+### 5.1 True
 
 - **Check every claim against the code** at the version
   in the frontmatter, and name the file it rests on, by
@@ -140,7 +160,7 @@ the last two are always the same:
   printed no error is not the same as a result; say
   what output shows success
 
-### 4.2 Safe to Publish
+### 5.2 Safe to Publish
 
 Nothing on a page may identify the box's account or
 open a door into it. Never write:
@@ -171,7 +191,7 @@ git diff --cached -U0 | grep -nE '[0-9]{12}|@[a-z]+\.(com|in|edu)|[^m]i-0[0-9a-f
 
 Read every line it prints; do not explain one away.
 
-### 4.3 Runnable
+### 5.3 Runnable
 
 - **Complete commands,** run from the repository's
   root, as they will be typed: no `<...>` inside a
@@ -188,7 +208,7 @@ Read every line it prints; do not explain one away.
 - **A destructive step is flagged above itself,** in a
   `> [!CAUTION]` alert that says what is lost
 
-### 4.4 Readable
+### 5.4 Readable
 
 - UK English; plain words; short sentences; the active
   voice: [Writing](writing.md)
@@ -203,9 +223,9 @@ Read every line it prints; do not explain one away.
   at the wrap and reads badly aloud. Give the edges
   labels, and reuse the colour classes of [How the
   project meets the box](../onboarding/README.md)
-- Wrap to 55 columns before committing (§5)
+- Wrap to 55 columns before committing (§6)
 
-### 4.5 Linked
+### 5.5 Linked
 
 - **Between pages,** relative links to the `.md` file:
   `[the template](template.md)`. md-preview rewrites
@@ -216,7 +236,7 @@ Read every line it prints; do not explain one away.
 - **To vendors' documentation,** a link, with the date
   read if the page is versioned
 
-### 4.6 Kept Current
+### 5.6 Kept Current
 
 - A page moves `planned`, then `draft`, then `checked`.
   It is `checked` once every command on it has been run
@@ -231,7 +251,7 @@ Read every line it prints; do not explain one away.
   the manifest names it, with the same three pages as
   `js-api/`: what it is, its routes, how to develop it
 
-## 5 What Can Go Wrong
+## 6 What Can Go Wrong
 
 - **An alert turns into `\[!NOTE\]`.** Pandoc wraps
   alerts only when told they exist. Wrap with the
@@ -253,7 +273,7 @@ Read every line it prints; do not explain one away.
   one line is one row, so a cell the wrap folds onto a
   second line becomes a row of its own. Write a
   multiline table, with a blank line between rows and a
-  dashed line above and below, as in §2 and §3; or a
+  dashed line above and below, as in §3 and §4; or a
   list, as the map is
 
 - **A multiline table's cells come out mangled,
@@ -270,7 +290,7 @@ Read every line it prints; do not explain one away.
   older than a release that changed one of its
   `sources`. Put it back to `draft` in the map
 
-## 6 See Also
+## 7 See Also
 
 - [The template](template.md): the skeleton to copy for
   a new page

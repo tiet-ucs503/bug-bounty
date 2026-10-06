@@ -152,10 +152,10 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 
 ### Conduct
 
+- `draft` [The project's conduct: how we work, and how
+  we write it down](conduct/README.md)
 - `draft` [The philosophy: one thing, done
   well](conduct/philosophy.md)
-- `draft` [How these pages are
-  written](conduct/README.md)
 - `draft` [The page template](conduct/template.md)
 - `draft` [The database's conduct](conduct/database.md)
 - `draft` [The concept: before the first line of
@@ -194,5 +194,5 @@ md-preview build docs
 
 - [How the project meets the
   box](onboarding/README.md): read next
-- [How these pages are written](conduct/README.md):
-  before you add or change a page
+- [The project's conduct](conduct/README.md): how
+  we work, and before you add or change a page

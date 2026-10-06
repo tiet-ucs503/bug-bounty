@@ -17,9 +17,9 @@ version: v0.1.0
 The skeleton of a page. Copy it, keep the frontmatter
 keys, and delete the sections your page's kind does not
 use: a reference page has no "Before You Start", an
-explanation no steps. [How These Pages Are
-Written](README.md) says what each key and section is
-for.
+explanation no steps. [The Project's
+Conduct](README.md) §4 says what each key and section
+is for.
 
 ## 1 Before You Start
 

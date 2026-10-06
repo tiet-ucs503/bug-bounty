@@ -248,5 +248,5 @@ the rewrite; old commits stay unsigned.
 
 - [From an issue to a merge](workflow.md): the branches
   in use
-- [How these pages are written](README.md) §4.2: what
+- [How these pages are written](README.md) §5.2: what
   never goes into a commit

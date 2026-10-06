@@ -126,5 +126,5 @@ newcomer cannot learn a habit by reading.
 - [The database's conduct](database.md): why every name
   carries its prefix
 - [The glossary](../glossary.md): the words in use
-- [How these pages are written](README.md) §3: the
+- [How these pages are written](README.md) §4: the
   pages' titles and keywords
