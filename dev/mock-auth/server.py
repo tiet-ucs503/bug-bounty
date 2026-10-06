@@ -35,6 +35,9 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 ISSUER = os.environ.get("ISSUER", "http://localhost:9000")
 PORT = int(os.environ.get("PORT", "9000"))
+# This machine alone, unless told: the dev stack's container is told
+# 0.0.0.0, so the services reach it on the stack's network
+BIND = os.environ.get("BIND", "127.0.0.1")
 CLIENTS = {c for c in os.environ.get("CLIENTS", "dev-ui,dev-probe").split(",") if c}
 # Origins whose pages may call the token endpoint, as Cognito allows a
 # public client's own
@@ -150,5 +153,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(json.dumps({"mock-auth": f"issuer {ISSUER}, port {PORT}, clients {sorted(CLIENTS)}"}), flush=True)
-    ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
+    print(json.dumps({"mock-auth": f"issuer {ISSUER}, {BIND}:{PORT}, clients {sorted(CLIENTS)}"}), flush=True)
+    ThreadingHTTPServer((BIND, PORT), Handler).serve_forever()

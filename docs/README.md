@@ -109,6 +109,8 @@ not yet checked; **planned** --- not yet written.
 
 ### Conduct
 
+- `draft` [The philosophy: one thing, done
+  well](conduct/philosophy.md)
 - `draft` [How these pages are
   written](conduct/README.md)
 - `draft` [The page template](conduct/template.md)

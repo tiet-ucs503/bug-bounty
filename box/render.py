@@ -683,6 +683,7 @@ services:
     build: ../mock-auth
     environment:
       ISSUER: http://mock-auth:9000
+      BIND: 0.0.0.0
       CLIENTS: dev-ui,dev-probe
       ORIGINS: {",".join(origins)}
     ports:
