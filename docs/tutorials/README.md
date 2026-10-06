@@ -3,10 +3,10 @@ abstract: |
   Seven tutorials, in order, that take a fork of the
   template from a sign-in to a notes dashboard with
   uploads: who comes in, what each person may do, the
-  database that holds both, a `users` service in Python
-  or JavaScript, a Svelte UI, and files in the static
-  bucket. What you build, what you need, and the
-  conventions every page shares.
+  database that holds both, `/users` in py-api or
+  js-api, a Svelte UI, and files in the static bucket.
+  What you build, what you need, and the conventions
+  every page shares.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -42,22 +42,19 @@ config:
 flowchart LR
   browser(["The dashboard<br/>Svelte, at www"])
   cognito["Cognito<br/>the box's pool"]
-  users["users<br/>who comes in, who may what"]
-  notes["py-api<br/>notes and uploads"]
+  notes["py-api<br/>/users: who comes in, who may what<br/>/notes, /objects: notes and uploads"]
   db[("The project's database<br/>users_*, py_api_*")]
   bucket[("The static bucket<br/>objects/")]
   browser -->|"signs in"| cognito
-  browser -->|"Bearer token"| users
   browser -->|"Bearer token"| notes
-  users -->|"userInfo: the e-mail"| cognito
-  users -->|"users_admit, users_grant"| db
-  notes -->|"py_api_*, which ask users_may"| db
+  notes -->|"userInfo: the e-mail"| cognito
+  notes -->|"users_*; py_api_*, which ask users_may"| db
   notes -->|"PUT, DELETE"| bucket
   browser -->|"reads"| bucket
   classDef network fill:#dbeafe,stroke:#3b82f6,color:#111
   class cognito network
   classDef compute fill:#fff6eb,stroke:#804900,color:#804900
-  class users,notes compute
+  class notes compute
   classDef storage fill:#dcfce7,stroke:#22c55e,color:#111
   class db,bucket storage
 ```
@@ -68,20 +65,20 @@ flowchart LR
     control matrix, and notes as (u=rw, a=r), tried
 3.  [Make it a migration](3-the-migration.md): both as
     migrations, each proved down and up
-4.  [users in Python](4-users-in-python.md): the
-    `users` service
-5.  [users in JavaScript](5-users-in-javascript.md): or
-    the same, in JavaScript
+4.  [/users in Python](4-users-in-python.md): who comes
+    in, as routes of py-api, at `py-api.<zone>/users`
+5.  [/users in JavaScript](5-users-in-javascript.md):
+    or the same, in js-api, at `js-api.<zone>/users`
 6.  [A Svelte UI](6-a-svelte-ui.md): the dashboard, who
     you are, the notes, the people
 7.  [Uploads](7-uploads/README.md): files on notes, in
     the static bucket, collected when no note needs
     them
 
-Take 4 **or** 5: the same service, the same routes, the
-same database, in the language your team writes. The
-rest are in order; each starts where the one before
-ended.
+Take 4 **or** 5: the same routes, the same database, in
+the language your team writes. The notes and uploads
+are py-api's either way. The rest are in order; each
+starts where the one before ended.
 
 Every step on these pages was run, as written, in a
 fork of the template v0.1.0 on 2026-10-06: on the
@@ -246,9 +243,11 @@ all is well.
   caller first, and refuses with an SQLSTATE the
   service turns into HTTP. A service that forgets a
   check cannot skip it
-- **One thing, done well,** a unit each: `users` for
-  people and roles, `py-api` for notes and uploads.
-  [The philosophy](../conduct/philosophy.md)
+- **One thing, done well,** a unit each, by its prefix
+  in the database: `users` for people and roles,
+  `py_api` for notes and uploads. One service may run
+  both, py-api here, each with names of its own. [The
+  philosophy](../conduct/philosophy.md)
 
 ## 5 See Also
 

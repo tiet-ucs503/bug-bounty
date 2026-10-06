@@ -1,12 +1,13 @@
 ---
 abstract: |
-  The users unit as a Python service, from the py-api
-  starter: the door at `/me`, which asks Cognito's
-  userInfo and the database who may come in, and the
-  people and their roles for whoever may run them.
-  FastAPI and psycopg, the database's refusals turned
-  into HTTP, tests that need no database, and the
-  service run behind the stack's nginx.
+  `/users` as routes of py-api, at
+  `py-api.<zone>/users`: the door at `/users/me`, which
+  asks Cognito's userInfo and the database who may come
+  in, and the people and their roles for whoever may
+  run them. FastAPI and psycopg, the database's
+  refusals turned into HTTP, tests that need no
+  database, and the routes run behind the stack's
+  nginx.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -22,68 +23,68 @@ sources:
 - box/project.json
 status: draft
 subtitle: FastAPI, psycopg, and the database deciding
-title: 4 The users Service in Python
+title: 4 /users in Python, in py-api
 version: v0.1.0
 ---
 
 ## 1 Before You Start
 
 - [What you need](README.md) §2, installed and checked
-- [3 Make it a migration](3-the-migration.md), with
-  `services/users/` copied from `services/py-api/`, and
-  its migrations applied
+- [3 Make it a migration](3-the-migration.md), its
+  migrations applied, with `users` among py-api's
+  `prefixes` (§2 there)
 - The JavaScript version is [tutorial
-  5](5-users-in-javascript.md): the same routes, take
-  one
+  5](5-users-in-javascript.md): the same routes, in
+  js-api; take one
 
 ## 2 The Routes
 
-- **`GET /health`,** anyone: the box's check
-- **`GET /me`,** signed in: the door. It admits you if
-  the rules let you in, then answers who you are, your
-  roles and your permissions
-- **`GET /people`,** `users.read`: everyone in, with
-  their roles
-- **`GET /roles`,** `users.read`: the matrix, role by
-  role
-- **`PUT /people/{sub}/roles/{role}`,** `users.grant`:
-  give a role
-- **`DELETE /people/{sub}/roles/{role}`,**
+`/users` is a part of py-api, not a service of its own:
+the same host, `py-api.<zone>`, the same image and the
+same process, its routes under `/users`. Its tables are
+its own, `users_*`, by the prefix py-api owns beside
+`py_api`.
+
+- **`GET /users/me`,** signed in: the door. It admits
+  you if the rules let you in, then answers who you
+  are, your roles and your permissions
+- **`GET /users/people`,** `users.read`: everyone in,
+  with their roles
+- **`GET /users/roles`,** `users.read`: the matrix,
+  role by role
+- **`PUT /users/people/{sub}/roles/{role}`,**
+  `users.grant`: give a role
+- **`DELETE /users/people/{sub}/roles/{role}`,**
   `users.grant`: take it away
 
-Put them in the manifest, as the users service's
-`routes`, in place of tutorial 3's `/health` alone:
+Add them to py-api's `routes` in the manifest, after
+the starter's three:
 
 ``` json
 [
   {
     "method": "GET",
-    "path": "/health",
-    "signed_in": false
-  },
-  {
-    "method": "GET",
-    "path": "/me",
+    "path": "/users/me",
     "signed_in": true
   },
   {
     "method": "GET",
-    "path": "/people",
+    "path": "/users/people",
     "signed_in": true
   },
   {
     "method": "GET",
-    "path": "/roles",
+    "path": "/users/roles",
     "signed_in": true
   },
   {
     "method": "PUT",
-    "path": "/people/{sub}/roles/{role}",
+    "path": "/users/people/{sub}/roles/{role}",
     "signed_in": true
   },
   {
     "method": "DELETE",
-    "path": "/people/{sub}/roles/{role}",
+    "path": "/users/people/{sub}/roles/{role}",
     "signed_in": true
   }
 ]
@@ -96,8 +97,8 @@ Cognito `sub` is a UUID, and fits.
 ## 3 Its Packages
 
 psycopg 3, the PostgreSQL driver, with its binary build
-and its pool. In `services/users/requirements.txt`, the
-three lines among the others, by version, as every
+and its pool. In `services/py-api/requirements.txt`,
+the three lines among the others, by version, as every
 package there is:
 
 ``` text
@@ -111,25 +112,46 @@ x86-64, so nothing compiles.
 
 ## 4 The Code
 
-`services/users/main.py`, whole:
+`services/py-api/main.py`, whole, as this page leaves
+it: the starter, and what `/users` adds.
 
 ``` python
-"""users, at users.<your zone>: who may come in, and what each person
-may do (docs/tutorials/4-users-in-python.md)
+"""A starter service in Python, at py-api.<your zone>
 
-    GET    /health                      the box's and the probes' check
-    GET    /me                          the door: admits the caller if the
-                                        rules let them in, then says who
-                                        they are and what they may do
-    GET    /people                      everyone admitted: users.read
-    GET    /roles                       the matrix, role by role: users.read
-    PUT    /people/{sub}/roles/{role}   give a role: users.grant
-    DELETE /people/{sub}/roles/{role}   take it away: users.grant
+The starter's three routes show the shape every service keeps; the
+rest are yours.
 
-Who the caller is, from their access token, as every starter checks it;
-their e-mail from Cognito's userInfo, since an access token carries
-none. What they may do, the database decides: every accessor takes the
-caller first and refuses with SQLSTATE 42501, which becomes 403 here.
+    GET  /health   the box's and the probes' check; keep it
+    GET  /hello    anyone
+    POST /echo     a signed-in caller: the body back, with who sent it
+
+and who comes in, and what each may do, the database deciding
+(docs/tutorials/4-users-in-python.md):
+
+    GET    /users/me                          the door: admits the caller
+                                              if the rules let them in,
+                                              then says who they are and
+                                              what they may do
+    GET    /users/people                      everyone admitted: users.read
+    GET    /users/roles                       the matrix: users.read
+    PUT    /users/people/{sub}/roles/{role}   give a role: users.grant
+    DELETE /users/people/{sub}/roles/{role}   take it away: users.grant
+
+In front of this process, the box's nginx (rendered from
+box/project.json, docs/onboarding/README.md):
+
+- an allow-list: a route added here is unreachable until
+  box/project.json names it, and the box's owner rolls it out;
+- CORS for your www alone, and the rate of writes;
+
+so this process does neither.
+
+Who the caller is, this service decides itself: a Bearer access token
+from the box's Cognito pool, issued to your project's UI client or the
+box's probe client, verified against the pool's keys. What the caller
+may then do, the project's database decides: every accessor takes the
+caller first, and its refusals by SQLSTATE become 403, 404 and 409
+here.
 """
 
 import json
@@ -142,17 +164,27 @@ from contextlib import asynccontextmanager
 
 import jwt
 import psycopg
-from fastapi import FastAPI, Header
+from fastapi import APIRouter, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool, PoolTimeout
+from starlette.concurrency import run_in_threadpool
 
-SERVICE = os.environ.get("SERVICE", "users")
+SERVICE = os.environ.get("SERVICE", "py-api")
+MAX_BODY = 1024 * 1024
 
+# From the env file the box writes for your project at upload, from
+# its Terraform's outputs. Unset, no token is accepted
 ISSUER = os.environ.get("COGNITO_ISSUER", "")
 CLIENTS = [c for c in (os.environ.get("COGNITO_UI_CLIENT_ID"), os.environ.get("COGNITO_PROBE_CLIENT_ID")) if c]
+
+# Cognito's userInfo, which answers a caller's e-mail to their own
+# token: an access token carries none
 USERINFO = os.environ.get("COGNITO_USERINFO_URL", "")
 
+# The pool's signing keys, fetched once and again only for a key ID not
+# yet seen, at most every five minutes: a forged token with a new key ID each time cannot make
+# this process fetch on every request
 REFETCH_AFTER = 300
 _keys: dict[str, jwt.PyJWK] = {}
 _fetched = -REFETCH_AFTER
@@ -172,8 +204,10 @@ def _key(kid: str) -> jwt.PyJWK | None:
 
 
 def caller(header: str | None) -> dict | None:
-    """The caller's sub and token, if the token is the pool's access
-    token for one of our clients and unexpired; None otherwise"""
+    """The caller's sub, groups and token, if the token is the pool's access
+    token for one of our clients and unexpired; None otherwise.
+    Cognito's access tokens carry client_id, not aud. Blocking: the
+    first call fetches the keys, so run it off the event loop"""
     if not ISSUER or not CLIENTS:
         return None
     m = BEARER.match(header or "")
@@ -190,7 +224,7 @@ def caller(header: str | None) -> dict | None:
         return None
     if claims.get("token_use") != "access" or claims.get("client_id") not in CLIENTS:
         return None
-    return {"sub": claims["sub"], "token": m[1]}
+    return {"sub": claims["sub"], "groups": claims.get("cognito:groups", []), "token": m[1]}
 
 
 # userInfo's answer for each sub, kept ten minutes: Cognito limits how
@@ -231,6 +265,34 @@ def query(sql: str, args: tuple = ()) -> list[dict]:
 
 # The database's refusals, by SQLSTATE, as HTTP
 STATUS = {"42501": 403, "P0002": 404, "23001": 409, "23514": 400, "22001": 400}
+NOSTORE = {"Cache-Control": "no-store"}
+
+
+def answer(data, status: int = 200) -> JSONResponse:
+    return JSONResponse(data, status, headers=NOSTORE)
+
+
+def signed_out() -> JSONResponse:
+    return JSONResponse({"error": "sign in first"}, 401, headers={**NOSTORE, "WWW-Authenticate": 'Bearer realm="py-api"'})
+
+
+def run(sql: str, args: tuple) -> JSONResponse | list[dict]:
+    """The accessor's rows, times as ISO 8601; or its refusal as an
+    answer"""
+    try:
+        out = query(sql, args)
+    except psycopg.Error as e:
+        if e.sqlstate in STATUS:
+            return answer({"error": e.diag.message_primary or str(e)}, STATUS[e.sqlstate])
+        raise
+    except PoolTimeout:
+        return answer({"error": "the database is not answering"}, 503)
+    for r in out:
+        for k, v in r.items():
+            if hasattr(v, "isoformat"):
+                r[k] = v.isoformat()
+    return out
+
 
 @asynccontextmanager
 async def lifespan(_app):
@@ -240,40 +302,9 @@ async def lifespan(_app):
     pool.close()
 
 
+# No /docs, /redoc or /openapi.json: nginx's allow-list would refuse
+# them in any case
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
-
-
-NOSTORE = {"Cache-Control": "no-store"}
-
-
-def answer(data, status: int = 200) -> JSONResponse:
-    return JSONResponse(data, status, headers=NOSTORE)
-
-
-def signed_out() -> JSONResponse:
-    return JSONResponse({"error": "sign in first"}, 401, headers={**NOSTORE, "WWW-Authenticate": 'Bearer realm="users"'})
-
-
-def run(sql: str, args: tuple) -> JSONResponse | list[dict]:
-    """The accessor's rows, or its refusal as an answer"""
-    try:
-        return query(sql, args)
-    except psycopg.Error as e:
-        if e.sqlstate in STATUS:
-            return answer({"error": e.diag.message_primary or str(e)}, STATUS[e.sqlstate])
-        raise
-    except PoolTimeout:
-        return answer({"error": "the database is not answering"}, 503)
-
-
-def rows(x):
-    if isinstance(x, JSONResponse):
-        return x
-    for r in x:
-        for k, v in r.items():
-            if hasattr(v, "isoformat"):
-                r[k] = v.isoformat()
-    return x
 
 
 @app.get("/health")
@@ -281,7 +312,41 @@ def health():
     return {"status": "ok", "service": SERVICE}
 
 
-@app.get("/me")
+@app.get("/hello")
+def hello():
+    return {"message": f"hello from {SERVICE}"}
+
+
+# The token check may fetch the keys, so it runs in the thread pool;
+# the body is read on the loop first. 1 MiB, as nginx's
+# client_max_body_size for the host
+@app.post("/echo")
+async def echo(request: Request):
+    nostore = {"Cache-Control": "no-store"}
+    body = await request.body()
+    if len(body) > MAX_BODY:
+        return JSONResponse({"error": "body too large"}, 413, headers=nostore)
+    who = await run_in_threadpool(caller, request.headers.get("authorization"))
+    if who is None:
+        return JSONResponse(
+            {"error": "sign in first"}, 401, headers={**nostore, "WWW-Authenticate": 'Bearer realm="py-api"'}
+        )
+    try:
+        parsed = json.loads(body) if body else None
+    except ValueError:
+        return JSONResponse({"error": "body is not JSON"}, 400, headers=nostore)
+    return JSONResponse(
+        {"service": SERVICE, "caller": who["sub"], "groups": who["groups"], "body": parsed}, headers=nostore
+    )
+
+
+# /users: who may come in, and what each person may do; the database
+# decides (docs/tutorials/4-users-in-python.md). Sync routes: FastAPI
+# runs each in its thread pool, so userInfo and the database may block
+users = APIRouter(prefix="/users")
+
+
+@users.get("/me")
 def me(authorization: str | None = Header(default=None)):
     who = caller(authorization)
     if who is None:
@@ -295,20 +360,20 @@ def me(authorization: str | None = Header(default=None)):
         return r
     if not r[0]["admitted"]:
         return answer({"error": "not admitted", "email": email, "verified": verified}, 403)
-    r = rows(run("SELECT * FROM users_me(%s)", (who["sub"],)))
+    r = run("SELECT * FROM users_me(%s)", (who["sub"],))
     return r if isinstance(r, JSONResponse) else answer(r[0])
 
 
-@app.get("/people")
+@users.get("/people")
 def people(authorization: str | None = Header(default=None)):
     who = caller(authorization)
     if who is None:
         return signed_out()
-    r = rows(run("SELECT * FROM users_list(%s)", (who["sub"],)))
+    r = run("SELECT * FROM users_list(%s)", (who["sub"],))
     return r if isinstance(r, JSONResponse) else answer(r)
 
 
-@app.get("/roles")
+@users.get("/roles")
 def roles(authorization: str | None = Header(default=None)):
     who = caller(authorization)
     if who is None:
@@ -317,7 +382,7 @@ def roles(authorization: str | None = Header(default=None)):
     return r if isinstance(r, JSONResponse) else answer(r)
 
 
-@app.put("/people/{sub}/roles/{role}")
+@users.put("/people/{sub}/roles/{role}")
 def grant(sub: str, role: str, authorization: str | None = Header(default=None)):
     who = caller(authorization)
     if who is None:
@@ -326,17 +391,22 @@ def grant(sub: str, role: str, authorization: str | None = Header(default=None))
     return r if isinstance(r, JSONResponse) else answer({"sub": sub, "role": role, "granted": True})
 
 
-@app.delete("/people/{sub}/roles/{role}")
+@users.delete("/people/{sub}/roles/{role}")
 def revoke(sub: str, role: str, authorization: str | None = Header(default=None)):
     who = caller(authorization)
     if who is None:
         return signed_out()
     r = run("SELECT users_revoke(%s, %s, %s)", (who["sub"], sub, role))
     return r if isinstance(r, JSONResponse) else answer({"sub": sub, "role": role, "granted": False})
+
+
+app.include_router(users)
 ```
 
-What each part does:
+What it adds to the starter:
 
+- **`USERINFO`:** Cognito's userInfo, from
+  `COGNITO_USERINFO_URL`
 - **`caller`:** the starter's check of the token,
   unchanged but for keeping the token itself, which
   userInfo needs
@@ -346,37 +416,48 @@ What each part does:
   answers must be the token's
 - **`pool`:** four connections at most, as the
   project's login, `DATABASE_URL`. Opened without
-  waiting: the service starts and answers `/health`
-  with the database down, and a route that needs it
-  answers `503`
+  waiting, by `lifespan`: the service starts and
+  answers `/health` with the database down, and a route
+  that needs it answers `503`
 - **`query`:** one statement, its rows. The tests
   replace it
 - **`run` and `STATUS`:** an accessor's refusal, by its
   SQLSTATE, as HTTP, with its message
-- **The routes:** each `def`, not `async def`. FastAPI
-  runs them in its thread pool, where the token check
-  and psycopg may block. Each passes the caller first;
-  none checks a permission itself
+- **`users`, an `APIRouter` with the prefix `/users`:**
+  the routes, each `def`, not `async def`. FastAPI runs
+  them in its thread pool, where the token check and
+  psycopg may block. Each passes the caller first; none
+  checks a permission itself. `app.include_router`
+  mounts them
+- **The starter's three,** `/health`, `/hello` and
+  `/echo`, as they were
+
+Tutorial 6's notes use the same `pool`, `run` and
+`answer`.
 
 ## 5 Its Tests
 
 Offline: a key pair and a userInfo of their own on a
 local port, and the database replaced by what the
-accessors would answer.
-`services/users/test/test_main.py`:
+accessors would answer. The starter's tests share
+`main` in the same process, so these set the pool's
+address and the database on it, and put them back.
+`services/py-api/test/test_users.py`:
 
 ``` python
-"""The routes, the token check and the door, against a pool of our own:
-a key pair made here, its public half served as the pool's JWKS, and a
+"""/users: the token check and the door, against a pool of our own: a
+key pair made here, its public half served as the pool's JWKS, and a
 userInfo, on a local port. The database is replaced by a function that
 answers as the accessors would. Nothing leaves the machine:
 
     python -m unittest discover -s test
+
+main is shared with the other tests in this process, so the pool's
+address and the database are set on it here, and put back after
 """
 
 import importlib
 import json
-import os
 import sys
 import threading
 import time
@@ -398,7 +479,7 @@ EMAILS = {"alice": ("alice@example.org", "true"), "eve": ("eve@example.org", "fa
 class Pool(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/.well-known/jwks.json":
-            body = {"keys": [{**JWK, "kid": "k1", "alg": "RS256", "use": "sig"}]}
+            body = {"keys": [{**JWK, "kid": "users-k1", "alg": "RS256", "use": "sig"}]}
         else:
             sub = jwt.decode(self.headers["Authorization"][7:], options={"verify_signature": False})["sub"]
             email, verified = EMAILS[sub]
@@ -432,52 +513,55 @@ def database(sql, args):
     raise AssertionError(sql)
 
 
-class Api(unittest.TestCase):
+SET = ("ISSUER", "CLIENTS", "USERINFO", "query", "_keys", "_fetched", "_emails")
+
+
+class Users(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.pool = HTTPServer(("127.0.0.1", 0), Pool)
         threading.Thread(target=cls.pool.serve_forever, daemon=True).start()
         cls.issuer = f"http://127.0.0.1:{cls.pool.server_port}"
-        os.environ.update(COGNITO_ISSUER=cls.issuer, COGNITO_UI_CLIENT_ID="ui-client",
-                          COGNITO_PROBE_CLIENT_ID="probe-client", COGNITO_USERINFO_URL=f"{cls.issuer}/oauth2/userInfo")
-        os.environ.pop("DATABASE_URL", None)
         from fastapi.testclient import TestClient
 
         cls.main = importlib.import_module("main")
-        cls.main.query = database
+        cls.saved = {k: getattr(cls.main, k) for k in SET}
+        for k, v in {"ISSUER": cls.issuer, "CLIENTS": ["ui-client", "probe-client"],
+                     "USERINFO": f"{cls.issuer}/oauth2/userInfo", "query": database,
+                     "_keys": {}, "_fetched": -cls.main.REFETCH_AFTER, "_emails": {}}.items():
+            setattr(cls.main, k, v)
         cls.client = TestClient(cls.main.app)
 
     @classmethod
     def tearDownClass(cls):
+        for k, v in cls.saved.items():
+            setattr(cls.main, k, v)
         cls.pool.shutdown()
 
     def token(self, sub, **over):
         now = int(time.time())
         claims = {"iss": self.issuer, "sub": sub, "iat": now, "exp": now + 300, "token_use": "access",
                   "client_id": "ui-client", **over}
-        return {"Authorization": "Bearer " + jwt.encode(claims, KEY, algorithm="RS256", headers={"kid": "k1"})}
-
-    def test_health(self):
-        self.assertEqual(self.client.get("/health").json(), {"status": "ok", "service": "users"})
+        return {"Authorization": "Bearer " + jwt.encode(claims, KEY, algorithm="RS256", headers={"kid": "users-k1"})}
 
     def test_me_signed_out(self):
-        self.assertEqual(self.client.get("/me").status_code, 401)
+        self.assertEqual(self.client.get("/users/me").status_code, 401)
 
     def test_me_another_client(self):
-        self.assertEqual(self.client.get("/me", headers=self.token("alice", client_id="other")).status_code, 401)
+        self.assertEqual(self.client.get("/users/me", headers=self.token("alice", client_id="other")).status_code, 401)
 
     def test_me_admitted(self):
-        r = self.client.get("/me", headers=self.token("alice"))
+        r = self.client.get("/users/me", headers=self.token("alice"))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["roles"], ["deny-all"])
 
     def test_me_unverified(self):
-        r = self.client.get("/me", headers=self.token("eve"))
+        r = self.client.get("/users/me", headers=self.token("eve"))
         self.assertEqual((r.status_code, r.json()["error"]), (403, "not admitted"))
 
     def test_refusals_by_sqlstate(self):
-        self.assertEqual(self.client.get("/people", headers=self.token("alice")).status_code, 403)
-        r = self.client.delete("/people/alice/roles/admin", headers=self.token("alice"))
+        self.assertEqual(self.client.get("/users/people", headers=self.token("alice")).status_code, 403)
+        r = self.client.delete("/users/people/alice/roles/admin", headers=self.token("alice"))
         self.assertEqual(r.status_code, 409)
 
 
@@ -485,7 +569,8 @@ if __name__ == "__main__":
     unittest.main()
 ```
 
-Expect `OK` for each service, users among them:
+Expect `OK` for each service, py-api's with the
+starter's tests and these:
 
 ``` sh
 make test
@@ -493,8 +578,8 @@ make test
 
 ## 6 Run It
 
-**The dev stack:** `make dev` builds the new service
-and starts it. **The native stack:** stop, install its
+**The dev stack:** `make dev` builds py-api again and
+starts it. **The native stack:** stop, install its
 packages, and start:
 
 ``` sh
@@ -503,7 +588,7 @@ tools/native-dev.sh init
 tools/native-dev.sh start
 ```
 
-Expect `users health 200`:
+Expect `py-api health 200`:
 
 ``` sh
 tools/native-dev.sh status
@@ -526,57 +611,58 @@ The door. Expect you with `["admin"]`, alice with
 `not admitted`:
 
 ``` sh
-curl -s -H "Authorization: Bearer ${Y}" http://users.${H}/me
-curl -s -H "Authorization: Bearer ${A}" http://users.${H}/me
-curl -s -H "Authorization: Bearer ${E}" http://users.${H}/me
+curl -s -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/me
+curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
+curl -s -H "Authorization: Bearer ${E}" http://py-api.${H}/users/me
 ```
 
 The people, which alice may not read,
 `users.read needed`, and you may:
 
 ``` sh
-curl -s -H "Authorization: Bearer ${A}" http://users.${H}/people
-curl -s -H "Authorization: Bearer ${Y}" http://users.${H}/people
+curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/people
+curl -s -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people
 ```
 
 Alice a member. Expect `"granted":true`, then alice
 with `notes.read` and `notes.write`:
 
 ``` sh
-curl -s -X PUT -H "Authorization: Bearer ${Y}" http://users.${H}/people/alice/roles/member
-curl -s -H "Authorization: Bearer ${A}" http://users.${H}/me
+curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/alice/roles/member
+curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
 ```
 
 And the refusals. Expect `no such person` (`404`), then
 `the last users.grant` (`409`):
 
 ``` sh
-curl -s -X PUT -H "Authorization: Bearer ${Y}" http://users.${H}/people/nobody/roles/member
-curl -s -X DELETE -H "Authorization: Bearer ${Y}" http://users.${H}/people/you/roles/admin
+curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/nobody/roles/member
+curl -s -X DELETE -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/you/roles/admin
 ```
 
 ## 8 What Reaches the Box
 
-A tag: the `users` image is built, and the manifest's
-change handed to the box's owner. A new service is a
-new host, `users.<zone>`, a new image and a new build,
-so the owner rolls it out before the routes answer
-([Hand a change to the box's
+A tag: py-api's image is built again, and the
+manifest's change handed to the box's owner. No new
+host, image or build: `/users` is py-api's, so the
+owner renders its allow-list again and the new routes
+answer ([Hand a change to the box's
 owner](../onboarding/hand-over.md)).
 
-The box must also give the service **`userInfo`'s
-address**, `COGNITO_USERINFO_URL`, with the issuer, in
-the project's `cognito.env`: Cognito's own domain, not
-the issuer's. Until the owner adds it, `/me` admits no
-one, since it cannot learn an e-mail. And the database
-waits for the box's `feature/postgres`.
+The box must also give py-api **`userInfo`'s address**,
+`COGNITO_USERINFO_URL`, with the issuer, in the
+project's `cognito.env`: Cognito's own domain, not the
+issuer's. Until the owner adds it, `/users/me` admits
+no one, since it cannot learn an e-mail. And the
+database waits for the box's `feature/postgres`.
 
 ## 9 What Can Go Wrong
 
-- **`/me` says `not admitted`, `"verified": false`, for
-  everyone.** `COGNITO_USERINFO_URL` is unset: the
-  service asks no one, and admits no one. Or the box's
-  pool does not map `email_verified`
+- **`/users/me` says `not admitted`,
+  `"verified": false`, for everyone.**
+  `COGNITO_USERINFO_URL` is unset: the service asks no
+  one, and admits no one. Or the box's pool does not
+  map `email_verified`
 - **`503`, `the database is not answering`.** The pool
   could not connect within five seconds:
   `DATABASE_URL`, or the database is down
@@ -584,10 +670,12 @@ waits for the box's `feature/postgres`.
   `function users_admit(...) does not exist` in the
   log.** The migrations have not run:
   `make db CMD=status`
-- **Every route `404` but `/health`.** The manifest
-  still names `/health` alone, or nginx was not
-  rendered again: `make dev`, or the native stack's
-  `start`
+- **Every `/users` route `404`.** The manifest does not
+  name them for py-api, or nginx was not rendered
+  again: `make dev`, or the native stack's `start`
+- **`make check` refuses a `users_` migration.**
+  `users` is not among py-api's `prefixes`: tutorial 3
+  §2
 - **`403` from nginx, an HTML page, not JSON.** A
   method the manifest does not name for that path
 
@@ -598,3 +686,6 @@ waits for the box's `feature/postgres`.
   the starter this came from
 - [psycopg 3](https://www.psycopg.org/psycopg3/docs/),
   read 2026-10-06
+- [FastAPI's bigger
+  applications](https://fastapi.tiangolo.com/tutorial/bigger-applications/):
+  `APIRouter` and its prefix, read 2026-10-06

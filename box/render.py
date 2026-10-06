@@ -124,11 +124,20 @@ def check(m: dict) -> dict:
             routes.append({"method": meth, "path": path, "signed_in": bool(r.get("signed_in", True))})
         if ("GET", "/health") not in keys or any(r["path"] == "/health" and r["signed_in"] for r in routes):
             raise Bad(f"{sn}: needs GET /health, signed_in false: the box and the probes check it")
-        prefix = s.get("prefix", sn.replace("-", "_"))
-        if not PREFIX.match(prefix) or prefix in prefixes:
-            raise Bad(f"{sn}: prefix {prefix!r}: lower case, digits and _, a letter first, and no other service's")
-        prefixes.add(prefix)
-        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "prefix": prefix,
+        # The database prefixes the service owns: its own, prefix, or
+        # several, prefixes, its own first. A second is a part of the
+        # service with tables of its own, as /users in
+        # docs/tutorials/4-users-in-python.md
+        if "prefix" in s and "prefixes" in s:
+            raise Bad(f"{sn}: prefix or prefixes, not both")
+        own = s["prefixes"] if "prefixes" in s else [s.get("prefix", sn.replace("-", "_"))]
+        if not isinstance(own, list) or not own:
+            raise Bad(f"{sn}: prefixes {own!r}: a list of one or more")
+        for prefix in own:
+            if not isinstance(prefix, str) or not PREFIX.match(prefix) or prefix in prefixes:
+                raise Bad(f"{sn}: prefix {prefix!r}: lower case, digits and _, a letter first, and no other's")
+            prefixes.add(prefix)
+        out.append({"name": sn, "language": lang, "port": port, "memory_mib": mem, "prefixes": own,
                     "routes": routes})
     return {"name": name, "description": m.get("description", ""), "github": github, "database": database,
             "ui": {"dev_callback_urls": dev}, "services": out}
@@ -146,12 +155,13 @@ def check_migrations(p: dict) -> int:
     named <version>_<prefix>_<what>.sql for a service's prefix, and
     every table, view, function, procedure, index, sequence, type,
     trigger and domain it makes named with that prefix (conduct's
-    database page). The count checked; Bad otherwise"""
+    database page). A service may own several prefixes; each file has
+    one. The count checked; Bad otherwise"""
     d = HERE.parent / "migrations" / "sql"
     files = sorted(d.glob("*.sql")) if d.is_dir() else []
     if p["database"] != bool(files):
         raise Bad("database true needs migrations/sql/*.sql, and migrations need database true")
-    prefixes = sorted((s["prefix"] for s in p["services"]), key=len, reverse=True)
+    prefixes = sorted((x for s in p["services"] for x in s["prefixes"]), key=len, reverse=True)
     for f in files:
         m = MIGRATION.match(f.name)
         own = m and next((x for x in prefixes if m.group(2).startswith(x + "_")), None)

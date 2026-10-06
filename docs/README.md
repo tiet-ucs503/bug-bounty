@@ -93,10 +93,10 @@ not yet checked; **planned** --- not yet written.
   authorisation](tutorials/2-authorisation.md)
 - `draft` [3 Make it a
   migration](tutorials/3-the-migration.md)
-- `draft` [4 The users service in
-  Python](tutorials/4-users-in-python.md)
-- `draft` [5 The users service in
-  JavaScript](tutorials/5-users-in-javascript.md)
+- `draft` [4 /users in Python, in
+  py-api](tutorials/4-users-in-python.md)
+- `draft` [5 /users in JavaScript, in
+  js-api](tutorials/5-users-in-javascript.md)
 - `draft` [6 A Svelte UI](tutorials/6-a-svelte-ui.md)
 - `draft` [7 Uploads](tutorials/7-uploads/README.md):
   [the store](tutorials/7-uploads/1-the-store.md), [the

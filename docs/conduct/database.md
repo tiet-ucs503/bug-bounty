@@ -28,14 +28,21 @@ A service's tables, views, functions, procedures,
 indexes, sequences, types and triggers are all named
 `<prefix>_*`, its prefix from the manifest:
 `py_api_notes`, `py_api_note_add`. A migration makes
-the objects of one service alone, and its file name
+the objects of one prefix alone, and its file name
 carries that prefix. `make check` refuses either
 broken, so the fence holds without anyone being
 careful.
 
-A service reads and writes its own objects alone.
-Another service's data is that service's to give,
-through its API, not through its tables, with one
+A service may own more than one prefix, `prefixes` in
+the manifest, its own first: py-api holding `/users`
+owns `py_api` and `users` ([tutorial
+4](../tutorials/4-users-in-python.md)). Each prefix is
+a **unit**, its tables, accessors and migrations its
+own, whichever service runs its code.
+
+A unit reads and writes its own objects alone. Another
+unit's data is that unit's to give, through its
+service's API, not through its tables, with one
 exception: a function the other unit **publishes**
 (§3).
 

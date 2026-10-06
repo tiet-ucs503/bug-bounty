@@ -1,10 +1,10 @@
 ---
 abstract: |
-  A dashboard in Svelte: who you are, from the users
-  service's door; every note, yours to change and the
-  rest to read; and, for whoever may run them, the
-  people and their roles. First py-api's notes routes,
-  over tutorial 3's accessors; then `ui/` turned into a
+  A dashboard in Svelte: who you are, from the door at
+  `/users/me`; every note, yours to change and the rest
+  to read; and, for whoever may run them, the people
+  and their roles. First py-api's notes routes, over
+  tutorial 3's accessors; then `ui/` turned into a
   Svelte project by Vite, its sign-in carried over from
   the starter; then run, built and released.
 date: 2026-10-06
@@ -30,8 +30,8 @@ version: v0.1.0
 
 - [What you need](README.md) §2, installed and checked
 - [4](4-users-in-python.md) or
-  [5](5-users-in-javascript.md): the users service,
-  running
+  [5](5-users-in-javascript.md): `/users`, in py-api or
+  js-api, running
 - [Svelte 5's
   runes](https://svelte.dev/docs/svelte/overview), in
   passing: `$state` for what changes, `$props` for what
@@ -39,9 +39,13 @@ version: v0.1.0
 
 ## 2 The Notes Routes, in py-api
 
-Tutorial 3's accessors, called by py-api. In
-`services/py-api/requirements.txt`, the users service's
-three psycopg lines (tutorial 4 §3).
+Tutorial 3's accessors, called by py-api. If you took
+tutorial 4, py-api has its database already: the
+psycopg lines, the imports and the block below are
+there, and only `pydantic`'s import and the routes are
+new. If you took tutorial 5, add them all now, starting
+with tutorial 4 §3's three psycopg lines in
+`services/py-api/requirements.txt`.
 
 Add the routes to py-api's in the manifest:
 
@@ -83,7 +87,7 @@ from psycopg_pool import ConnectionPool, PoolTimeout
 from pydantic import BaseModel, Field
 ```
 
-The database, as the users service has it, before the
+The database, as tutorial 4 gives py-api, before the
 line that makes `app`; and `app` made with its
 `lifespan`, so the pool opens with the service:
 
@@ -281,8 +285,10 @@ cd ui && npm install --no-audit --no-fund && cd ..
 
 The starter's `app.js`, as a module the components
 share: the same PKCE sign-in, the same `api()` that
-waits out a `429` and backs off a `503`. Two additions:
-`raw`, to send a file as itself (tutorial 7), and
+waits out a `429` and backs off a `503`. Three
+additions: `USERS`, the service that holds `/users`,
+`py-api` or, if you took tutorial 5, `js-api`; `raw`,
+to send a file as itself (tutorial 7); and
 `staticBase`, the static bucket's address.
 `ui/src/lib/box.js`:
 
@@ -300,6 +306,9 @@ export const config = (await import(/* @vite-ignore */ new URL("config.js", `${l
 
 const authBase = config.authDomain.includes("://") ? config.authDomain : `https://${config.authDomain}`;
 const apiBase = (service) => (config.apiUrl ? config.apiUrl(service) : `https://${service}.${config.zone}`);
+// The service that holds /users: py-api after tutorial 4, js-api after
+// tutorial 5
+export const USERS = "py-api";
 // The static bucket's objects/, public reads (docs/tutorials/7-uploads/)
 export const staticBase = config.staticUrl ?? `https://static.${config.zone}`;
 
@@ -453,9 +462,9 @@ answers decides what the page shows:
 
 ``` svelte
 <script>
-  // The dashboard: who you are, by users' /me, the door; the notes, by
+  // The dashboard: who you are, by /users/me, the door; the notes, by
   // py-api; the people and their roles, if you may read them
-  import { api, signIn, signOut, signedIn } from "./lib/box.js";
+  import { USERS, api, signIn, signOut, signedIn } from "./lib/box.js";
   import Notes from "./Notes.svelte";
   import People from "./People.svelte";
 
@@ -463,7 +472,7 @@ answers decides what the page shows:
   let refused = $state("");
 
   async function load() {
-    const r = await api("users", "/me");
+    const r = await api(USERS, "/users/me");
     if (r.status === 200) me = r.data;
     else refused = r.status === 403 ? `Not admitted: ${r.data.email || "no e-mail"}` : `users: ${r.status}`;
   }
@@ -581,7 +590,7 @@ permissions in its tooltip:
 <script>
   // The people admitted and their roles, users.read; a role given or
   // taken, users.grant. The matrix says what each role may do
-  import { api } from "./lib/box.js";
+  import { USERS, api } from "./lib/box.js";
 
   let { canGrant } = $props();
   let people = $state([]);
@@ -589,7 +598,7 @@ permissions in its tooltip:
   let error = $state("");
 
   async function load() {
-    const [p, r] = await Promise.all([api("users", "/people"), api("users", "/roles")]);
+    const [p, r] = await Promise.all([api(USERS, "/users/people"), api(USERS, "/users/roles")]);
     if (p.status === 200) people = p.data;
     if (r.status === 200) roles = r.data;
   }
@@ -597,7 +606,7 @@ permissions in its tooltip:
   async function toggle(person, role) {
     error = "";
     const has = person.roles.includes(role);
-    const r = await api("users", `/people/${encodeURIComponent(person.sub)}/roles/${role}`, { method: has ? "DELETE" : "PUT" });
+    const r = await api(USERS, `/users/people/${encodeURIComponent(person.sub)}/roles/${role}`, { method: has ? "DELETE" : "PUT" });
     if (r.status >= 400) error = r.data.error ?? `users: ${r.status}`;
     await load();
   }

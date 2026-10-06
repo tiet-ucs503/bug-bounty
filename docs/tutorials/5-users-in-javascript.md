@@ -1,11 +1,11 @@
 ---
 abstract: |
-  The users unit as a JavaScript service, from the
-  js-api starter: the same routes as tutorial 4's
-  Python, the same database, the same refusals.
-  Fastify, jose and node-postgres, tests that need no
-  database, and the service run behind the stack's
-  nginx.
+  `/users` as routes of js-api, at
+  `js-api.<zone>/users`: the same routes as tutorial
+  4's Python, the same database, the same refusals.
+  Fastify, jose and node-postgres, a plugin with its
+  own hooks, tests that need no database, and the
+  routes run behind the stack's nginx.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -22,77 +22,105 @@ sources:
 status: draft
 subtitle: Fastify, node-postgres, and the database
   deciding
-title: 5 The users Service in JavaScript
+title: 5 /users in JavaScript, in js-api
 version: v0.1.0
 ---
 
 ## 1 Before You Start
 
 - [What you need](README.md) §2, installed and checked
-- [3 Make it a migration](3-the-migration.md), with
-  `services/users/` copied from `services/js-api/`, and
-  its migrations applied
+- [3 Make it a migration](3-the-migration.md), its
+  migrations applied, with `users` among js-api's
+  `prefixes` (§2 there)
 - The Python version is [tutorial
-  4](4-users-in-python.md): the same routes, take one
+  4](4-users-in-python.md): the same routes, in py-api;
+  take one
 
 ## 2 The Routes
 
-Tutorial 4's, §2: the same table, and the same `routes`
-in the manifest. The service's entry differs in two
-keys, `"language": "node"` and `"port": 3000`.
+Tutorial 4's, §2, the same five under `/users`, but in
+js-api's `routes` in the manifest, after the starter's
+three. They answer at `js-api.<zone>/users`: the same
+host, image and process as js-api's own routes.
 
 ## 3 Its Package
 
 `pg`, node-postgres, by exact version, in
-`services/users/`. Expect `added` and a new
+`services/js-api/`. Expect `added` and a changed
 `package-lock.json`:
 
 ``` sh
-cd services/users && npm install --save-exact --no-audit --no-fund pg@8.23.1 && cd ../..
+cd services/js-api && npm install --save-exact --no-audit --no-fund pg@8.23.1 && cd ../..
 ```
 
-And name the package `users` in its `package.json`.
 `make check` holds the lockfile to `package.json`.
 
 ## 4 The Code
 
-`services/users/server.js`, whole:
+`services/js-api/server.js`, whole, as this page leaves
+it: the starter, and what `/users` adds.
 
 ``` javascript
-// users, at users.<your zone>: who may come in, and what each person may
-// do (docs/tutorials/5-users-in-javascript.md)
+// A starter service in JavaScript, at js-api.<your zone>. The
+// starter's three routes show the shape every service keeps; the rest
+// are yours.
 //
-//   GET    /health                      the box's and the probes' check
-//   GET    /me                          the door: admits the caller if the
-//                                       rules let them in, then says who
-//                                       they are and what they may do
-//   GET    /people                      everyone admitted: users.read
-//   GET    /roles                       the matrix, role by role: users.read
-//   PUT    /people/{sub}/roles/{role}   give a role: users.grant
-//   DELETE /people/{sub}/roles/{role}   take it away: users.grant
+//   GET  /health   the box's and the probes' check; keep it
+//   GET  /hello    anyone
+//   POST /echo     a signed-in caller: the body back, with who sent it
 //
-// Who the caller is, from their access token, as every starter checks
-// it; their e-mail from Cognito's userInfo, since an access token
-// carries none. What they may do, the database decides: every accessor
-// takes the caller first and refuses with SQLSTATE 42501, which becomes
-// 403 here.
+// and who comes in, and what each may do, the database deciding
+// (docs/tutorials/5-users-in-javascript.md):
+//
+//   GET    /users/me                          the door: admits the caller
+//                                             if the rules let them in,
+//                                             then says who they are and
+//                                             what they may do
+//   GET    /users/people                      everyone admitted: users.read
+//   GET    /users/roles                       the matrix: users.read
+//   PUT    /users/people/{sub}/roles/{role}   give a role: users.grant
+//   DELETE /users/people/{sub}/roles/{role}   take it away: users.grant
+//
+// In front of this process, the box's nginx (rendered from
+// box/project.json, docs/onboarding/README.md):
+//   - an allow-list: a route added here is unreachable until
+//     box/project.json names it, and the box's owner rolls it out;
+//   - CORS for your www alone, and the rate of writes;
+// so this process does neither.
+//
+// Who the caller is, this service decides itself: a Bearer access token
+// from the box's Cognito pool, issued to your project's UI client or the
+// box's probe client, verified against the pool's keys. What the caller
+// may then do, the project's database decides: every accessor takes
+// the caller first, and its refusals by SQLSTATE become 403, 404 and
+// 409 here.
 
 import Fastify from "fastify";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import pg from "pg";
 
 const PORT = Number(process.env.PORT ?? 3000);
+// Every address in a container; 127.0.0.1 alone when run as a program
+// on a shared machine (tools/native-dev.sh)
 const HOST = process.env.HOST ?? "0.0.0.0";
-const SERVICE = process.env.SERVICE ?? "users";
+const SERVICE = process.env.SERVICE ?? "js-api";
 
+// From the env file the box writes for your project at upload, from
+// its Terraform's outputs. Unset, no token is accepted
 const ISSUER = process.env.COGNITO_ISSUER ?? "";
 const CLIENTS = [process.env.COGNITO_UI_CLIENT_ID, process.env.COGNITO_PROBE_CLIENT_ID].filter(Boolean);
+// Cognito's userInfo, which answers a caller's e-mail to their own
+// token: an access token carries none
 const USERINFO = process.env.COGNITO_USERINFO_URL ?? "";
 
+// The pool's keys, fetched on first use and cached; an unknown key ID
+// refetches at most every 30 s, jose's cooldown, so a forged token
+// cannot make this process fetch on every request
 const keys = ISSUER ? createRemoteJWKSet(new URL(`${ISSUER}/.well-known/jwks.json`)) : null;
 
-// The caller's sub and token, if the token is the pool's access token
-// for one of our clients and unexpired; null otherwise
+// The caller, if the token is the pool's access token for one of our
+// clients and unexpired; null otherwise. Cognito's access tokens carry
+// client_id, not aud
 export async function caller(header) {
   if (!keys || CLIENTS.length === 0) return null;
   const m = /^Bearer ([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)$/.exec(header ?? "");
@@ -100,7 +128,7 @@ export async function caller(header) {
   try {
     const { payload } = await jwtVerify(m[1], keys, { issuer: ISSUER, algorithms: ["RS256"] });
     if (payload.token_use !== "access" || !CLIENTS.includes(payload.client_id)) return null;
-    return { sub: payload.sub, token: m[1] };
+    return { sub: payload.sub, groups: payload["cognito:groups"] ?? [], token: m[1] };
   } catch {
     return null;
   }
@@ -137,9 +165,9 @@ export const db = { query: async (sql, args) => (await pool.query(sql, args)).ro
 // The database's refusals, by SQLSTATE, as HTTP
 const STATUS = { 42501: 403, P0002: 404, 23001: 409, 23514: 400, 22001: 400 };
 
-export function build() {
-  const app = Fastify({ logger: true, bodyLimit: 1024 * 1024 });
-
+// /users: who may come in, and what each person may do; the database
+// decides. A plugin, so its hook and its error handler are its own
+async function users(app) {
   // Every answer here is the caller's own: never cached
   app.addHook("onSend", async (req, reply) => {
     reply.header("Cache-Control", "no-store");
@@ -156,18 +184,16 @@ export function build() {
     throw err;
   });
 
-  // Every route but /health: a signed-in caller, or 401
-  async function signedIn(req, reply) {
+  // Every route here: a signed-in caller, or 401
+  app.addHook("preHandler", async (req, reply) => {
     req.who = await caller(req.headers.authorization);
     if (!req.who) {
-      reply.header("WWW-Authenticate", 'Bearer realm="users"');
+      reply.header("WWW-Authenticate", 'Bearer realm="js-api"');
       return reply.code(401).send({ error: "sign in first" });
     }
-  }
+  });
 
-  app.get("/health", async () => ({ status: "ok", service: SERVICE }));
-
-  app.get("/me", { preHandler: signedIn }, async (req, reply) => {
+  app.get("/me", async (req, reply) => {
     let who;
     try {
       who = await emailOf(req.who);
@@ -179,25 +205,50 @@ export function build() {
     return (await db.query("SELECT * FROM users_me($1)", [req.who.sub]))[0];
   });
 
-  app.get("/people", { preHandler: signedIn }, async (req) => db.query("SELECT * FROM users_list($1)", [req.who.sub]));
+  app.get("/people", async (req) => db.query("SELECT * FROM users_list($1)", [req.who.sub]));
 
-  app.get("/roles", { preHandler: signedIn }, async (req) => db.query("SELECT * FROM users_matrix($1)", [req.who.sub]));
+  app.get("/roles", async (req) => db.query("SELECT * FROM users_matrix($1)", [req.who.sub]));
 
-  app.put("/people/:sub/roles/:role", { preHandler: signedIn }, async (req) => {
+  app.put("/people/:sub/roles/:role", async (req) => {
     const { sub, role } = req.params;
     await db.query("SELECT users_grant($1, $2, $3)", [req.who.sub, sub, role]);
     return { sub, role, granted: true };
   });
 
-  app.delete("/people/:sub/roles/:role", { preHandler: signedIn }, async (req) => {
+  app.delete("/people/:sub/roles/:role", async (req) => {
     const { sub, role } = req.params;
     await db.query("SELECT users_revoke($1, $2, $3)", [req.who.sub, sub, role]);
     return { sub, role, granted: false };
   });
+}
+
+// 1 MiB, as nginx's client_max_body_size for the host. The log is
+// JSON on stdout, which Docker's awslogs driver sends on; Fastify's
+// request lines carry no header, so no token reaches the log
+export function build() {
+  const app = Fastify({ logger: true, bodyLimit: 1024 * 1024 });
+
+  app.get("/health", async () => ({ status: "ok", service: SERVICE }));
+
+  app.get("/hello", async () => ({ message: `hello from ${SERVICE}` }));
+
+  app.post("/echo", async (req, reply) => {
+    reply.header("Cache-Control", "no-store");
+    const who = await caller(req.headers.authorization);
+    if (!who) {
+      reply.header("WWW-Authenticate", 'Bearer realm="js-api"');
+      return reply.code(401).send({ error: "sign in first" });
+    }
+    return { service: SERVICE, caller: who.sub, groups: who.groups, body: req.body ?? null };
+  });
+
+  app.register(users, { prefix: "/users" });
 
   return app;
 }
 
+// Started as a program, not when a test imports it. SIGTERM from
+// `docker compose` closes the server and lets requests in flight end
 if (import.meta.url === `file://${process.argv[1]}`) {
   const app = build();
   for (const s of ["SIGTERM", "SIGINT"]) {
@@ -207,8 +258,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
-What each part does:
+What it adds to the starter:
 
+- **`USERINFO`:** Cognito's userInfo, from
+  `COGNITO_USERINFO_URL`
 - **`caller`:** the starter's check of the token,
   keeping the token itself, which userInfo needs
 - **`emailOf`:** asks userInfo with the caller's own
@@ -220,25 +273,32 @@ What each part does:
   with the database down
 - **`db.query`:** one statement, its rows; the tests
   replace it
-- **The error handler:** node-postgres puts the
-  SQLSTATE in `err.code`; `STATUS` turns a refusal into
-  HTTP with its message. An unreachable database is
-  `503`; anything else, Fastify's `500`
-- **`signedIn`:** a `preHandler` on every route but
-  `/health`, so no route can forget the token
-- **`Cache-Control: no-store`** on every answer, by one
-  hook: each is the caller's own
+- **`users`, a Fastify plugin,** registered with the
+  prefix `/users`. Fastify keeps a plugin's hooks and
+  error handler to its own routes, so the starter's
+  three answer as they did:
+  - **its error handler:** node-postgres puts the
+    SQLSTATE in `err.code`; `STATUS` turns a refusal
+    into HTTP with its message. An unreachable database
+    is `503`; anything else, Fastify's `500`
+  - **a `preHandler` hook:** the token, on every route
+    of the plugin, so none can forget it
+  - **an `onSend` hook:** `Cache-Control: no-store`, as
+    each answer is the caller's own
+- **The shutdown** ends the pool after the server
 
 ## 5 Its Tests
 
-`services/users/test/server.test.js`:
+Each test file runs in a process of its own, so this
+one sets the pool's address before it imports
+`server.js`. `services/js-api/test/users.test.js`:
 
 ``` javascript
-// The routes, the token check and the door, against a pool of our own:
-// a key pair made here, its public half served as the pool's JWKS, and
-// a userInfo, on a local port. The database is replaced by a function
-// that answers as the accessors would. `npm test`; nothing leaves the
-// machine
+// /users: the token check and the door, against a pool of our own: a
+// key pair made here, its public half served as the pool's JWKS, and a
+// userInfo, on a local port. The database is replaced by a function
+// that answers as the accessors would. `npm test`, which runs each file
+// in a process of its own; nothing leaves the machine
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
@@ -288,36 +348,41 @@ after(async () => {
 const get = async (url, sub, claims) =>
   app.inject({ url, headers: sub ? { authorization: `Bearer ${await sign(sub, claims)}` } : {} });
 
-test("health answers anyone", async () => {
-  assert.deepEqual((await app.inject("/health")).json(), { status: "ok", service: "users" });
-});
-
 test("the door refuses no token and another client's", async () => {
-  assert.equal((await get("/me")).statusCode, 401);
-  assert.equal((await get("/me", "alice", { client_id: "neighbour" })).statusCode, 401);
+  assert.equal((await get("/users/me")).statusCode, 401);
+  assert.equal((await get("/users/me", "alice", { client_id: "neighbour" })).statusCode, 401);
 });
 
 test("the door admits a verified e-mail the rules match", async () => {
-  const r = await get("/me", "alice");
+  const r = await get("/users/me", "alice");
   assert.equal(r.statusCode, 200);
   assert.deepEqual(r.json().roles, ["deny-all"]);
   assert.equal(r.headers["cache-control"], "no-store");
 });
 
 test("the door refuses an unverified e-mail", async () => {
-  const r = await get("/me", "eve");
+  const r = await get("/users/me", "eve");
   assert.deepEqual([r.statusCode, r.json().error], [403, "not admitted"]);
 });
 
 test("the database's refusals become 403 and 409", async () => {
-  assert.equal((await get("/people", "alice")).statusCode, 403);
-  const r = await app.inject({ method: "DELETE", url: "/people/alice/roles/admin",
+  assert.equal((await get("/users/people", "alice")).statusCode, 403);
+  const r = await app.inject({ method: "DELETE", url: "/users/people/alice/roles/admin",
     headers: { authorization: `Bearer ${await sign("alice")}` } });
   assert.equal(r.statusCode, 409);
 });
+
+test("the starter's routes keep their own answers", async () => {
+  const r = await app.inject("/health");
+  assert.deepEqual(r.json(), { status: "ok", service: "js-api" });
+  assert.equal(r.headers["cache-control"], undefined);
+});
 ```
 
-Expect `pass 5` for users among the others:
+The last test holds the plugin to its own routes:
+`/health` answers as the starter's, without `no-store`.
+Expect `pass 9` for js-api, the starter's four tests
+and these five:
 
 ``` sh
 make test
@@ -325,11 +390,12 @@ make test
 
 ## 6 Run It, and Call It
 
-As tutorial 4's §6 and §7, word for word: the same
-calls, the same answers. On the dev stack, `make dev`
-builds it; on the native stack, `stop`, `init` and
-`start`, where `init` installs its packages with
-`npm ci`.
+As tutorial 4's §6 and §7, with `js-api` for `py-api`:
+`js-api health 200`, then the same calls at
+`http://js-api.${H}/users/...`, and the same answers.
+On the dev stack, `make dev` builds it; on the native
+stack, `stop`, `init` and `start`, where `init`
+installs its packages with `npm ci`.
 
 One difference you may see: times. node-postgres
 answers a `timestamptz` as a JavaScript `Date`, which
@@ -338,13 +404,14 @@ offset. Both are the same instant.
 
 ## 7 What Reaches the Box
 
-As tutorial 4's §8: a new host, image and build for the
-box's owner to roll out, and `COGNITO_USERINFO_URL` in
-the project's `cognito.env`.
+As tutorial 4's §8: js-api's image built again, its
+allow-list rendered again, no new host, and
+`COGNITO_USERINFO_URL` in the project's `cognito.env`.
 
 ## 8 What Can Go Wrong
 
-- **Tutorial 4's §9,** all of it
+- **Tutorial 4's §9,** all of it, with js-api for
+  py-api
 - **`make check`:
   `package-lock.json differs from package.json for pg`.**
   `pg` was added by hand; run §3's `npm install`
@@ -352,6 +419,9 @@ the project's `cognito.env`.
   database's address is wrong rather than down: the
   handler answers `503` for a refused connection and a
   timeout, not for a name that does not resolve
+- **The starter's routes answer `no-store`, or its
+  errors as the database's.** A hook or the error
+  handler was set on `app`, not inside the plugin
 
 ## 9 See Also
 
@@ -360,3 +430,6 @@ the project's `cognito.env`.
   the starter this came from
 - [node-postgres](https://node-postgres.com/), read
   2026-10-06
+- [Fastify's
+  encapsulation](https://fastify.dev/docs/latest/Reference/Encapsulation/):
+  why a plugin's hooks stay its own, read 2026-10-06

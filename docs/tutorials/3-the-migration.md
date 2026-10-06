@@ -2,8 +2,8 @@
 abstract: |
   Tutorials 1 and 2's drafts, carried as they are into
   migrations: one for the users unit, one for its first
-  admin, one for the notes. A unit declared in the
-  manifest so its prefix is its own; each file complete
+  admin, one for the notes. The unit's prefix given to
+  the service that will serve it; each file complete
   and consistent, linted, applied, rolled back and
   applied again, and the schema written down.
 date: 2026-10-06
@@ -35,48 +35,27 @@ version: v0.1.0
   migration](../migrations/write-a-migration.md) is the
   how-to; this page follows it
 
-## 2 Declare the Unit
+## 2 Give the Unit Its Prefix
 
-A migration's names carry the prefix of a unit in the
-manifest, and `make check` refuses any other. So the
-users unit comes first: a service named `users`, whose
-prefix is `users`.
+A migration's names carry a prefix the manifest gives a
+service, and `make check` refuses any other. `/users`
+will be routes of the service you write it in: py-api,
+for tutorial 4's Python, or js-api, for tutorial 5's
+JavaScript. Not a service of its own: that would be a
+host, an image and a build more, and memory from the
+box's 1 GiB, for five routes.
 
-Copy the starter in the language you will write it in,
-tutorial 4's Python or tutorial 5's JavaScript. Its
-code is replaced there; here it only holds the place:
-
-``` sh
-cp -r services/py-api services/users
-```
-
-or
-
-``` sh
-cp -r services/js-api services/users
-```
-
-Then add it to `box/project.json`'s `services`, with
-the starter's port (each container has its own, so two
-services may share a number) and, for now, its health
-alone. For Python:
+So that service owns the `users` prefix beside its own.
+In `box/project.json`, py-api's `"prefix": "py_api"`
+becomes, its own first:
 
 ``` json
-{
-  "name": "users",
-  "language": "python",
-  "port": 8000,
-  "memory_mib": 128,
-  "prefix": "users",
-  "routes": [
-    {"method": "GET", "path": "/health", "signed_in": false}
-  ]
-}
+"prefixes": ["py_api", "users"],
 ```
 
-For JavaScript, `"language": "node"` and
-`"port": 3000`. Expect three services, agreeing with
-`services/`:
+For JavaScript, js-api's
+`"prefixes": ["js_api", "users"]`. Expect the two
+services as before, agreeing with `services/`:
 
 ``` sh
 make check
@@ -592,17 +571,17 @@ make db CMD=dump
 On the native stack,
 `dbmate --url "${MIGRATOR_URL}" -d migrations/sql -s migrations/schema.sql dump`.
 
-Commit the three migrations, `schema.sql`,
-`box/project.json` and `services/users/` together.
-Delete the drafts: from here on, the migrations are the
-truth, and a change to them is a new migration.
+Commit the three migrations, `schema.sql` and
+`box/project.json` together. Delete the drafts: from
+here on, the migrations are the truth, and a change to
+them is a new migration.
 
 ## 11 What Reaches the Box
 
 A release tag builds the migrations image and records
 its digest; the manifest's change is handed to the
-box's owner, since a new service is a new host, image
-and build ([How a release reaches the
+box's owner. No new host or image: `users` is a prefix
+of py-api or js-api ([How a release reaches the
 box](../onboarding/ci-cd.md)). The box runs the
 migrations once its PostgreSQL is there, the last step
 of its `feature/postgres`; until then, the database is
@@ -611,9 +590,9 @@ your stack's alone.
 ## 12 What Can Go Wrong
 
 - **`make check`:
-  `not <14-digit version>_<prefix>_<what>.sql`.** The
-  unit is not in the manifest yet, §2; or the file was
-  named by hand
+  `not <14-digit version>_<prefix>_<what>.sql`.**
+  `users` is not among a service's `prefixes` yet, §2;
+  or the file was named by hand
 - **`function users_may(text, text) does not exist`,
   applying the notes.** Its file sorts before the users
   migration's. Rename it with a later time; nothing has

@@ -131,8 +131,10 @@ PKCE
   the secret behind it later
 
 Prefix
-: A service's part of the database: `py_api` for
-  `py-api`, every object it owns named `py_api_*`
+: A unit's part of the database: `py_api` for `py-api`,
+  every object it owns named `py_api_*`. A service owns
+  one, or several by `prefixes` in the manifest, as
+  py-api holding `/users` owns `users` too
 
 Published function
 : A unit's function that other units may call, marked
@@ -162,6 +164,12 @@ UI maintainer
   by hand ([A release by
   hand](onboarding/release-by-hand.md)). Releases
   themselves go by the CI role
+
+Unit
+: One thing the project does, with a prefix of its own
+  in the database: its tables, accessors and
+  migrations. A service runs one unit or several:
+  py-api runs `py_api` and, after tutorial 4, `users`
 
 userInfo
 : Cognito's endpoint that answers a person's e-mail and

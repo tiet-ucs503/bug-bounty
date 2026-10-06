@@ -28,9 +28,11 @@ The project has one PostgreSQL database, named for the
 project, and every service with state keeps its part of
 it there. A service's part is its prefix: `py-api` owns
 every object named `py_api_*`, `js-api` every
-`js_api_*`. The manifest names each service's prefix;
-`make check` refuses a migration whose objects carry
-another's.
+`js_api_*`. The manifest names each service's prefix,
+or its prefixes, when one service holds more than one
+part, as py-api holding `/users` does ([tutorial
+4](../tutorials/4-users-in-python.md)); `make check`
+refuses a migration whose objects carry another's.
 
 For a small team, one database is simpler to run, back
 up and reason about than one per service, and a prefix

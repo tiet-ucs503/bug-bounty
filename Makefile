@@ -184,9 +184,11 @@ dev-token:
 # dbmate's form: one file, its up and its down, named by its time
 PREFIX ?=
 NAME   ?=
+# Every prefix the manifest names: a service's prefix, or its prefixes
+PREFIXES := [.services[] | (.prefixes // [.prefix // (.name | gsub("-"; "_"))])[]]
 db-new:
-	@jq -e --arg p '$(PREFIX)' '[.services[].prefix] | index($$p)' box/project.json > /dev/null \
-	  || { echo "PREFIX=<a service's prefix>: $$(jq -r '[.services[].prefix] | join(", ")' box/project.json)" >&2; exit 1; }
+	@jq -e --arg p '$(PREFIX)' '$(PREFIXES) | index($$p)' box/project.json > /dev/null \
+	  || { echo "PREFIX=<a service's prefix>: $$(jq -r '$(PREFIXES) | join(", ")' box/project.json)" >&2; exit 1; }
 	@echo "$(NAME)" | grep -qE '^[a-z][a-z0-9_]{2,60}$$' || { echo "NAME=<lower_case_words>" >&2; exit 1; }
 	@f=migrations/sql/$$(date -u +%Y%m%d%H%M%S)_$(PREFIX)_$(NAME).sql; \
 	  printf -- "-- migrate:up\nSET lock_timeout = '2s';\nSET statement_timeout = '30s';\n\n-- migrate:down\nSET lock_timeout = '2s';\nSET statement_timeout = '30s';\n" > $$f; \
