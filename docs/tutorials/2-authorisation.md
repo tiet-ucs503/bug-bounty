@@ -27,6 +27,7 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - [1 Who comes in](1-authentication.md), with its
   `users-draft.sql`
 - A local stack, up, with the template's own migration

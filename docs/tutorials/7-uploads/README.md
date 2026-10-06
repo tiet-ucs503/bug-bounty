@@ -29,6 +29,8 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](../README.md) §2, installed and
+  checked
 - [6 A Svelte UI](../6-a-svelte-ui.md): the notes, in
   py-api and in the dashboard
 - A local stack whose render has the mock store:

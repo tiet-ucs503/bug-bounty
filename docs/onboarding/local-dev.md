@@ -28,9 +28,14 @@ version: v0.1.0
 ## 1 Before You Start
 
 - **Docker,** with Compose 2.20 or later
-- **`jq` and `curl`;** Python 3 for the render;
-  md-preview, if you want these pages at
+- **GNU `make`, `jq` and `curl`;** Python 3 for the
+  render; md-preview, if you want these pages at
   `docs.localhost`
+- **All of it by one command,** with your system's
+  packages: `make install-deps STACK=docker`, then
+  `make check-deps STACK=docker`. [The
+  tutorials](../tutorials/README.md) §2 says what each
+  tool is for, and §6 what each trusts
 - **Nothing to undo:** the stack binds only to
   `127.0.0.1`, and `make dev-down` stops it
 

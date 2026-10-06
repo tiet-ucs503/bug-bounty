@@ -27,6 +27,7 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - [The tutorials' conventions](README.md) §3, set in
   your shell
 - A local stack, up

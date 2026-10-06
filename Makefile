@@ -2,6 +2,9 @@
 # release is a tag, vX.Y.Z, and GitHub's workflow
 # (.github/workflows/release.yml, docs/onboarding/ci-cd.md).
 #
+#   make install-deps  the tools the tutorials need, by your system's
+#                  packages: STACK=docker or STACK=podman adds the engine
+#   make check-deps    each tool present and new enough
 #   make check     the manifest, and what the box will refuse
 #   make render    the box's pieces, into box/out/<name>/
 #   make test      every service's tests, offline, by its language
@@ -25,8 +28,83 @@ SHELL       := /bin/bash
 .SHELLFLAGS := -o pipefail -c
 SERVICES    := $(notdir $(wildcard services/*))
 
-.PHONY: check render test ui dev dev-down dev-token db-new db-lint db docs-build plan
+.PHONY: install-deps check-deps check render test ui dev dev-down dev-token db-new db-lint db docs-build plan
 .DEFAULT_GOAL := check
+
+# The tools of docs/tutorials/README.md §2, by the system's own package
+# manager, sudo unless root; then check-deps. The system by uname and
+# /etc/os-release, its ID first, then each it is like: Linux Mint is
+# Ubuntu's, Manjaro Arch's. STACK adds Docker or Podman; never the
+# docker group, which is root (§6 there)
+STACK    ?=
+SUDO     := $(shell [ "$$(id -u)" = 0 ] || echo sudo)
+PLATFORM := $(shell if [ "$$(uname -s)" = Darwin ]; then echo macos; \
+  elif [ -r /etc/os-release ]; then . /etc/os-release; for d in $$ID $$ID_LIKE; do \
+  case $$d in (arch|alpine|ubuntu|debian) echo $$d; break ;; esac; done; fi)
+
+ENGINE_arch_docker   := docker docker-compose
+ENGINE_arch_podman   := podman podman-compose
+ENGINE_debian_docker := docker.io docker-cli docker-compose
+ENGINE_debian_podman := podman podman-compose uidmap passt slirp4netns
+ENGINE_ubuntu_docker := docker.io docker-compose-v2
+ENGINE_ubuntu_podman := podman podman-compose uidmap passt slirp4netns
+ENGINE_alpine_docker := docker docker-cli-compose
+ENGINE_alpine_podman := podman podman-compose
+ENGINE_macos_podman  := podman podman-compose
+ENGINE := $(ENGINE_$(PLATFORM)_$(STACK))
+
+install-deps:
+	@case "$(STACK)" in ""|docker|podman) ;; *) echo "STACK=docker, STACK=podman, or none" >&2; exit 1 ;; esac
+	@[ -n "$(PLATFORM)" ] || { echo "install-deps: no recipe for this system; docs/tutorials/README.md §2 lists what to install" >&2; exit 1; }
+	@echo "install-deps: $(PLATFORM)$(if $(STACK), with $(STACK))"
+	@$(MAKE) --no-print-directory install-deps-$(PLATFORM)
+	@$(MAKE) --no-print-directory check-deps
+
+check-deps:
+	@tools/check-deps.sh $(STACK)
+
+install-deps-arch:
+	$(SUDO) pacman -S --needed --noconfirm git bash make curl jq openssl coreutils diffutils grep \
+	  python postgresql nodejs-lts-krypton npm $(ENGINE)
+
+install-deps-alpine:
+	$(SUDO) apk add --no-cache git bash make curl jq openssl coreutils diffutils grep \
+	  python3 postgresql17-client nodejs npm $(ENGINE)
+
+# Debian 13 and Ubuntu 24.04 have neither Node 24 nor, on Ubuntu,
+# PostgreSQL 17: both from their makers' own apt repositories, each key
+# trusted for its repository alone. PostgreSQL's key as the system's
+# own postgresql-common ships it; NodeSource's fetched, and refused
+# unless its fingerprint is the one first read, 2026-10-06. Nothing
+# merely recommended: logrotate's would bring a mail server
+NODESOURCE_KEY := 6F71F525282841EEDAF851B42F59B5F99B1BE0B4
+APT := $(SUDO) env DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends
+install-deps-debian install-deps-ubuntu:
+	$(APT) update
+	$(APT) install -y ca-certificates curl gnupg git bash make jq openssl coreutils diffutils grep \
+	  python3 python3-venv postgresql-common
+	echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] https://apt.postgresql.org/pub/repos/apt $$(. /etc/os-release; echo $$VERSION_CODENAME)-pgdg main" \
+	  | $(SUDO) tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+	@g=$$(mktemp -d); trap 'rm -rf "$$g"' EXIT; export GNUPGHOME=$$g; k=$$g/key; \
+	  curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key > "$$k"; \
+	  f=$$(gpg --show-keys --with-colons "$$k" 2> /dev/null | awk -F: '/^fpr/ {print $$10; exit}'); \
+	  [ "$$f" = $(NODESOURCE_KEY) ] || { echo "install-deps: NodeSource's key is $$f, not $(NODESOURCE_KEY): stopped" >&2; exit 1; }; \
+	  $(SUDO) install -d -m 0755 /etc/apt/keyrings; \
+	  gpg --dearmor < "$$k" | $(SUDO) tee /etc/apt/keyrings/nodesource.gpg > /dev/null
+	echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" \
+	  | $(SUDO) tee /etc/apt/sources.list.d/nodesource.list > /dev/null
+	$(APT) update
+	$(APT) install -y postgresql-client-17 nodejs $(ENGINE)
+
+# Homebrew's, as you: GNU make as gmake, and libpq and node@24 kept off
+# PATH until you add them. Docker on a Mac is Docker Desktop, by hand
+install-deps-macos:
+	@command -v brew > /dev/null || { echo "install-deps: Homebrew first, https://brew.sh" >&2; exit 1; }
+	@[ "$(STACK)" != docker ] || echo "install-deps: Docker Desktop is yours to install: https://docs.docker.com/desktop/setup/install/mac-install/"
+	brew install git bash make curl jq openssl coreutils diffutils grep python@3.12 libpq node@24 $(ENGINE)
+	@echo "install-deps: add to your shell's startup file, then open a new shell:"
+	@echo '  export PATH="$$(brew --prefix)/opt/make/libexec/gnubin:$$(brew --prefix)/opt/libpq/bin:$$(brew --prefix)/opt/node@24/bin:$$(brew --prefix)/opt/python@3.12/libexec/bin:$$PATH"'
+	@[ "$(STACK)" != podman ] || echo "install-deps: then, once: podman machine init && podman machine start"
 
 # The manifest and the migrations' prefixes (render --check), each
 # service folder named in it and each in it a folder, the build the

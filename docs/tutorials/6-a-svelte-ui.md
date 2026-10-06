@@ -28,10 +28,10 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - [4](4-users-in-python.md) or
   [5](5-users-in-javascript.md): the users service,
   running
-- Node 24
 - [Svelte 5's
   runes](https://svelte.dev/docs/svelte/overview), in
   passing: `$state` for what changes, `$props` for what

@@ -58,8 +58,10 @@ page](local-dev.md) §4 passing through its nginx.
 ## 2 Install Podman
 
 **From the distribution,** if the administrator
-installed it. Expect a version, and `podman-compose`
-beside it:
+installed it; `make install-deps STACK=podman` does,
+where you may use `sudo` ([the
+tutorials](../tutorials/README.md) §2). Expect a
+version, and `podman-compose` beside it:
 
 ``` sh
 podman --version

@@ -26,11 +26,11 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - `users-draft.sql` and `notes-draft.sql`, from
   tutorials [1](1-authentication.md) and
   [2](2-authorisation.md)
 - A local stack, up
-- Node, for Squawk
 - [Write a
   migration](../migrations/write-a-migration.md) is the
   how-to; this page follows it

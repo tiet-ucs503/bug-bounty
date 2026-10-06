@@ -28,10 +28,10 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - [3 Make it a migration](3-the-migration.md), with
   `services/users/` copied from `services/js-api/`, and
   its migrations applied
-- Node 24, as the image's
 - The Python version is [tutorial
   4](4-users-in-python.md): the same routes, take one
 

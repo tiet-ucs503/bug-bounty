@@ -87,7 +87,10 @@ Every step on these pages was run, as written, in a
 fork of the template v0.1.0 on 2026-10-06: on the
 native stack, and in containers under rootless Podman.
 
-## 2 Before You Start
+## 2 What You Need
+
+Everything every page needs is here; no page asks for
+more, and each links back to this section.
 
 - **A fork of the template,** and a shell at its root
 - **A local stack,** either:
@@ -97,13 +100,94 @@ native stack, and in containers under rootless Podman.
   - [the native stack](../onboarding/shared-box.md),
     without containers or root: hosts at
     `*.localhost:<your NGINX_PORT>`
-- **`curl`, `jq` and `psql`,** and Node 24 from page 6
-  on
+- **A browser,** for pages 6 and 7.4
 - **Reading SQL,** and Python or JavaScript
 
-Nothing here touches the box or AWS. What reaches the
-box, and what its owner must add first, each page says
-at its end.
+### 2.1 Install Them
+
+One command installs every tool, with your system's own
+package manager: Arch, Debian 13, Ubuntu 24.04, Alpine
+3.24 or macOS with Homebrew. It uses `sudo` unless you
+are root, and checks what it installed at the end.
+
+`make` comes first, where the system lacks it, and on
+Alpine `bash`, which the Makefile runs its recipes in:
+
+- **Debian and Ubuntu:** `sudo apt-get install make`
+- **Alpine:** `sudo apk add make bash`
+- **Arch and macOS:** already there
+
+Then, from the fork's root, with the engine for your
+stack. Expect every line of the check at the end to
+start `ok`:
+
+``` sh
+make install-deps STACK=podman
+```
+
+- **`STACK=podman`** for [the dev
+  stack](../onboarding/local-dev.md) under
+  [Podman](../onboarding/podman.md)
+- **`STACK=docker`** for it under Docker; on a Mac,
+  Docker Desktop is yours to install
+- **No `STACK`** for [the native
+  stack](../onboarding/shared-box.md). Without root,
+  install nothing here: that page's §2 and §3 install
+  every tool below, and its own, into your home
+  directory
+
+What it does not do, since each is yours to decide:
+start Docker's service, add you to the `docker` group
+(§6), or start Podman's machine on a Mac. On macOS it
+prints the `PATH` line to add to your shell's startup
+file; open a new shell, then check (§2.3).
+
+Tried 2026-10-06 in containers of Arch, Debian 13,
+Ubuntu 24.04 and Alpine 3.24: every tool installed and
+checked, then `make check` and `make test` passing.
+macOS's recipe is written but not yet tried.
+
+### 2.2 What It Installs, and Why
+
+- **`git`, `bash` and GNU `make`:** every page. The
+  Makefile is the way in: `make check`,
+  `make dev-token`, `make test`, `make ui`
+- **`curl` and `jq` 1.6 or later:** every page
+- **Python 3.12 or later:** the render behind
+  `make check` and `make dev`, tutorial 4's
+  `make test`, and the test image 7.3 draws
+- **`psql` and `pg_dump`, PostgreSQL 17 or later:**
+  tutorials 1, 2, 3 and 7.2. `pg_dump` refuses a server
+  newer than itself, and the stack's is 17. Debian and
+  Ubuntu get them from PostgreSQL's own repository
+- **`openssl` and `base64`:** 7.1, a file's SHA-256 as
+  S3 wants it
+- **Node 24 or later, with `npm`:** tutorial 3, for
+  Squawk by `npx`; 5, 6 and 7.4. Debian and Ubuntu get
+  it from NodeSource's repository
+- **`diff`, `cmp` and `grep`:** tutorials 3 and 7.3
+- **With `STACK`:** Docker with Compose 2.20 or later,
+  or Podman 5 with podman-compose 1.5. dbmate and the
+  database run in the stack's containers, so `make db`
+  needs nothing more
+
+Debian 13's podman-compose is 1.3, and Ubuntu 24.04's
+Podman 4.9 with podman-compose 1.0.6: older than the
+stack was tried with. The check says so; take Podman
+from conda-forge instead, [Podman's
+page](../onboarding/podman.md) §2.
+
+### 2.3 Check Them
+
+At any time, the same check `install-deps` ends with.
+Expect every line to start `ok`; `old` or `none` names
+the tool to install or update:
+
+``` sh
+make check-deps STACK=podman
+```
+
+Security notes on these tools are §6.
 
 ## 3 Conventions
 
@@ -122,8 +206,10 @@ STORE_URL=http://localhost:9100/static.localhost
 STATIC_URL=http://static.localhost:8080
 ```
 
-For the native stack, from your own ports; `env.sh`
-sets the database's and the store's four itself:
+For the native stack, `H` and `MOCK_URL` come from your
+own ports, and `env.sh` sets the other four itself:
+`MIGRATOR_URL`, `DATABASE_URL`, `STORE_URL` and
+`STATIC_URL`.
 
 ``` sh
 . dev/out/native/env.sh
@@ -172,3 +258,63 @@ all is well.
 - [Write a
   migration](../migrations/write-a-migration.md)
 - [The UI](../ui/README.md)
+
+## 6 The Tools' Security
+
+None of these tools is unusual, but each of the
+following trusts something, or gives something, that
+you should know about.
+
+> [!WARNING]
+> **The `docker` group is root.** A member can start a
+> container that mounts `/` and writes to it, with no
+> password asked. Adding yourself to the group, which
+> many install guides suggest, gives root to anything
+> that runs as you. Prefer [rootless
+> Podman](../onboarding/podman.md) or Docker's own
+> rootless mode, or keep `sudo docker` and accept the
+> prompt.
+
+- **`make install-deps` runs your package manager as
+  root,** by `sudo`, and installs only what its recipe
+  names. Read the recipe for your system in the
+  Makefile first; it is a few lines
+- **On Debian and Ubuntu it adds two apt
+  repositories,** and root then trusts each for the
+  packages it serves. PostgreSQL's key is the one your
+  system's own `postgresql-common` ships, so it comes
+  through your distribution's signatures. NodeSource's
+  is fetched, and refused unless its fingerprint is
+  `6F71F525282841EEDAF851B42F59B5F99B1BE0B4`. That is
+  the key as first read, 2026-10-06, not one NodeSource
+  publishes elsewhere: it catches a key changed since,
+  not a bad one then. The recipe never pipes a maker's
+  script into `sudo bash`, as many install guides do
+- **`npm` runs packages' code as you,** at install as
+  well as at run: `npm ci` and `npm install` run their
+  install scripts, and `npx --yes squawk-cli@2.67.0`
+  fetches and runs a package, its binary in a second
+  package for your platform. Versions are pinned and
+  lockfiles committed, which stops a surprise upgrade,
+  not a bad release
+- **`pip` installs into each service's own `.venv`,**
+  never system-wide, from PyPI by the versions in its
+  `requirements.txt`, without hashes; `make test` adds
+  `httpx`, unpinned. A package with no wheel for your
+  platform is built from source, which runs its code
+- **micromamba is fetched unchecked,** by `curl` into
+  `tar`, from its own site, and it trusts conda-forge
+  for every package it installs. [The native stack's
+  page](../onboarding/shared-box.md) §3 checks dbmate's
+  SHA-256 against its GitHub release. That catches a
+  corrupt download, but not a release replaced at
+  GitHub, since the hash comes from the same place
+- **The mocks admit anyone, on `127.0.0.1`.** On a
+  shared machine every user can reach them, and the
+  database's URL, password and all, is visible in `ps`
+  while `psql` or `pg_dump` runs. Use a password of
+  your own, and only test data: [the native stack's
+  page](../onboarding/shared-box.md) §1 and §5
+- **Podman's `newuidmap` and `newgidmap` are setuid
+  root,** installed by the administrator. They map only
+  the IDs that `/etc/subuid` and `/etc/subgid` give you

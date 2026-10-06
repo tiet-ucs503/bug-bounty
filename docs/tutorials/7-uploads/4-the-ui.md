@@ -25,6 +25,8 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](../README.md) §2, installed and
+  checked
 - [7.3 The service](3-the-service.md), running
 - [6 A Svelte UI](../6-a-svelte-ui.md), with `make ui`
   serving it

@@ -28,10 +28,10 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](README.md) §2, installed and checked
 - [3 Make it a migration](3-the-migration.md), with
   `services/users/` copied from `services/py-api/`, and
   its migrations applied
-- Python 3.12, as the image's
 - The JavaScript version is [tutorial
   5](5-users-in-javascript.md): the same routes, take
   one

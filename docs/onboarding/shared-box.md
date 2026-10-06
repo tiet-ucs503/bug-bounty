@@ -66,12 +66,12 @@ On arm64, `linux-aarch64` for `linux-64`.
 
 ## 3 Install the Tools
 
-Node, Python, PostgreSQL, nginx and `jq`, in one
-environment of your own. Expect a list of packages,
-then `Transaction finished`:
+Node, Python, PostgreSQL, nginx, `jq`, GNU `make` and
+`openssl`, in one environment of your own. Expect a
+list of packages, then `Transaction finished`:
 
 ``` sh
-"${HOME}/.local/bin/micromamba" create -y -p "${HOME}/.local/envs/project-dev" -c conda-forge nodejs=24 python=3.12 postgresql=17 nginx jq
+"${HOME}/.local/bin/micromamba" create -y -p "${HOME}/.local/envs/project-dev" -c conda-forge nodejs=24 python=3.12 postgresql=17 nginx jq make openssl
 ```
 
 Then dbmate, a single binary, checked against the
@@ -92,7 +92,15 @@ your shell's startup file. Expect each tool's path:
 
 ``` sh
 export PATH="${HOME}/.local/bin:${HOME}/.local/envs/project-dev/bin:${PATH}"
-command -v node python3 initdb pg_ctl psql nginx dbmate
+command -v node python3 initdb pg_ctl psql pg_dump nginx jq make openssl dbmate
+```
+
+Then the tutorials' check, [their
+page](../tutorials/README.md) §2.3. Expect every line
+to start `ok`:
+
+``` sh
+make check-deps
 ```
 
 ## 4 Your Ports

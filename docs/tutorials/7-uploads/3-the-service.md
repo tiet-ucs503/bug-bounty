@@ -26,6 +26,8 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](../README.md) §2, installed and
+  checked
 - [7.2 The database](2-the-database.md), applied
 - py-api with tutorial 6's notes routes
 

@@ -26,6 +26,8 @@ version: v0.1.0
 
 ## 1 Before You Start
 
+- [What you need](../README.md) §2, installed and
+  checked
 - [7 Uploads](README.md), read
 - A local stack up, and [the conventions](../README.md)
   §3 set, `STORE_URL` and `STATIC_URL` among them
