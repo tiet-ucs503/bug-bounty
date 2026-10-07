@@ -37,7 +37,7 @@ Two files at your fork's root, carried into tutorial
   the accessors that read and change them, and the two
   functions a later unit's migration calls to bring its
   permissions
-- **`test-2.sql`:** 28 tests, written before it, that
+- **`test-2.sql`:** 29 tests, written before it, that
   it must pass
 
 At the end, every test passes, in a transaction rolled
@@ -59,7 +59,7 @@ its refusals.
     to 7 rely on: each accessor's signature, the
     permission it needs, and how it refuses
 3.  **[The tests](3-tests.md).** Each rule asked what
-    could go wrong, and the answers fixed as 28 tests,
+    could go wrong, and the answers fixed as 29 tests,
     held to the contract. You run them first, and every
     one fails
 4.  **[The implementation](4-implementation.md).** The

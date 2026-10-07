@@ -33,7 +33,7 @@ Each rule of [the concept](1-concept.md) §3, held to
 - **T3.4, R5:** a grant for a role that does not exist?
   Expect `23503`, a foreign key's refusal
 - **T3.5, R2, R6:** tutorial 2's tests, on the
-  migrations? Expect `28 of 28 pass`
+  migrations? Expect `29 of 29 pass`
 - **T3.6, R7:** the first admin signs in for the first
   time: may they grant? Expect `t`
 - **T3.7, R8:** the three rolled back: how many
@@ -110,7 +110,7 @@ expect T3.3 3 "$(q "SELECT count(*) FROM pg_proc p WHERE p.proname LIKE 'users\_
 expect T3.4 23503 "$(ask "INSERT INTO users_grants VALUES ('nobody', 'users.read')")"
 
 # Tutorial 2's tests, on the migrations instead of the drafts
-expect T3.5 "28 of 28 pass" "$(psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -f test-2.sql -c ROLLBACK 2>&1 | grep -o '[0-9]* of [0-9]* pass')"
+expect T3.5 "29 of 29 pass" "$(psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -f test-2.sql -c ROLLBACK 2>&1 | grep -o '[0-9]* of [0-9]* pass')"
 
 # The first admin, at their first sign-in, may grant
 expect T3.6 t "$(ask "SELECT users_person_see('t3-first', '${FIRST_ADMIN}', true, 'Google')" \

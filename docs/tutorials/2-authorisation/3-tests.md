@@ -2,7 +2,7 @@
 abstract: |
   Step 3 of tutorial 2: the concept's ten rules, each
   asked what could go wrong, and the answers fixed as
-  28 tests in one SQL file, before any code. Run it
+  29 tests in one SQL file, before any code. Run it
   now, and every test fails; the implementation is
   whatever makes them pass.
 date: 2026-10-07
@@ -131,9 +131,12 @@ refusals by the SQLSTATEs the contract names.
                             added, anu signs in
                             again: how many?
 
-  R2 The matrix,    T2.28   you read the matrix: `example.read`
-  read                      what does `reader`   alone
+  R2, R6 The        T2.28   you read the matrix: `example.read`
+  matrix, read              what does `reader`   alone
                             hold?
+
+                    T2.29   bhanu reads the      `42501`
+                            matrix
 
   -------------------------------------------------------------
 
@@ -202,7 +205,9 @@ accessors it calls and the tests that check it.
     at the first sign-in alone. T2.25 to T2.27
 12. **You read the matrix.** `users_matrix` shows you
     each role and the permissions it holds: `reader`
-    holds `example.read` and nothing else. T2.28
+    holds `example.read` and nothing else. Bhanu asks
+    for it too, and is refused, as he was the people.
+    T2.28, T2.29
 
 ## 3 The File
 
@@ -213,7 +218,7 @@ the file ends by counting, and exits with an error if
 any failed.
 
 ``` sql
--- Tutorial 2's tests, T2.1 to T2.28: the concept's rules, each with its
+-- Tutorial 2's tests, T2.1 to T2.29: the concept's rules, each with its
 -- answer fixed. Run in a transaction that is rolled back
 
 -- expect(id, act, ask, want): run act, if any, then ask; pass if ask
@@ -311,9 +316,10 @@ SELECT pg_temp.expect('T2.27', $$INSERT INTO users_starting_roles VALUES (20, '%
                                  SELECT users_person_see('anu', 'anu@elsewhere.net', true, 'Google')$$,
   $$SELECT count(*) FROM users_members WHERE sub = 'anu'$$, '0');
 
--- R2: the matrix, read, each role its row
+-- R2, R6: the matrix, each role its row, to users.read alone
 SELECT pg_temp.expect('T2.28', NULL,
   $$SELECT permissions::text FROM users_matrix('you') WHERE role = 'reader'$$, '{example.read}');
+SELECT pg_temp.expect('T2.29', NULL, $$SELECT count(*) FROM users_matrix('bhanu')$$, '42501');
 
 -- How many pass; exit 3 if any fails
 SELECT format('%s of %s pass', count(*) FILTER (WHERE ok), count(*)) FROM t2_results;
@@ -332,7 +338,7 @@ recorded, then `FAIL` on every line: most with
 `got 42883`, an undefined function; T2.23 with
 `got nothing`, no published function to find; T2.25 to
 T2.27 with `got 42P01`, an undefined table. At the
-end, `0 of 28 pass`, and `failed:` with every ID:
+end, `0 of 29 pass`, and `failed:` with every ID:
 
 ``` sh
 psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f test-2.sql -c ROLLBACK
