@@ -147,7 +147,7 @@ user of your choosing. Expect `200` and the user named
 as the caller:
 
 ``` sh
-TOKEN=$(make -s dev-token SUB=alice GROUPS=admin)
+TOKEN=$(make -s dev-token SUB=asha GROUPS=admin)
 curl -s -X POST -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -d '{"x": 1}' http://js-api.localhost:8080/echo
 ```
 

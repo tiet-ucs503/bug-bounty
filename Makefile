@@ -168,7 +168,7 @@ dev-down:
 
 # An access token from the mock, for curl, as the probe client, with
 # the e-mail its userInfo answers:
-#   make dev-token SUB=alice EMAIL=alice@example.org GROUPS=admin
+#   make dev-token SUB=asha EMAIL=asha@example.org GROUPS=admin
 SUB      ?= dev-user
 EMAIL    ?= $(SUB)@example.org
 VERIFIED ?= true

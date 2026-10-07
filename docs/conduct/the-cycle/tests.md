@@ -57,17 +57,18 @@ expects.
   `admin` alone cannot read notes, `member` can. Expect
   you can read them: roles add up, and one role never
   takes away what another gives
-- **Whose?** Bob, a `member`, edits a note alice wrote.
-  Expect a refusal, `not your note`: being allowed to
-  write notes is not being allowed to write hers
-- **Absent?** Alice edits a note that does not exist.
+- **Whose?** Bhanu, a `member`, edits a note asha
+  wrote. Expect a refusal, `not your note`: being
+  allowed to write notes is not being allowed to write
+  hers
+- **Absent?** Asha edits a note that does not exist.
   Expect `404`, which is a different answer from
   editing someone else's note (`403`), so the caller
   can tell the two apart
 - **Twice?** Does doing the same thing again change
-  anything? An admin gives bob the `reader` role, then,
-  by mistake, gives it again. Expect no error, and bob
-  holding `reader` once, not twice
+  anything? An admin gives bhanu the `reader` role,
+  then, by mistake, gives it again. Expect no error,
+  and bhanu holding `reader` once, not twice
 - **The last one?** Can taking away the last of
   something break everything? The project's only admin
   takes away their own `admin` role. Were it allowed,
@@ -78,7 +79,7 @@ expects.
 - **At the edge?** A body of exactly 1 MiB is sent.
   Expect it to pass; one byte more, `413`
 - **What leaks?** Does an answer say more than it
-  should? Bob, a `reader`, lists the notes. He should
+  should? Bhanu, a `reader`, lists the notes. He should
   see every note and, on each, whether it is his own,
   but not who wrote the others. Expect the list to
   carry a `mine` flag, `true` or `false`, and no owner

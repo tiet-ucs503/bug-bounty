@@ -226,7 +226,7 @@ and remembers the e-mail you give, as Cognito would,
 for its `userInfo`:
 
 ``` sh
-A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=alice)
+A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
 Y=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=you EMAIL=you@example.org)
 ```
 

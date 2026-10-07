@@ -297,33 +297,33 @@ for the second.
 Save as `try-7.sql`:
 
 ``` sql
--- Alice a member, with an upload: its row first, then, once the
+-- Asha a member, with an upload: its row first, then, once the
 -- bucket holds it, marked stored
-SELECT users_admit('alice', 'alice@example.org', true);
-INSERT INTO users_members (sub, role) VALUES ('alice', 'member') ON CONFLICT DO NOTHING;
-SELECT key AS object, stored FROM py_api_object_add('alice', repeat('a', 64), 10, 'image/png') \gset
+SELECT users_admit('asha', 'asha@example.org', true);
+INSERT INTO users_members (sub, role) VALUES ('asha', 'member') ON CONFLICT DO NOTHING;
+SELECT key AS object, stored FROM py_api_object_add('asha', repeat('a', 64), 10, 'image/png') \gset
 SELECT :'object' AS object, :'stored' AS stored;
-SELECT py_api_object_stored('alice', :'object');
+SELECT py_api_object_stored('asha', :'object');
 
 -- A note refers to it: one reference, counted
-SELECT py_api_note_new('alice', 'with an object') AS note \gset
-SELECT py_api_note_objects_set('alice', :note, ARRAY[:'object']);
-SELECT refs FROM py_api_objects_mine('alice') WHERE key = :'object';
+SELECT py_api_note_new('asha', 'with an object') AS note \gset
+SELECT py_api_note_objects_set('asha', :note, ARRAY[:'object']);
+SELECT refs FROM py_api_objects_mine('asha') WHERE key = :'object';
 
--- Bob may not take it up into a note of his
-SELECT users_admit('bob', 'bob@example.org', true);
-INSERT INTO users_members (sub, role) VALUES ('bob', 'member') ON CONFLICT DO NOTHING;
-SELECT py_api_note_new('bob', 'bob''s') AS bobs \gset
+-- Bhanu may not take it up into a note of his
+SELECT users_admit('bhanu', 'bhanu@example.org', true);
+INSERT INTO users_members (sub, role) VALUES ('bhanu', 'member') ON CONFLICT DO NOTHING;
+SELECT py_api_note_new('bhanu', 'bhanu''s') AS bhanus \gset
 DO $$ BEGIN
-  PERFORM py_api_note_objects_set('bob', (SELECT max(id) FROM py_api_notes WHERE owner = 'bob'),
-                                  ARRAY(SELECT key FROM py_api_objects WHERE owner = 'alice'));
-EXCEPTION WHEN no_data_found THEN RAISE NOTICE 'bob takes alice''s object: %', SQLERRM;
+  PERFORM py_api_note_objects_set('bhanu', (SELECT max(id) FROM py_api_notes WHERE owner = 'bhanu'),
+                                  ARRAY(SELECT key FROM py_api_objects WHERE owner = 'asha'));
+EXCEPTION WHEN no_data_found THEN RAISE NOTICE 'bhanu takes asha''s object: %', SQLERRM;
 END $$;
 
 -- The note deleted: its link goes, the object is let go, and the
 -- collector waits out the grace
-SELECT py_api_note_drop('alice', :note);
-SELECT refs FROM py_api_objects_mine('alice') WHERE key = :'object';
+SELECT py_api_note_drop('asha', :note);
+SELECT refs FROM py_api_objects_mine('asha') WHERE key = :'object';
 SELECT count(*) AS to_collect_now FROM py_api_objects_to_collect('6 hours', 10);
 UPDATE py_api_objects SET created_at = created_at - interval '7 hours', released_at = released_at - interval '7 hours'
   WHERE key = :'object';
@@ -339,10 +339,10 @@ psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f try-7.sql -c ROLLBACK
 
 Expect, in order:
 
-- alice in; her object's key,
+- asha in; her object's key,
   `objects/<16 hex>/aaa...`, and `stored` `f`;
 - one reference, once her note refers to it;
-- a notice: bob may not take it up,
+- a notice: bhanu may not take it up,
   `an object that is not yours, or not stored`;
 - after the note's deletion, `refs` `0`, and nothing to
   collect: the grace has six hours to run;

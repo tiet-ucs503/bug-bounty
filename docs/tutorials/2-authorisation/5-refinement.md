@@ -165,9 +165,9 @@ passes 23 of 24.
   `SELECT * FROM users_grants WHERE role = 'member'`
 - **A permission's name is refused by a `CHECK`.** It
   must be `<unit>.<verb>`, lower case, one dot
-- **You want "everyone but bob".** A matrix cannot say
-  no ([the concept](1-concept.md) §5). Take bob's role,
-  or give the others a role he lacks
+- **You want "everyone but bhanu".** A matrix cannot
+  say no ([the concept](1-concept.md) §5). Take bhanu's
+  role, or give the others a role he lacks
 - **`relation "t2_results" already exists`.** The tests
   ran twice in one session without a rollback. Run them
   as §2 does, between `BEGIN` and `ROLLBACK`

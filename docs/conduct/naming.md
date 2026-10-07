@@ -59,7 +59,7 @@ newcomer cannot learn a habit by reading.
     `sub`, `id`, `url`, `db`
 7.  **No versions, dates or people in a name,** except
     a migration's version, which is its order:
-    `notes_v2`, `new_users`, `alice_fix` all go stale
+    `notes_v2`, `new_users`, `asha_fix` all go stale
 
 ## 3 Each Kind of Name
 

@@ -112,7 +112,7 @@ Say what it prints: *Expect `native-dev: up`.*
 - **A warning names the trap and its cost:**
 
   > Mind the `@`: `'%example.org'` would let in
-  > `mallory@evil-example.org`.
+  > `manthara@evil-example.org`.
 
 - **Plain words.** *Use*, not *utilise*; *need*, not
   *require*; *about*, not *in relation to*

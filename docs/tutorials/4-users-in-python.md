@@ -477,7 +477,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 JWK = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(KEY.public_key()))
-EMAILS = {"alice": ("alice@example.org", "true"), "eve": ("eve@example.org", "false")}
+EMAILS = {"asha": ("asha@example.org", "true"), "esha": ("esha@example.org", "false")}
 
 
 class Pool(BaseHTTPRequestHandler):
@@ -509,7 +509,7 @@ def database(sql, args):
         sub, email, verified = args
         return [{"admitted": verified and email.endswith("@example.org")}]
     if sql.startswith("SELECT * FROM users_me"):
-        return [{"sub": args[0], "email": "alice@example.org", "roles": ["deny-all"], "permissions": []}]
+        return [{"sub": args[0], "email": "asha@example.org", "roles": ["deny-all"], "permissions": []}]
     if sql.startswith("SELECT * FROM users_list"):
         raise refused("42501", "users.read needed")
     if sql.startswith("SELECT users_revoke"):
@@ -552,20 +552,20 @@ class Users(unittest.TestCase):
         self.assertEqual(self.client.get("/users/me").status_code, 401)
 
     def test_me_another_client(self):
-        self.assertEqual(self.client.get("/users/me", headers=self.token("alice", client_id="other")).status_code, 401)
+        self.assertEqual(self.client.get("/users/me", headers=self.token("asha", client_id="other")).status_code, 401)
 
     def test_me_admitted(self):
-        r = self.client.get("/users/me", headers=self.token("alice"))
+        r = self.client.get("/users/me", headers=self.token("asha"))
         self.assertEqual(r.status_code, 200)
         self.assertEqual(r.json()["roles"], ["deny-all"])
 
     def test_me_unverified(self):
-        r = self.client.get("/users/me", headers=self.token("eve"))
+        r = self.client.get("/users/me", headers=self.token("esha"))
         self.assertEqual((r.status_code, r.json()["error"]), (403, "not admitted"))
 
     def test_refusals_by_sqlstate(self):
-        self.assertEqual(self.client.get("/users/people", headers=self.token("alice")).status_code, 403)
-        r = self.client.delete("/users/people/alice/roles/admin", headers=self.token("alice"))
+        self.assertEqual(self.client.get("/users/people", headers=self.token("asha")).status_code, 403)
+        r = self.client.delete("/users/people/asha/roles/admin", headers=self.token("asha"))
         self.assertEqual(r.status_code, 409)
 
 
@@ -601,17 +601,17 @@ tools/native-dev.sh status
 ## 7 Call It
 
 Three people: you, the first admin by tutorial 3's
-migration; alice; and eve, whose e-mail is not
+migration; asha; and esha, whose e-mail is not
 verified:
 
 ``` sh
 Y=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=you EMAIL=you@example.org)
-A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=alice)
-E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=eve VERIFIED=false)
+A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
+E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=esha VERIFIED=false)
 ```
 
-The door. Expect you with `["admin"]`, alice with
-`["deny-all"]` and no permissions, and eve `403`,
+The door. Expect you with `["admin"]`, asha with
+`["deny-all"]` and no permissions, and esha `403`,
 `not admitted`:
 
 ``` sh
@@ -620,7 +620,7 @@ curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
 curl -s -H "Authorization: Bearer ${E}" http://py-api.${H}/users/me
 ```
 
-The people, which alice may not read,
+The people, which asha may not read,
 `users.read needed`, and you may:
 
 ``` sh
@@ -628,11 +628,11 @@ curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/people
 curl -s -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people
 ```
 
-Alice a member. Expect `"granted":true`, then alice
+Asha a member. Expect `"granted":true`, then asha
 with `notes.read` and `notes.write`:
 
 ``` sh
-curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/alice/roles/member
+curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/asha/roles/member
 curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
 ```
 

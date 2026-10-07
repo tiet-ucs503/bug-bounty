@@ -202,7 +202,7 @@ asked, and the table's `CHECK` holds the same line
 behind it.
 
 Run py-api's tests, then restart the stack (`make dev`,
-or the native `stop` and `start`). Make alice a member
+or the native `stop` and `start`). Make asha a member
 (tutorial 4 §7), then expect `{"id":...}` and the note
 back, `"mine":true`:
 
@@ -670,7 +670,7 @@ in turn:
     "You are in, with no rights yet"
 3.  **As `you` again,** tick `reader` for zed
 4.  **As `zed`:** the notes, to read, no add box
-5.  **As `alice`,** a member: add a note, edit it,
+5.  **As `asha`,** a member: add a note, edit it,
     delete it. Another's note has no buttons
 
 ## 7 Build and Release

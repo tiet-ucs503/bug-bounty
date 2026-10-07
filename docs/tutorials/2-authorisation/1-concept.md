@@ -124,7 +124,7 @@ tests](2-tests.md) can say which each one checks:
 ## 5 What It Will Not Do
 
 - **Say no to one person.** A matrix cannot say
-  "everyone but bob": take bob's role, or give the
+  "everyone but bhanu": take bhanu's role, or give the
   others a role he lacks. Refusals that override grants
   belong to §2's third row
 - **Relations, sharing, delegation.** Also the third

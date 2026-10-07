@@ -284,11 +284,11 @@ and `start`. Delete `dev/dev.env` when you are done.
 
 ## 6 Upload, Link, Collect
 
-Alice, a member since tutorial 4, and an image of hers.
+Asha, a member since tutorial 4, and an image of hers.
 Any PNG will do; this one is made here:
 
 ``` sh
-A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=alice)
+A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
 python3 -c "import zlib,struct; c=lambda t,d: struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)); open('/tmp/blue.png','wb').write(b'\x89PNG\r\n\x1a\n'+c(b'IHDR',struct.pack('>IIBBBBB',64,48,8,2,0,0,0))+c(b'IDAT',zlib.compress(b''.join(b'\x00'+bytes((40,90,200))*64 for _ in range(48))))+c(b'IEND',b''))"
 ```
 

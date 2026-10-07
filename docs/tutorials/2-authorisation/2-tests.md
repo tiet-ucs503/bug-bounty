@@ -25,23 +25,23 @@ version: v0.1.0
 Each rule of [the concept](1-concept.md) §4, asked the
 questions of [the tests'
 conduct](../../conduct/the-cycle/tests.md) §2. Three
-people: you, the first admin; alice; and bob, both in
+people: you, the first admin; asha; and bhanu, both in
 as `deny-all`.
 
   -------------------------------------------------------------
   Rule              Test    Asks                 Expects
   ----------------- ------- -------------------- --------------
-  R1 Nothing unless T2.1    bob, `deny-all`,     `false`
+  R1 Nothing unless T2.1    bhanu, `deny-all`,   `false`
                             reads notes?
 
                     T2.2    someone never        `false`
                             admitted reads
                             notes?
 
-  R2 Each role, its T2.3    bob, a `reader`,     `true`
+  R2 Each role, its T2.3    bhanu, a `reader`,   `true`
   row                       reads notes?
 
-                    T2.4    bob, a `reader`,     `false`
+                    T2.4    bhanu, a `reader`,   `false`
                             writes notes?
 
                     T2.5    you, an `admin`,     `false`
@@ -54,7 +54,7 @@ as `deny-all`.
                             `member`, read notes
                             and grant?
 
-  R4 Only           T2.8    bob makes himself    `42501`
+  R4 Only           T2.8    bhanu makes himself  `42501`
   `users.grant`             `admin`
 
                     T2.9    a role given to      `P0002`
@@ -63,8 +63,8 @@ as `deny-all`.
                     T2.10   a role that does not `P0002`
                             exist given
 
-                    T2.11   bob given `reader` a `1`
-                            second time: how
+                    T2.11   bhanu given `reader` `1`
+                            a second time: how
                             many times does he
                             hold it?
 
@@ -72,43 +72,44 @@ as `deny-all`.
                             take away your own
                             `admin`
 
-                    T2.13   alice made `admin`,  `false`
+                    T2.13   asha made `admin`,   `false`
                             then unmade: may she
                             still grant?
 
-  R2, R6 The        T2.14   bob lists the people `42501`
-  database decides
+  R2, R6 The        T2.14   bhanu lists the      `42501`
+  database decides          people
 
-                    T2.15   bob's own roles and  his two, and
-                            permissions          `notes.read`
+                    T2.15   bhanu's own roles    his two, and
+                            and permissions      `notes.read`
 
-  R7 (u=rw, a=r)    T2.16   bob, a `reader`,     `42501`
+  R7 (u=rw, a=r)    T2.16   bhanu, a `reader`,   `42501`
                             writes a note
 
-                    T2.17   alice, a `member`,   `true`
+                    T2.17   asha, a `member`,    `true`
                             writes one: is it
                             hers?
 
-                    T2.18   alice edits hers;    `edited`
-                            bob reads it
+                    T2.18   asha edits hers;     `edited`
+                            bhanu reads it
 
-                    T2.19   bob, a `member` now, `42501`
-                            edits alice's
+                    T2.19   bhanu, a `member`    `42501`
+                            now, edits asha's
 
-                    T2.20   bob deletes alice's  `42501`
+                    T2.20   bhanu deletes asha's `42501`
 
-                    T2.21   alice edits a note   `P0002`
+                    T2.21   asha edits a note    `P0002`
                             that does not exist
 
-  R8 Whether, never T2.22   bob lists the notes: `false`
-  whose                     is alice's marked
-                            his?
+  R8 Whether, never T2.22   bhanu lists the      `false`
+  whose                     notes: is asha's
+                            marked his?
 
                     T2.23   the notes' list has  `true`
                             no owner in it
 
   R9                T2.24   a permission named   `23514`
   `<unit>.<verb>`           `Notes`
+
   -------------------------------------------------------------
 
 An SQLSTATE is the refusal [the
@@ -149,18 +150,18 @@ END
 $$;
 
 -- Three people in, by tutorial 1's rules; you the first admin, by hand
-SELECT users_admit('you', 'you@example.org', true), users_admit('alice', 'alice@example.org', true),
-       users_admit('bob', 'bob@elsewhere.net', true);
+SELECT users_admit('you', 'you@example.org', true), users_admit('asha', 'asha@example.org', true),
+       users_admit('bhanu', 'bhanu@elsewhere.net', true);
 INSERT INTO users_members (sub, role) VALUES ('you', 'admin');
 
 -- R1: nothing unless a role says so
-SELECT pg_temp.expect('T2.1', NULL, $$SELECT users_may('bob', 'notes.read')$$, 'false');
+SELECT pg_temp.expect('T2.1', NULL, $$SELECT users_may('bhanu', 'notes.read')$$, 'false');
 SELECT pg_temp.expect('T2.2', NULL, $$SELECT users_may('nobody', 'notes.read')$$, 'false');
 
 -- R2: each role's row of the matrix
-SELECT pg_temp.expect('T2.3', $$SELECT users_grant('you', 'bob', 'reader')$$,
-  $$SELECT users_may('bob', 'notes.read')$$, 'true');
-SELECT pg_temp.expect('T2.4', NULL, $$SELECT users_may('bob', 'notes.write')$$, 'false');
+SELECT pg_temp.expect('T2.3', $$SELECT users_grant('you', 'bhanu', 'reader')$$,
+  $$SELECT users_may('bhanu', 'notes.read')$$, 'true');
+SELECT pg_temp.expect('T2.4', NULL, $$SELECT users_may('bhanu', 'notes.write')$$, 'false');
 SELECT pg_temp.expect('T2.5', NULL, $$SELECT users_may('you', 'notes.read')$$, 'false');
 SELECT pg_temp.expect('T2.6', NULL, $$SELECT count(*) FROM users_list('you')$$, '3');
 
@@ -169,37 +170,37 @@ SELECT pg_temp.expect('T2.7', $$SELECT users_grant('you', 'you', 'member')$$,
   $$SELECT users_may('you', 'notes.read') AND users_may('you', 'users.grant')$$, 'true');
 
 -- R4: only users.grant gives a role, to a person and a role that exist
-SELECT pg_temp.expect('T2.8', NULL, $$SELECT users_grant('bob', 'bob', 'admin')$$, '42501');
+SELECT pg_temp.expect('T2.8', NULL, $$SELECT users_grant('bhanu', 'bhanu', 'admin')$$, '42501');
 SELECT pg_temp.expect('T2.9', NULL, $$SELECT users_grant('you', 'nobody', 'reader')$$, 'P0002');
-SELECT pg_temp.expect('T2.10', NULL, $$SELECT users_grant('you', 'bob', 'owner')$$, 'P0002');
-SELECT pg_temp.expect('T2.11', $$SELECT users_grant('you', 'bob', 'reader')$$,
-  $$SELECT count(*) FROM users_members WHERE sub = 'bob' AND role = 'reader'$$, '1');
+SELECT pg_temp.expect('T2.10', NULL, $$SELECT users_grant('you', 'bhanu', 'owner')$$, 'P0002');
+SELECT pg_temp.expect('T2.11', $$SELECT users_grant('you', 'bhanu', 'reader')$$,
+  $$SELECT count(*) FROM users_members WHERE sub = 'bhanu' AND role = 'reader'$$, '1');
 
 -- R5: the project cannot lock itself out, and any other revoke goes through
 SELECT pg_temp.expect('T2.12', NULL, $$SELECT users_revoke('you', 'you', 'admin')$$, '23001');
-SELECT pg_temp.expect('T2.13', $$SELECT users_grant('you', 'alice', 'admin'), users_revoke('you', 'alice', 'admin')$$,
-  $$SELECT users_may('alice', 'users.grant')$$, 'false');
+SELECT pg_temp.expect('T2.13', $$SELECT users_grant('you', 'asha', 'admin'), users_revoke('you', 'asha', 'admin')$$,
+  $$SELECT users_may('asha', 'users.grant')$$, 'false');
 
 -- R2, R6: the people, to users.read alone; the caller's own view
-SELECT pg_temp.expect('T2.14', NULL, $$SELECT count(*) FROM users_list('bob')$$, '42501');
+SELECT pg_temp.expect('T2.14', NULL, $$SELECT count(*) FROM users_list('bhanu')$$, '42501');
 SELECT pg_temp.expect('T2.15', NULL,
-  $$SELECT roles::text || ' ' || permissions::text FROM users_me('bob')$$, '{deny-all,reader} {notes.read}');
+  $$SELECT roles::text || ' ' || permissions::text FROM users_me('bhanu')$$, '{deny-all,reader} {notes.read}');
 
 -- R7: notes, (u=rw, a=r)
-SELECT pg_temp.expect('T2.16', NULL, $$SELECT py_api_note_new('bob', 'bob writes')$$, '42501');
-SELECT pg_temp.expect('T2.17', $$SELECT users_grant('you', 'alice', 'member'), py_api_note_new('alice', 'a first note')$$,
-  $$SELECT mine FROM py_api_notes_all('alice') ORDER BY id DESC LIMIT 1$$, 'true');
-SELECT pg_temp.expect('T2.18', $$SELECT py_api_note_edit('alice', (SELECT max(id) FROM py_api_notes), 'edited')$$,
-  $$SELECT body FROM py_api_notes_all('bob') ORDER BY id DESC LIMIT 1$$, 'edited');
-SELECT pg_temp.expect('T2.19', $$SELECT users_grant('you', 'bob', 'member')$$,
-  $$SELECT py_api_note_edit('bob', (SELECT max(id) FROM py_api_notes), 'bob was here')$$, '42501');
+SELECT pg_temp.expect('T2.16', NULL, $$SELECT py_api_note_new('bhanu', 'bhanu writes')$$, '42501');
+SELECT pg_temp.expect('T2.17', $$SELECT users_grant('you', 'asha', 'member'), py_api_note_new('asha', 'a first note')$$,
+  $$SELECT mine FROM py_api_notes_all('asha') ORDER BY id DESC LIMIT 1$$, 'true');
+SELECT pg_temp.expect('T2.18', $$SELECT py_api_note_edit('asha', (SELECT max(id) FROM py_api_notes), 'edited')$$,
+  $$SELECT body FROM py_api_notes_all('bhanu') ORDER BY id DESC LIMIT 1$$, 'edited');
+SELECT pg_temp.expect('T2.19', $$SELECT users_grant('you', 'bhanu', 'member')$$,
+  $$SELECT py_api_note_edit('bhanu', (SELECT max(id) FROM py_api_notes), 'bhanu was here')$$, '42501');
 SELECT pg_temp.expect('T2.20', NULL,
-  $$SELECT py_api_note_drop('bob', (SELECT max(id) FROM py_api_notes))$$, '42501');
-SELECT pg_temp.expect('T2.21', NULL, $$SELECT py_api_note_edit('alice', -1, 'none')$$, 'P0002');
+  $$SELECT py_api_note_drop('bhanu', (SELECT max(id) FROM py_api_notes))$$, '42501');
+SELECT pg_temp.expect('T2.21', NULL, $$SELECT py_api_note_edit('asha', -1, 'none')$$, 'P0002');
 
 -- R8: a reader learns whether a note is theirs, never whose
 SELECT pg_temp.expect('T2.22', NULL,
-  $$SELECT mine FROM py_api_notes_all('bob') ORDER BY id DESC LIMIT 1$$, 'false');
+  $$SELECT mine FROM py_api_notes_all('bhanu') ORDER BY id DESC LIMIT 1$$, 'false');
 SELECT pg_temp.expect('T2.23', NULL,
   $$SELECT array_to_string(proargnames, ',') NOT LIKE '%owner%' FROM pg_proc WHERE proname = 'py_api_notes_all'$$, 'true');
 

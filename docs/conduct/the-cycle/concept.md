@@ -54,7 +54,7 @@ question to answer before you write code.
   rule is a test waiting to be written
 - **What it will not do.** Tutorial 2 says it plainly:
   a matrix cannot say no to one person; "everyone but
-  bob" belongs to a policy engine, and to another
+  bhanu" belongs to a policy engine, and to another
   project
 - **One artefact,** below
 

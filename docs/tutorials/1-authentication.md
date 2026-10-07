@@ -83,14 +83,14 @@ sequenceDiagram
 
 ## 3 Read a Token
 
-Ask the mock for one, as alice:
+Ask the mock for one, as asha:
 
 ``` sh
-A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=alice)
+A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
 ```
 
 Its claims are the token's middle part. Expect
-`"token_use": "access"`, a `client_id`, `sub` alice,
+`"token_use": "access"`, a `client_id`, `sub` asha,
 and **no e-mail**:
 
 ``` sh
@@ -106,7 +106,7 @@ service accepts only access tokens.
 
 Cognito answers a person's e-mail to anyone holding
 their access token, at its `userInfo` endpoint. Expect
-alice's address and `"email_verified": "true"`:
+asha's address and `"email_verified": "true"`:
 
 ``` sh
 curl -s -H "Authorization: Bearer ${A}" "${MOCK_URL}/oauth2/userInfo" | jq .
@@ -121,7 +121,7 @@ Now an unverified address. Expect
 `"email_verified": "false"`:
 
 ``` sh
-E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=eve VERIFIED=false)
+E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=esha VERIFIED=false)
 curl -s -H "Authorization: Bearer ${E}" "${MOCK_URL}/oauth2/userInfo" | jq .email_verified
 ```
 
@@ -154,7 +154,7 @@ Four patterns cover most projects:
   members, everyone else   `(100, '%', 'deny-all')`
   in with none**           
 
-  **A named list**         `(10, 'ana@example.org', 'member')`,
+  **A named list**         `(10, 'anu@example.org', 'member')`,
                            `(11, 'raj@example.net', 'reader')`,
                            ...
   ---------------------------------------------------------------
@@ -179,11 +179,11 @@ whatever their case, and `deny-all` for the other two:
 ``` sh
 psql "${MIGRATOR_URL}" -c "WITH rules (position, pattern, role) AS (VALUES (10, '%@example.org', 'member'), (100, '%', 'deny-all'))
 SELECT e AS email, (SELECT r.role FROM rules r WHERE lower(e) LIKE r.pattern ORDER BY r.position LIMIT 1) AS role
-FROM unnest(ARRAY['alice@example.org', 'Carol@Example.org', 'bob@elsewhere.net', 'mallory@evil-example.org']) AS e"
+FROM unnest(ARRAY['asha@example.org', 'Chitra@Example.org', 'bhanu@elsewhere.net', 'manthara@evil-example.org']) AS e"
 ```
 
 Mind the `@`: `'%example.org'` would let in
-`mallory@evil-example.org`. And `_` in `LIKE` matches
+`manthara@evil-example.org`. And `_` in `LIKE` matches
 any one character; a domain with one in it wants `\_`.
 
 ## 6 Write the Rules Down
@@ -289,22 +289,22 @@ database is as it was after. Save the trial as
 -- One rule more: anyone at example.org comes in as a member
 INSERT INTO users_admission (position, pattern, role) VALUES (10, '%@example.org', 'member');
 
-SELECT users_admit('alice', 'Alice@Example.org', true) AS alice,
-       users_admit('bob', 'bob@elsewhere.net', true) AS bob,
-       users_admit('eve', 'eve@example.org', false) AS eve;
+SELECT users_admit('asha', 'Asha@Example.org', true) AS asha,
+       users_admit('bhanu', 'bhanu@elsewhere.net', true) AS bhanu,
+       users_admit('esha', 'esha@example.org', false) AS esha;
 
 SELECT p.email, m.role FROM users_people p JOIN users_members m USING (sub) ORDER BY p.email;
 ```
 
-Then expect `t`, `t` and `f`, and two people, alice a
-`member` and bob `deny-all`:
+Then expect `t`, `t` and `f`, and two people, asha a
+`member` and bhanu `deny-all`:
 
 ``` sh
 psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f try-1.sql -c ROLLBACK
 ```
 
-Eve's address matches, but it is not verified: she
-stays out. Bob matches only `%`: he is in, with
+Esha's address matches, but it is not verified: she
+stays out. Bhanu matches only `%`: he is in, with
 nothing.
 
 ## 8 What Can Go Wrong

@@ -308,7 +308,7 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import { SignJWT, decodeJwt, exportJWK, generateKeyPair } from "jose";
 
-const EMAILS = { alice: ["alice@example.org", "true"], eve: ["eve@example.org", "false"] };
+const EMAILS = { asha: ["asha@example.org", "true"], esha: ["esha@example.org", "false"] };
 let pool, issuer, sign, app, server;
 
 // A refusal as node-postgres raises one, with its SQLSTATE
@@ -354,25 +354,25 @@ const get = async (url, sub, claims) =>
 
 test("the door refuses no token and another client's", async () => {
   assert.equal((await get("/users/me")).statusCode, 401);
-  assert.equal((await get("/users/me", "alice", { client_id: "neighbour" })).statusCode, 401);
+  assert.equal((await get("/users/me", "asha", { client_id: "neighbour" })).statusCode, 401);
 });
 
 test("the door admits a verified e-mail the rules match", async () => {
-  const r = await get("/users/me", "alice");
+  const r = await get("/users/me", "asha");
   assert.equal(r.statusCode, 200);
   assert.deepEqual(r.json().roles, ["deny-all"]);
   assert.equal(r.headers["cache-control"], "no-store");
 });
 
 test("the door refuses an unverified e-mail", async () => {
-  const r = await get("/users/me", "eve");
+  const r = await get("/users/me", "esha");
   assert.deepEqual([r.statusCode, r.json().error], [403, "not admitted"]);
 });
 
 test("the database's refusals become 403 and 409", async () => {
-  assert.equal((await get("/users/people", "alice")).statusCode, 403);
-  const r = await app.inject({ method: "DELETE", url: "/users/people/alice/roles/admin",
-    headers: { authorization: `Bearer ${await sign("alice")}` } });
+  assert.equal((await get("/users/people", "asha")).statusCode, 403);
+  const r = await app.inject({ method: "DELETE", url: "/users/people/asha/roles/admin",
+    headers: { authorization: `Bearer ${await sign("asha")}` } });
   assert.equal(r.statusCode, 409);
 });
 

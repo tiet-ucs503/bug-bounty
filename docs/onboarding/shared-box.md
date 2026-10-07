@@ -179,11 +179,11 @@ curl -s "http://js-api.localhost:${NGINX_PORT}/health"
 
 Expect `{"status":"ok","service":"js-api"}`. A
 signed-in route, with a token from the mock; expect
-`200` and `bob` as the caller:
+`200` and `bhanu` as the caller:
 
 ``` sh
 . dev/out/native/env.sh
-TOKEN=$(curl -s -H 'Content-Type: application/json' -d '{"sub": "bob", "client_id": "dev-probe"}' "http://localhost:${MOCK_PORT}/dev/token" | jq -r .access_token)
+TOKEN=$(curl -s -H 'Content-Type: application/json' -d '{"sub": "bhanu", "client_id": "dev-probe"}' "http://localhost:${MOCK_PORT}/dev/token" | jq -r .access_token)
 curl -s -X POST -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' -d '{"n": 1}' "http://js-api.localhost:${NGINX_PORT}/echo"
 ```
 
