@@ -1,10 +1,11 @@
 ---
 abstract: |
-  Six tutorials, in order, that take a fork of the
+  Seven tutorials, in order, that take a fork of the
   template from a sign-in to a notes dashboard with
   uploads: who is signed in, what each person may do,
   the database that holds both, `/users` in py-api or
-  js-api, a Svelte UI, and files in the static bucket.
+  js-api, notes under the matrix, a Svelte UI, and
+  files in the static bucket.
   What you build, what you need, and the conventions
   every page shares.
 date: 2026-10-06
@@ -295,10 +296,13 @@ changed since its run goes back to `NO`.
   4 /users                  `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
+  5 Notes                   `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
+  6 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  7 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
@@ -306,12 +310,15 @@ changed since its run goes back to `NO`.
 
 - **The native stack,** without root, in a fork of the
   template. Tutorials 1 and 2, every step; tutorial 2's
-  tests 2026-10-07, before and after its code, and with
-  its code broken on purpose. Tutorials 3 to 6, as
-  reworked 2026-10-07: every test script before the
-  code, after it, and with the code broken on purpose;
-  tutorial 4's against both languages. Not yet every
-  other step of their pages as written, so `NO`
+  tests again 2026-10-07, after the notes left it:
+  before and after its code, and with its code broken
+  on purpose. Tutorials 3 to 7 the same day, after the
+  notes became tutorial 5: the test scripts of 3, 5 and
+  6 before the code, after it, and with the code broken
+  on purpose; 4's and 7's passing in a fork that took
+  every tutorial, on py-api. Before the move, tutorial
+  4's against js-api too. Not yet every other step of
+  their pages as written, so `NO`
 - **The dev stack under rootless Podman,** the same
   fork, 2026-10-06, in part: every image built, the
   door, the notes, an upload read back through nginx,
