@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 6, part 3. py-api's half of the
+  Step 4 of tutorial 7, part 3. py-api's half of the
   uploads: a route that takes a file's bytes, names
   them, writes the row, stores the object and confirms
   it; a route that sets a note's objects; and the
@@ -20,7 +20,7 @@ sources:
 - box/project.json
 status: draft
 subtitle: Upload, link, collect
-title: "6.4 Uploads: the Service"
+title: "7.4 Uploads: the Service"
 version: v0.1.0
 ---
 
@@ -29,7 +29,7 @@ version: v0.1.0
 - [What you need](../README.md) §2, installed and
   checked
 - [The database](4-the-database.md), applied
-- py-api with tutorial 5's notes routes
+- py-api with tutorial 6's notes routes
 
 ## 2 The Routes
 
@@ -283,7 +283,7 @@ note also has `objects`, a list of `{key, type}`".
 
 ## 4 Its Tests
 
-Beside tutorial 5's, in `test/test_main.py`:
+Beside tutorial 6's, in `test/test_main.py`:
 
 ``` python
     def test_an_upload_of_a_type_not_allowed_is_refused(self):

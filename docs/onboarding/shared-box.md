@@ -211,7 +211,7 @@ make ui UI_PORT="${UI_PORT}"
 ```
 
 A Svelte UI ([5 A Svelte
-UI](../tutorials/5-a-svelte-ui/README.md)) reads its
+UI](../tutorials/6-a-svelte-ui/README.md)) reads its
 config from `ui/public/` instead:
 
 ``` sh

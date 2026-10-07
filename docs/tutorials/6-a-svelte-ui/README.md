@@ -23,7 +23,7 @@ sources:
 status: draft
 subtitle: The notes, the profile and the people, in a
   browser
-title: 5 A Svelte UI
+title: 6 A Svelte UI
 version: v0.1.0
 ---
 
@@ -40,7 +40,7 @@ page](../README.md) §5.
   starter's sign-in carried over, then a dashboard of
   four parts, each shown by what `/users/me` says you
   may do: your profile, the notes, and the people
-- **`test-5.sh`:** thirteen tests, written before the
+- **`test-6.sh`:** thirteen tests, written before the
   code: six call the notes through nginx; seven render
   the dashboard in `ui/`'s own tests, with no browser
   and no network
@@ -84,4 +84,4 @@ step. Read them in order.
   five steps in general
 - [The UI](../../ui/README.md): what the box asks of
   any UI
-- [6 Uploads](../6-uploads/README.md): next
+- [7 Uploads](../7-uploads/README.md): next

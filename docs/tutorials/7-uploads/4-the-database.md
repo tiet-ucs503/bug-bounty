@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 6, part 2. The uploads in the
+  Step 4 of tutorial 7, part 2. The uploads in the
   database: a permission in the users unit's matrix,
   and py-api's objects, the notes' links to them, their
   count, and what the collector may take. Two
@@ -19,7 +19,7 @@ sources:
 - migrations/sql/20261006120000_py_api_create_notes.sql
 status: draft
 subtitle: Objects, owners, references and the grace
-title: "6.4 Uploads: the Database"
+title: "7.4 Uploads: the Database"
 version: v0.1.0
 ---
 
@@ -43,7 +43,7 @@ make db-new PREFIX=users NAME=grant_objects_write
 
 ``` sql
 -- objects.write, uploading to the static bucket's objects/, for
--- members (docs/tutorials/6-uploads/4-the-database.md). The matrix is
+-- members (docs/tutorials/7-uploads/4-the-database.md). The matrix is
 -- the users unit's, so its cell is a users migration, though py-api
 -- is what asks for it.
 
@@ -68,7 +68,7 @@ make db-new PREFIX=py_api NAME=objects
 ``` sql
 -- Uploads: an object in the static bucket's objects/ for each row here,
 -- (u=rw, a=r): its owner writes it, anyone reads it at static.<zone>
--- (docs/tutorials/6-uploads/4-the-database.md). A key names its owner
+-- (docs/tutorials/7-uploads/4-the-database.md). A key names its owner
 -- and its content, objects/<owner's tag>/<SHA-256>, so it is never
 -- overwritten with other bytes, and one object has one owner. A note
 -- refers to objects by its links; an object no note refers to is
@@ -353,8 +353,8 @@ Expect, in order:
 The collector deletes from the bucket between those
 last two steps: [the service](4-the-service.md).
 
-The same life, asserted, is T6.1 to T6.8 in
-`test-6.sql`; `./test-6.sh` runs them.
+The same life, asserted, is T7.1 to T7.8 in
+`test-7.sql`; `./test-7.sh` runs them.
 
 ## 6 Prove the Down, and Write the Schema
 

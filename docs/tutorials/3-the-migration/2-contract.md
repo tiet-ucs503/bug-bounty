@@ -24,7 +24,7 @@ version: v0.1.0
 
 - **Tutorial 4,** `/users` in a service: it calls the
   users unit's functions, and needs its prefix
-- **Tutorial 6,** uploads: its migrations come after
+- **Tutorial 7,** uploads: its migrations come after
   these, and ask `users_may`
 - **The box's owner,** who reads every migration before
   the box runs it

@@ -116,6 +116,6 @@ Restart as the implementation page's §5 says:
 
 ## 6 See Also
 
-- [5 A Svelte UI](../5-a-svelte-ui/README.md): next
+- [6 A Svelte UI](../6-a-svelte-ui/README.md): next
 - [The cycle](../../conduct/the-cycle/README.md) §3:
   what to refine, in general

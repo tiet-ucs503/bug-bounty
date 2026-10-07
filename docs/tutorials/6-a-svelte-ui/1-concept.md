@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 1 of tutorial 5: what the notes routes and the
+  Step 1 of tutorial 6: what the notes routes and the
   dashboard are for. The goal, ten rules, and what they
   will not do.
 date: 2026-10-07
@@ -14,7 +14,7 @@ sources:
 - ui/app.js
 status: draft
 subtitle: Step 1, what and why
-title: "5.1 A Svelte UI: the Concept"
+title: "6.1 A Svelte UI: the Concept"
 version: v0.1.0
 ---
 
@@ -79,7 +79,7 @@ as tutorials 2 and 4 tried.
 
 ## 5 What It Will Not Do
 
-- **Uploads.** Tutorial 6
+- **Uploads.** Tutorial 7
 - **Show whose a note is.** R8 of tutorial 2: whether,
   never whose
 - **Work without JavaScript.** It signs in by PKCE,

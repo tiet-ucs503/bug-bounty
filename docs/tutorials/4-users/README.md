@@ -58,7 +58,7 @@ two.
     for, as eight rules
 2.  **[The contract](2-contract.md).** The routes, what
     each takes and answers, and how each refuses: what
-    tutorial 5's UI relies on
+    tutorial 6's UI relies on
 3.  **[The tests](3-tests.md).** The rules as fourteen
     tests, through nginx. You run them first, and every
     one fails
@@ -88,4 +88,4 @@ two.
   five steps in general
 - [1 Who is signed in](../1-authentication.md): the
   token, `userInfo`, and the tables `/users/me` writes
-- [5 A Svelte UI](../5-a-svelte-ui/README.md): next
+- [6 A Svelte UI](../6-a-svelte-ui/README.md): next

@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 6, part 4. The dashboard's half of
+  Step 4 of tutorial 7, part 4. The dashboard's half of
   the uploads, a step at a time: a file selector on a
   note you are editing; each note's attachments shown,
   images as images; the type and size checked before
@@ -20,7 +20,7 @@ sources:
 - ui/src/lib/box.js
 status: draft
 subtitle: From a file selector to drag and drop
-title: "6.4 Uploads: the UI"
+title: "7.4 Uploads: the UI"
 version: v0.1.0
 ---
 
@@ -29,11 +29,11 @@ version: v0.1.0
 - [What you need](../README.md) §2, installed and
   checked
 - [The service](4-the-service.md), running
-- [5 A Svelte UI](../5-a-svelte-ui/README.md), with
+- [6 A Svelte UI](../6-a-svelte-ui/README.md), with
   `make ui` serving it
 - `api()` in `ui/src/lib/box.js` already sends a file
-  as itself, by `raw` (tutorial 5's
-  [implementation](../5-a-svelte-ui/4-implementation.md)
+  as itself, by `raw` (tutorial 6's
+  [implementation](../6-a-svelte-ui/4-implementation.md)
   §4)
 
 ## 2 Step 1: a File Selector
@@ -378,14 +378,14 @@ And `ui/src/Notes.svelte`, whole:
 ## 8 Its Tests
 
 `ui/test/attach.test.js`, from [the tests](3-tests.md)
-§2, beside tutorial 5's. And one change to tutorial
+§2, beside tutorial 6's. And one change to tutorial
 5's: the notes it fakes now carry their objects, as
 `GET /notes` answers them since [the
 service](4-the-service.md) §3. In
 `ui/test/dashboard.test.js`, `NOTES` becomes:
 
 ``` javascript
-// Each with its objects, as GET /notes answers since tutorial 6
+// Each with its objects, as GET /notes answers since tutorial 7
 const NOTES = [
   { id: 2, body: "mine", mine: true, created_at: "2026-10-07T10:00:00Z", updated_at: null, objects: [] },
   { id: 1, body: "theirs", mine: false, created_at: "2026-10-07T09:00:00Z", updated_at: null, objects: [] },

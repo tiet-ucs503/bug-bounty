@@ -52,7 +52,7 @@ What a test got says where to look:
   refinement](../2-authorisation/5-refinement.md) §3
 - **T3.7 with a name in it:** the newest four
   migrations are not tutorial 3's, so nothing was
-  rolled back. Later migrations, such as tutorial 6's,
+  rolled back. Later migrations, such as tutorial 7's,
   sit on top of them
 - **T3.7 above `0 0`:** a down leaves something behind.
   The count says how many

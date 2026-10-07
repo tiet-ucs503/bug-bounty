@@ -72,13 +72,13 @@ the `users` prefix beside its own.
 ## 4 What It Will Not Do
 
 - **Sign anyone in.** The box's Cognito does; the UI
-  starts it (tutorial 5)
+  starts it (tutorial 6)
 - **Let an admin change someone else's profile.** That
   would be a permission, `users.edit`, and a row in the
   matrix: a turn of the cycle for when a project needs
   it
 - **Serve the notes.** They are py-api's own routes,
-  tutorial 5's
+  tutorial 6's
 
 ## 5 See Also
 

@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 2 of tutorial 6: what the uploads promise. The
+  Step 2 of tutorial 7: what the uploads promise. The
   routes, the accessors, the store's behaviour, what
   `GET /notes` adds, and what the box must give.
 date: 2026-10-07
@@ -15,7 +15,7 @@ sources:
 - services/py-api/main.py
 status: draft
 subtitle: Step 2, what others may rely on
-title: "6.2 Uploads: the Contract"
+title: "7.2 Uploads: the Contract"
 version: v0.1.0
 ---
 

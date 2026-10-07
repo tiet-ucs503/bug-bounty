@@ -71,10 +71,10 @@ flowchart LR
 4.  [/users](4-users/README.md): the door, the profile
     and the roles, as routes of py-api in Python, or of
     js-api in JavaScript
-5.  [A Svelte UI](5-a-svelte-ui/README.md): the
+6.  [A Svelte UI](6-a-svelte-ui/README.md): the
     dashboard: who you are, your profile, the notes,
     the people
-6.  [Uploads](6-uploads/README.md): files on notes, in
+7.  [Uploads](7-uploads/README.md): files on notes, in
     the static bucket, collected when no note needs
     them
 
@@ -102,7 +102,7 @@ more, and each links back to this section.
   - [the native stack](../onboarding/shared-box.md),
     without containers or root: hosts at
     `*.localhost:<your NGINX_PORT>`
-- **A browser,** for tutorials 5 and 6
+- **A browser,** for tutorials 6 and 7
 - **Reading SQL,** and Python or JavaScript
 
 ### 2.1 Install Them
@@ -157,12 +157,12 @@ macOS's recipe is written but not yet tried.
 - **`curl` and `jq` 1.6 or later:** every page
 - **Python 3.12 or later:** the render behind
   `make check` and `make dev`, tutorial 4's
-  `make test`, and the test image tutorial 6 draws
+  `make test`, and the test image tutorial 7 draws
 - **`psql` and `pg_dump`, PostgreSQL 17 or later:**
   tutorials 1, 2, 3 and 6. `pg_dump` refuses a server
   newer than itself, and the stack's is 17. Debian and
   Ubuntu get them from PostgreSQL's own repository
-- **`openssl` and `base64`:** tutorial 6, a file's
+- **`openssl` and `base64`:** tutorial 7, a file's
   SHA-256 as S3 wants it
 - **Node 24 or later, with `npm`:** tutorial 3, for
   Squawk by `npx`; 4, 5 and 6. Debian and Ubuntu get it
@@ -193,7 +193,7 @@ Security notes on these tools are §6.
 
 ## 3 Conventions
 
-Each page's commands use these settings; tutorial 6
+Each page's commands use these settings; tutorial 7
 alone needs the last two. Set them once in each shell,
 for your stack.
 
@@ -316,7 +316,7 @@ changed since its run goes back to `NO`.
   since `/users` moved into py-api and js-api, so `NO`
 - **Docker:** not yet
 - **The dashboard,** by its own tests in jsdom, from
-  tutorials 5 and 6; and, before the rework, in a
+  tutorials 6 and 7; and, before the rework, in a
   headless Chromium: the sign-in, a role granted, notes
   added and edited, files chosen and dropped
 - **Every code block** on the pages is the file that
@@ -342,8 +342,8 @@ The box does not yet take a project. Its half is being
 built: the points where nginx and Compose include a
 project's pieces, the repositories, buckets and sign-in
 client each project gets, the right to pull its images,
-and the grants tutorial 6 needs on the static bucket
-(§5 of [its contract](6-uploads/2-contract.md)). And
+and the grants tutorial 7 needs on the static bucket
+(§5 of [its contract](7-uploads/2-contract.md)). And
 the box's own database is MariaDB until it moves to
 PostgreSQL, which these pages assume.
 

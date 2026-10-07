@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 2 of tutorial 5: the notes routes, what each
+  Step 2 of tutorial 6: the notes routes, what each
   takes and answers, and the manifest's lines; and what
   the dashboard relies on: `/users`, and the keys of
   its `config.js`.
@@ -16,7 +16,7 @@ sources:
 - ui/config.example.js
 status: draft
 subtitle: Step 2, what others may rely on
-title: "5.2 A Svelte UI: the Contract"
+title: "6.2 A Svelte UI: the Contract"
 version: v0.1.0
 ---
 
@@ -24,7 +24,7 @@ version: v0.1.0
 
 - **The dashboard,** on the notes routes and on
   `/users`
-- **Tutorial 6,** uploads, which adds to the notes
+- **Tutorial 7,** uploads, which adds to the notes
 - **The release,** which builds `ui/` and writes its
   `config.js`
 

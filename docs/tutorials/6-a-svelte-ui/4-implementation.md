@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 5: what makes the thirteen tests
+  Step 4 of tutorial 6: what makes the thirteen tests
   pass. py-api's notes routes; `ui/` made a Svelte
   project; the starter's sign-in carried over; the
   dashboard's five components; then run, built and
@@ -19,7 +19,7 @@ sources:
 - Makefile
 status: draft
 subtitle: Step 4, the code
-title: "5.4 A Svelte UI: the Implementation"
+title: "6.4 A Svelte UI: the Implementation"
 version: v0.1.0
 ---
 
@@ -27,7 +27,7 @@ version: v0.1.0
 
 - [The contract](2-contract.md): its notes routes added
   to py-api's in `box/project.json` (§3 there)
-- [The tests](3-tests.md), saved as `test-5.sh` and
+- [The tests](3-tests.md), saved as `test-6.sh` and
   `ui/test/dashboard.test.js`, run once and failing
 
 ## 2 The Notes Routes, in py-api
@@ -233,7 +233,7 @@ tests alone: Svelte's browser build, in jsdom:
 
 ``` javascript
 // The UI's build: Svelte by Vite, into ui/dist/, which a release syncs
-// to www (docs/tutorials/5-a-svelte-ui/). public/ is copied as it is;
+// to www (docs/tutorials/6-a-svelte-ui/). public/ is copied as it is;
 // its config.js is read at run time, never bundled
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
@@ -277,7 +277,7 @@ The starter's `app.js`, as a module the components
 share: the same PKCE sign-in, the same `api()` that
 waits out a `429` and backs off a `503`. Three
 additions: `USERS`, the service that serves `/users`;
-`raw`, to send a file as itself (tutorial 6); and
+`raw`, to send a file as itself (tutorial 7); and
 `staticBase`, the static bucket's address.
 `ui/src/lib/box.js`:
 
@@ -298,7 +298,7 @@ const apiBase = (service) => (config.apiUrl ? config.apiUrl(service) : `https://
 // The service that holds /users: py-api, or js-api if you took
 // JavaScript in tutorial 4
 export const USERS = "py-api";
-// The static bucket's objects/, public reads (docs/tutorials/6-uploads/)
+// The static bucket's objects/, public reads (docs/tutorials/7-uploads/)
 export const staticBase = config.staticUrl ?? `https://static.${config.zone}`;
 
 const redirectUri = `${location.origin}/`;
@@ -658,7 +658,7 @@ permissions in its tooltip (D5):
 </ul>
 ```
 
-Run the tests: `./test-5.sh`, or the dashboard's alone,
+Run the tests: `./test-6.sh`, or the dashboard's alone,
 `cd ui && npm test`.
 
 ## 6 Run It
