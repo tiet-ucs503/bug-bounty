@@ -8,7 +8,7 @@
   <rect x="168.8" y="76" width="56.0" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
   <text x="196.8" y="91.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">admin</text>
   <rect x="230.8" y="76" width="63.2" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
-  <text x="262.40000000000003" y="91.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">member</text>
+  <text x="262.4" y="91.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">member</text>
   <rect x="36" y="106" width="92" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
   <text x="82.0" y="133.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Sign out</text>
   <text x="36" y="196" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Profile</text>
