@@ -4,7 +4,7 @@ abstract: |
   say, and change whichever step is wrong. How to read
   a result, how to try the tests by breaking the
   collector on purpose, and a refinement of tutorial
-  5's tests made while this tutorial was written.
+  6's tests made while this tutorial was written.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -44,7 +44,7 @@ tests is not done.
   is older than the mock store, or the store is down:
   [the store](4-the-store.md) §7
 - **T7.1 to T7.8 with `42883` or `42P01`:** the
-  migrations of [the database](4-the-database.md) have
+  migration of [the database](4-the-database.md) has
   not run
 - **T7.9 to T7.14 with `404`:** nginx knows no
   `/objects` route: the manifest, or nginx not rendered

@@ -105,8 +105,9 @@ where there is one:
   `py_api_objects_forget(keys)`:** the collector's, no
   caller
 
-And the users unit's: `objects.write`, a cell for
-`member` in the matrix, by a users migration.
+And a permission, `objects.write`, for `member`,
+brought by the same migration through the users unit's
+`users_permission_add`, and taken away by its down.
 
 ## 4 The Store
 

@@ -232,11 +232,11 @@ code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 printf 'hello, objects\n' > "${work}/hello.txt"
 sum=$(openssl dgst -sha256 -binary "${work}/hello.txt" | base64)
 store=$(code -X PUT -H 'Content-Type: text/plain' -H "x-amz-checksum-sha256: ${sum}" \
-    --data-binary @"${work}/hello.txt" "${STORE_URL}/objects/t6/hello"
-  echo " $(curl -s "${STATIC_URL}/objects/t6/hello")"
-  echo " $(code -X PUT -H "x-amz-checksum-sha256: ${sum}" --data-binary 'other bytes' "${STORE_URL}/objects/t6/hello")"
-  echo " $(code -X PUT --data-binary x "${STATIC_URL}/objects/t6/hello")"
-  echo " $(code -X DELETE "${STORE_URL}/objects/t6/hello") $(code "${STATIC_URL}/objects/t6/hello")")
+    --data-binary @"${work}/hello.txt" "${STORE_URL}/objects/t7/hello"
+  echo " $(curl -s "${STATIC_URL}/objects/t7/hello")"
+  echo " $(code -X PUT -H "x-amz-checksum-sha256: ${sum}" --data-binary 'other bytes' "${STORE_URL}/objects/t7/hello")"
+  echo " $(code -X PUT --data-binary x "${STATIC_URL}/objects/t7/hello")"
+  echo " $(code -X DELETE "${STORE_URL}/objects/t7/hello") $(code "${STATIC_URL}/objects/t7/hello")")
 if [ "$(echo ${store})" != "200 hello, objects 400 403 204 404" ]; then
   echo "the store is not the box's bucket: want 200 hello, objects 400 403 204 404, got $(echo ${store})"
   echo "see 4-the-store.md"; exit 3

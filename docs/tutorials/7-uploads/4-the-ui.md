@@ -379,7 +379,7 @@ And `ui/src/Notes.svelte`, whole:
 
 `ui/test/attach.test.js`, from [the tests](3-tests.md)
 §2, beside tutorial 6's. And one change to tutorial
-5's: the notes it fakes now carry their objects, as
+6's: the notes it fakes now carry their objects, as
 `GET /notes` answers them since [the
 service](4-the-service.md) §3. In
 `ui/test/dashboard.test.js`, `NOTES` becomes:
@@ -419,8 +419,8 @@ yours still refers to it.
 - **The zone never lights.** `dragover`'s default was
   not prevented
 - **`objects.write needed`, for a member.** [The
-  database](4-the-database.md)'s users migration has
-  not run: the role lacks the cell
+  database](4-the-database.md)'s migration has not run:
+  the role lacks the cell
 - **Images do not load, `404`.** The object was
   collected, or `staticUrl` in `config.js` names
   another host: `http://static.localhost:8080` here,

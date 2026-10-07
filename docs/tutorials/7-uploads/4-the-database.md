@@ -1,10 +1,10 @@
 ---
 abstract: |
   Step 4 of tutorial 7, part 2. The uploads in the
-  database: a permission in the users unit's matrix,
-  and py-api's objects, the notes' links to them, their
-  count, and what the collector may take. Two
-  migrations, one a unit, applied and tried through an
+  database: py-api's objects, the notes' links to them,
+  their count, and what the collector may take, with
+  the permission to upload brought to the users unit's
+  matrix. One migration, applied and tried through an
   object's whole life, the passing of the grace faked
   in a transaction that is rolled back.
 date: 2026-10-06
@@ -30,36 +30,7 @@ version: v0.1.0
 - [The store](4-the-store.md)
 - Tutorial 3's migrations, applied
 
-## 2 A Permission, in the Users Unit
-
-Uploading is `objects.write`, given to members. The
-matrix is the users unit's, so its new cell is a users
-migration, though py-api is what asks for it: a py-api
-migration may not write `users_*` tables.
-
-``` sh
-make db-new PREFIX=users NAME=grant_objects_write
-```
-
-``` sql
--- objects.write, uploading to the static bucket's objects/, for
--- members (docs/tutorials/7-uploads/4-the-database.md). The matrix is
--- the users unit's, so its cell is a users migration, though py-api
--- is what asks for it.
-
--- migrate:up
-SET lock_timeout = '2s';
-SET statement_timeout = '30s';
-INSERT INTO users_grants (role, permission) VALUES ('member', 'objects.write')
-ON CONFLICT DO NOTHING;
-
--- migrate:down
-SET lock_timeout = '2s';
-SET statement_timeout = '30s';
-DELETE FROM users_grants WHERE role = 'member' AND permission = 'objects.write';
-```
-
-## 3 Objects, in py-api
+## 2 Objects, in py-api
 
 ``` sh
 make db-new PREFIX=py_api NAME=objects
@@ -218,9 +189,14 @@ CREATE OR REPLACE FUNCTION py_api_objects_forget(p_keys text[]) RETURNS bigint
   SELECT count(*) FROM gone
 $$;
 
+-- Uploading's permission, for members, by the users unit's published
+-- door
+SELECT users_permission_add('objects.write', 'uploads to the static bucket''s objects/', '{member}');
+
 -- migrate:down
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
+SELECT users_permission_drop('objects.write');
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS py_api_objects_forget(text[]);
 -- squawk-ignore ban-drop-function
@@ -280,9 +256,10 @@ What it holds:
   `FOR UPDATE SKIP LOCKED`, until its transaction ends;
   the second deletes only what still has no link
 
-## 4 Lint, and Apply
+## 3 Lint, and Apply
 
-Expect `Found 0 issues`, then `Applied:` twice:
+Expect `Found 0 issues`, then `Applied:` for the
+objects:
 
 ``` sh
 make db-lint
@@ -293,9 +270,9 @@ On the native stack,
 `dbmate --url "${MIGRATOR_URL}" -d migrations/sql --no-dump-schema up`
 for the second.
 
-## 5 Try an Object's Life
+## 4 Try an Object's Life
 
-Save as `try-6.sql`:
+Save as `try-7.sql`:
 
 ``` sql
 -- Asha a member, with an upload: its row first, then, once the
@@ -335,7 +312,7 @@ SELECT py_api_objects_forget(ARRAY[:'object']) AS forgotten;
 Run it, rolled back:
 
 ``` sh
-psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f try-6.sql -c ROLLBACK
+psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f try-7.sql -c ROLLBACK
 ```
 
 Expect, in order:
@@ -356,19 +333,18 @@ last two steps: [the service](4-the-service.md).
 The same life, asserted, is T7.1 to T7.8 in
 `test-7.sql`; `./test-7.sh` runs them.
 
-## 6 Prove the Down, and Write the Schema
+## 5 Prove the Down, and Write the Schema
 
 As tutorial 3's
 [implementation](../3-the-migration/4-implementation.md)
-§7 and §8: `rollback` twice, `up`, and
-`make db CMD=dump`.
+§6 and §7: `rollback`, `up`, and `make db CMD=dump`.
 
-## 7 What Can Go Wrong
+## 6 What Can Go Wrong
 
-- **`objects.write needed` for a member.** The users
+- **`objects.write needed` for a member.** The
   migration of §2 has not run, or ran after you looked:
   `SELECT * FROM users_grants WHERE role = 'member'`
-- **Rolling back §3 on a stack with uploads.** The rows
+- **Rolling back §2 on a stack with uploads.** The rows
   go; the objects stay in the store, and nothing will
   ever collect them. On your machine, clear the store:
   the dev stack's `store` volume, or the native stack's
@@ -377,7 +353,7 @@ As tutorial 3's
   your own upload.** The bucket never confirmed it:
   `stored` is `f`. Upload it again
 
-## 8 See Also
+## 7 See Also
 
 - [The service](4-the-service.md): next
 - [3 Make it a migration](../3-the-migration/README.md)
