@@ -91,7 +91,7 @@ The rollback takes the broken function with it.
 ## 5 A Refinement of Tutorial 6's Tests
 
 Run after this tutorial, tutorial 6's tests failed:
-T6.10 and T6.11, a reader's and a member's notes. The
+T6.4 and T6.5, a reader's and a member's notes. The
 dashboard's notes now show each note's objects, and the
 notes in tutorial 6's tests had none to show, not even
 an empty list, so the component failed to draw.

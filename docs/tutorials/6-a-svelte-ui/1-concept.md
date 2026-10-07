@@ -1,8 +1,7 @@
 ---
 abstract: |
-  Step 1 of tutorial 6: what the notes routes and the
-  dashboard are for. The goal, ten rules, and what they
-  will not do.
+  Step 1 of tutorial 6: what the dashboard is for. The
+  goal, six rules, and what they will not do.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -27,25 +26,11 @@ version: v0.1.0
 ## 1 The Goal
 
 **A page where each person sees what they may do, and
-does it.** Tutorial 2 decided who may do what with the
-notes; tutorial 4 put `/users` on HTTP. This tutorial
-puts the notes on HTTP too, and draws a page over both.
+does it.** Tutorial 4 put `/users` on HTTP; tutorial 5
+put the notes there too. This tutorial draws a page
+over both.
 
-## 2 The Notes, Over HTTP
-
-Tutorial 2's notes accessors, one route each, in
-py-api, the notes' owner:
-
-- **N1 A member writes a note, and it is hers**
-- **N2 A reader reads every note, and learns only
-  whether it is her own,** never whose
-- **N3 Only the owner changes or deletes her note,**
-  and only while she holds `notes.write`
-- **N4 A note is 1 to 10,000 characters,** refused at
-  the service, `422`, before the database is asked; the
-  table's `CHECK` holds the same line behind it
-
-## 3 The Dashboard
+## 2 The Dashboard
 
 What `/users/me` answers decides what the page shows:
 
@@ -64,9 +49,9 @@ What `/users/me` answers decides what the page shows:
 **The buttons follow the permissions; the database
 decides regardless.** A button hidden is a courtesy.
 Whoever calls the API by hand meets the same refusals
-as tutorials 2 and 4 tried.
+as tutorials 4 and 5 tried.
 
-## 4 Two Choices, and Why
+## 3 Two Choices, and Why
 
 - **Svelte, built by Vite.** Small, compiled, no
   framework in the browser to speak of. The starter's
@@ -77,15 +62,15 @@ as tutorials 2 and 4 tried.
   writes it from the repository's variables, so one
   build serves any zone
 
-## 5 What It Will Not Do
+## 4 What It Will Not Do
 
 - **Uploads.** Tutorial 7
-- **Show whose a note is.** R8 of tutorial 2: whether,
+- **Show whose a note is.** N3 of tutorial 5: whether,
   never whose
 - **Work without JavaScript.** It signs in by PKCE,
   which needs it
 
-## 6 See Also
+## 5 See Also
 
 - [The contract](2-contract.md): next, then [the
   tests](3-tests.md)
