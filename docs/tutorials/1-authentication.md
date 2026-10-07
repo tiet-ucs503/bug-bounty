@@ -1,14 +1,11 @@
 ---
 abstract: |
-  Who is signed in, and who may come in. The box's
-  Cognito pool signs people in; your project decides
-  who of them it admits, by rules on their verified
-  e-mail, and with which role. Read a token, ask
-  Cognito's userInfo for the e-mail, choose your rules
-  from four common patterns, and try them in the
-  database. The default this template takes: anyone in,
-  as `deny-all`, and build up from there.
-date: 2026-10-06
+  Signing in and coming in are two steps. The box signs
+  people in; your project decides which of them it lets
+  in, and with which role. You read a token, ask
+  Cognito for the person's e-mail, choose rules that
+  match e-mails, and try the rules in the database.
+date: 2026-10-07
 keywords:
 - tutorial
 - auth
@@ -36,18 +33,23 @@ page](README.md) §5.
   your shell
 - A local stack, up
 
-You need no pool of your own. The box keeps **one
-Cognito pool** for every project on it, with a client
-for each project's UI; its owner makes yours. People
-sign in through it, on the box by Google. You never
-create, configure or administer a pool, and you cannot
-restrict who signs in to it: the pool is shared by
-everyone the box serves.
+**The box signs people in; you do not.** The box keeps
+one Cognito pool, a store of accounts, for every
+project it hosts. People sign in to it with Google.
+Its owner gives your project's UI a client of its own
+in that pool. You never create or configure a pool,
+and you cannot limit who signs in to it, because every
+project on the box shares it.
 
-What you decide is who of them **your project lets
-in**. That is this page.
+**You decide who comes in.** Anyone with a Google
+account can sign in. Which of them your project lets
+in, and with which role, is yours to decide, and is
+this page.
 
 ## 2 Two Questions, Two Places
+
+A person coming into your project answers two
+questions, in this order:
 
 ``` mermaid
 ---
@@ -59,13 +61,13 @@ config:
 sequenceDiagram
   participant B as Browser
   participant C as Cognito
-  participant U as users
+  participant U as Your service, /users
   participant D as Database
   B->>C: sign in, PKCE
   C-->>B: access token: sub, client_id
-  B->>U: GET /me, Bearer
-  U->>U: the token's signature, issuer, client
-  U->>C: userInfo, Bearer
+  B->>U: GET /users/me, Bearer token
+  U->>U: check the token
+  U->>C: userInfo, Bearer token
   C-->>U: email, email_verified
   U->>D: users_admit(sub, email, verified)
   D-->>U: in, or not
@@ -73,51 +75,77 @@ sequenceDiagram
 ```
 
 - **Authentication: who is this?** The token answers.
-  Every starter service already checks it: the pool's
-  signature, its issuer, `token_use` of `access`, and
-  `client_id` your UI's or the box's probe client's. A
-  token from another project's client is refused. `sub`
-  names the person, for good
+  Cognito signs it, and your service checks it: the
+  signature, who issued it, that it is an access token,
+  and that it was issued to your UI or to the box's
+  probes. A token issued to another project's UI is
+  refused
 - **Admission: may they come in?** Your rules answer,
-  in your database, from their verified e-mail
+  in your database, from the person's verified e-mail
+
+The browser signs in by PKCE, a way for a page that
+can keep no secret to prove that the token it collects
+is the one it asked for. The UI does this; your service
+only sees the token.
+
+The token names the person by `sub`, short for
+subject: an ID Cognito gives each account, which never
+changes. An e-mail can change; `sub` cannot, so your
+database keys people by `sub`, and uses the e-mail only
+at the door.
+
+`/users/me` is the door. Tutorials 4 and 5 build it,
+in Python and in JavaScript. This page builds what the
+door asks: the rules, in the database.
 
 ## 3 Read a Token
 
-Ask the mock for one, as asha:
+A token is a JWT: three parts, joined by dots. The
+first says how it is signed; the second holds its
+claims, the facts it states; the third is the
+signature. On the local stack, a mock stands in for
+Cognito and hands out tokens of the same shape.
+
+Ask the mock for a token for asha:
 
 ``` sh
 A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
 ```
 
-Its claims are the token's middle part. Expect
-`"token_use": "access"`, a `client_id`, `sub` asha,
-and **no e-mail**:
+Decode its middle part. It is base64url: base64 with
+`-` and `_` in place of `+` and `/`, so the command
+swaps them back before decoding. Expect
+`"token_use": "access"`, a `client_id`,
+`"sub": "asha"`, and **no e-mail**:
 
 ``` sh
 echo "${A}" | jq -R 'split(".")[1] | gsub("-"; "+") | gsub("_"; "/") | @base64d | fromjson'
 ```
 
-Cognito's access tokens carry no e-mail, and the
-mock's, made in their shape, carry none either. The ID
-token has it, but the ID token is for the browser: a
-service accepts only access tokens.
+**An access token carries no e-mail.** Cognito leaves
+it out, and the mock does too. Cognito's other token,
+the ID token, has the e-mail, but the ID token is for
+the browser to read. A service accepts access tokens
+only.
 
-## 4 Ask userInfo
+## 4 Ask for the E-mail
 
-Cognito answers a person's e-mail to anyone holding
-their access token, at its `userInfo` endpoint. Expect
+Cognito's `userInfo` endpoint gives the e-mail. Send it
+a person's access token, and it answers with that
+person's e-mail and whether it is verified. Expect
 asha's address and `"email_verified": "true"`:
 
 ``` sh
 curl -s -H "Authorization: Bearer ${A}" "${MOCK_URL}/oauth2/userInfo" | jq .
 ```
 
-`email_verified` is a **string**, `"true"` or
-`"false"`, as Cognito sends it. Test it as one:
-`"false"` is a non-empty string, true to any language
-that tests strings for truth.
+> [!WARNING]
+> `email_verified` is a string, `"true"` or `"false"`,
+> not a boolean. Compare it with `"true"`. Tested for
+> truth, `"false"` is a non-empty string, and so true
+> in Python and JavaScript alike.
 
-Now an unverified address. Expect
+Now a person whose address is not verified. Expect
 `"email_verified": "false"`:
 
 ``` sh
@@ -125,18 +153,29 @@ E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=esha VERIFIED=false)
 curl -s -H "Authorization: Bearer ${E}" "${MOCK_URL}/oauth2/userInfo" | jq .email_verified
 ```
 
-The service asks once a person and keeps the answer ten
-minutes: Cognito limits how often it may be asked.
+Cognito limits how often `userInfo` may be called. So
+your service asks once for each person, and keeps the
+answer for ten minutes.
 
 ## 5 Choose Your Rules
 
-A rule is a position, a pattern and a role. A new
-person's verified e-mail is matched against the rules
-in order of position, with SQL's `LIKE`; the first
-match lets them in with its role. **No match, no
-entry.** An unverified e-mail never matches.
+A rule says: an e-mail like this comes in with this
+role. For example, `(10, '%@example.org', 'member')`
+lets in anyone at example.org as a `member`. Each rule
+has three parts:
 
-Four patterns cover most projects:
+- **A position,** 10 here. The rules are tried in
+  order, lowest first, and the first that matches
+  wins
+- **A pattern,** matched with SQL's `LIKE`: `%` stands
+  for any run of characters, including none, and `_`
+  for any single character
+- **A role,** given to the person when they come in
+
+**No match, no entry.** An unverified e-mail matches
+no rule.
+
+Four sets of rules cover most projects:
 
   ---------------------------------------------------------------
   You want                 The rules
@@ -159,21 +198,21 @@ Four patterns cover most projects:
                            ...
   ---------------------------------------------------------------
 
-**Why `deny-all` by default.** A role that grants
-nothing makes a person who is in, and may do nothing:
-exactly as if they were signed out, but known by name.
-Rights are then given, one role at a time, by someone
-who may give them, and never taken for granted by the
-door. Build up from nothing; never trim down from
-everything.
+**The default is everyone in, as `deny-all`.**
+`deny-all` is a role that may do nothing. A person who
+holds only it is in, and known by name, but can do no
+more than someone signed out. An admin then gives them
+roles, one at a time. Rights are added by someone
+allowed to add them, never handed out at the door.
+Build up from nothing; never trim down from everything.
 
-`deny-all` is not a veto. Roles add up: whoever holds
-`deny-all` and `member` may do what `member` may. To
-shut out someone already in, take their roles away
-(tutorial 2).
+**`deny-all` is not a veto.** Roles add up: someone
+who holds `deny-all` and `member` may do everything
+`member` may. To shut out someone already in, take
+their roles away (tutorial 2).
 
-Try the patterns on some addresses, with no tables at
-all. Expect `member` for both example.org addresses,
+Try the third set on four addresses, without any
+tables yet. Expect `member` for the two at example.org,
 whatever their case, and `deny-all` for the other two:
 
 ``` sh
@@ -182,17 +221,25 @@ SELECT e AS email, (SELECT r.role FROM rules r WHERE lower(e) LIKE r.pattern ORD
 FROM unnest(ARRAY['asha@example.org', 'Chitra@Example.org', 'bhanu@elsewhere.net', 'manthara@evil-example.org']) AS e"
 ```
 
-Mind the `@`: `'%example.org'` would let in
-`manthara@evil-example.org`. And `_` in `LIKE` matches
-any one character; a domain with one in it wants `\_`.
+> [!WARNING]
+> Mind the `@`. `'%example.org'`, without it, would
+> also let in `manthara@evil-example.org`. And since
+> `_` matches any character, write it `\_` in a
+> pattern that means a real underscore.
 
 ## 6 Write the Rules Down
 
-The draft that tutorial 3 turns into a migration. Save
-it as `users-draft.sql` at the root of your fork,
-outside `migrations/sql/`, where `make check` would
-hold it to a migration's name. Every name in it carries
-`users_`, the prefix of the unit that will own it:
+Now write the rules, and the tables that hold them, as
+a draft: SQL you run by hand until tutorial 3 turns it
+into a migration. Save it as `users-draft.sql` at the
+root of your fork. Keep it out of `migrations/sql/`:
+`make check` holds every file there to a migration's
+naming rules, and a draft would fail them.
+
+Every name in the draft starts `users_`. That is the
+prefix of the `users` unit, the part of the project
+that will own these tables; each unit keeps its names
+under its own prefix ([Naming](../conduct/naming.md)).
 
 ``` sql
 -- The roles. deny-all grants nothing: whoever holds it alone may do
@@ -266,23 +313,28 @@ INSERT INTO users_admission (position, pattern, role) VALUES
 ON CONFLICT DO NOTHING;
 ```
 
+What each piece does:
+
 - **`users_roles`:** the roles. What each may do is
   tutorial 2's
-- **`users_admission`:** the rules, lower case, so an
-  address in any case matches
-- **`users_people`:** everyone admitted, by `sub`,
-  which never changes; the e-mail as it was at the door
+- **`users_admission`:** the rules, in lower case, so
+  an address in any case matches
+- **`users_people`:** everyone let in, by `sub`, with
+  their e-mail as it was when they came in
 - **`users_members`:** who holds which role
 - **`users_admit`:** the door. Someone already in is
-  seen again, and stays in; someone new comes in by the
-  first rule that matches, with its role. The rules are
-  read once a person, at their first sign-in: a rule
-  changed later changes nothing for people already in
+  marked as seen, and stays in. Someone new comes in by
+  the first rule that matches, with its role
+
+> [!NOTE]
+> The rules are read only at a person's first sign-in.
+> A rule changed later changes nothing for people
+> already in; change their roles instead.
 
 ## 7 Try It
 
-The draft in a transaction that is rolled back, so the
-database is as it was after. Save the trial as
+Run the draft inside a transaction and roll it back,
+so the database is left as it was. Save this trial as
 `try-1.sql`:
 
 ``` sql
@@ -296,34 +348,34 @@ SELECT users_admit('asha', 'Asha@Example.org', true) AS asha,
 SELECT p.email, m.role FROM users_people p JOIN users_members m USING (sub) ORDER BY p.email;
 ```
 
-Then expect `t`, `t` and `f`, and two people, asha a
-`member` and bhanu `deny-all`:
+Then run both. Expect `t`, `t` and `f`, then two
+people: asha a `member`, and bhanu `deny-all`:
 
 ``` sh
 psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f try-1.sql -c ROLLBACK
 ```
 
-Esha's address matches, but it is not verified: she
-stays out. Bhanu matches only `%`: he is in, with
-nothing.
+Esha's address matches a rule, but it is not verified,
+so she stays out. Bhanu's matches only `%`, so he is
+in, with nothing.
 
 ## 8 What Can Go Wrong
 
 - **`"email_verified": "false"` for everyone on the
-  box.** Cognito says what Google told it, if the pool
-  maps the attribute. Ask the box's owner whether
-  `email_verified` is mapped
-- **userInfo answers `401`.** The token is not an
+  box.** Cognito passes on what Google told it, but
+  only if the pool maps that attribute. Ask the box's
+  owner whether `email_verified` is mapped
+- **`userInfo` answers `401`.** The token is not an
   access token, has expired, or lacks the `openid`
   scope. The UI asks for `openid email`; keep both
-- **Everyone is let in.** A `%` rule sits before the
-  narrower ones. Rules are read by position, lowest
-  first
-- **Someone you shut out is still in.** The rules are
-  read at a first sign-in alone. Take their roles away
+- **Everyone is let in.** A `%` rule has a lower
+  position than the narrower ones. Rules are tried
+  lowest first
+- **Someone you shut out is still in.** The rules
+  apply only at a first sign-in. Take their roles away
 - **`relation "users_roles" already exists`.** Tutorial
   3's migration has run in this database. The draft is
-  for before it; from here on, change the database by
+  for before it; from then on, change the database by
   migrations
 
 ## 9 See Also
@@ -332,6 +384,8 @@ nothing.
 - [How the project meets the
   box](../onboarding/README.md) §3 and §4: what nginx
   checks, and what your service does
+- [The glossary](../glossary.md): JWT, claim, `sub`,
+  access token, `userInfo`
 - [Cognito's userInfo
   endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html),
   read 2026-10-06

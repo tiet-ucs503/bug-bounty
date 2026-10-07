@@ -63,6 +63,10 @@ CI role
   works as, assumed by GitHub's OIDC for the
   repository's `v*` tags alone
 
+Claim
+: A fact a token states, such as `sub` or `client_id`:
+  a key and its value in the token's middle part
+
 Collector
 : py-api's thread that deletes from the static bucket
   the objects no note has referred to for a grace, then
@@ -104,6 +108,11 @@ dev/dev.env
 Digest
 : An image's `sha256:` name. The box pulls images by
   digest alone, so what runs is exactly what was built
+
+JWT
+: JSON Web Token: three base64url parts joined by dots,
+  how it is signed, its claims, and the signature.
+  Cognito's tokens are JWTs
 
 Manifest
 : `box/project.json`: the project's name, its services
@@ -185,6 +194,11 @@ Render
 Role
 : A row of the access control matrix. A person holds
   any number; their rights are the union
+
+sub
+: Short for subject: the ID Cognito gives an account,
+  which never changes. The project keys people by it,
+  never by e-mail
 
 Test ID
 : `T<feature>.<n>`, such as `T2.12`: a test's name on
