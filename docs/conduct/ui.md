@@ -158,8 +158,7 @@ away, so that none other can.
 [Tutorial 6's
 implementation](../tutorials/6-a-svelte-ui/4-implementation.md)
 §3 to §5 is all of this at work: a theme with its dark
-values, five small parts, and a dashboard built of
-them.
+values, six small parts, and a dashboard built of them.
 
 Write your own, and a page beside [the
 UI's](../ui/README.md) that shows it: each token, its
@@ -178,7 +177,8 @@ concept](the-cycle/concept.md) §3; [tutorial
 - **Failed,** when the service did not answer
 - **Full,** the one everybody draws
 
-Each state has a test.
+Each state has a test. Tutorial 6 draws the last three
+for one part, and tests them for all (its D7).
 
 ## 6 U6 Usable by Everyone
 
