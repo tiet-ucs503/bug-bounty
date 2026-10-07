@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 672" width="660" height="672" role="img" aria-labelledby="t d">
+  <title id="t">One part in three states, on a phone</title>
+  <desc id="d">The notes, three times. Waiting: the heading and the words Loading the notes. Empty: the heading, the box for a new note with its Add button, and the words No notes yet. Failed: the heading, the words The notes did not load with the service and its answer, and a Try again button.</desc>
+  <rect width="660" height="672" fill="#fff"/>
+  <text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D7  Waiting</text>
+  <rect x="20" y="42" width="360" height="96" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="36" y="78" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Notes</text>
+  <text x="36" y="108" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">Loading the notes…</text>
+  <text x="400" y="84" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">before the answer</text>
+  <text x="400" y="100" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the same for your account, and the people</text>
+  <text x="20" y="178" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D7  Empty</text>
+  <rect x="20" y="190" width="360" height="254" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="36" y="226" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Notes</text>
+  <rect x="36" y="240" width="328" height="96" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="46" y="264" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">A new note</text>
+  <rect x="36" y="344" width="64" height="44" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+  <text x="68.0" y="371.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Add</text>
+  <text x="36" y="418" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">No notes yet.</text>
+  <text x="400" y="300" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the answer came, and held nothing</text>
+  <text x="400" y="316" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the box stays, for the first note</text>
+  <text x="20" y="484" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D7  Failed</text>
+  <rect x="20" y="496" width="360" height="156" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="36" y="532" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Notes</text>
+  <text x="36" y="562" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">The notes did not load: py-api: 503</text>
+  <rect x="36" y="578" width="96" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="84.0" y="605.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Try again</text>
+  <text x="400" y="560" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">no answer, or a refusal by the box</text>
+  <text x="400" y="576" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">which part, and which service</text>
+  <text x="400" y="592" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the same for your account, and the people</text>
+</svg>

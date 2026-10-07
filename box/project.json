@@ -1,8 +1,12 @@
 {
   "name": "example",
   "description": "The template's own example: two starter services and a UI",
+  "github": "your-org/your-project",
+  "database": true,
   "ui": {
-    "dev_callback_urls": ["http://localhost:5173/"]
+    "dev_callback_urls": [
+      "http://localhost:5173/"
+    ]
   },
   "services": [
     {
@@ -10,10 +14,23 @@
       "language": "node",
       "port": 3000,
       "memory_mib": 192,
+      "prefix": "js_api",
       "routes": [
-        { "method": "GET", "path": "/health", "signed_in": false },
-        { "method": "GET", "path": "/hello", "signed_in": false },
-        { "method": "POST", "path": "/echo", "signed_in": true }
+        {
+          "method": "GET",
+          "path": "/health",
+          "signed_in": false
+        },
+        {
+          "method": "GET",
+          "path": "/hello",
+          "signed_in": false
+        },
+        {
+          "method": "POST",
+          "path": "/echo",
+          "signed_in": true
+        }
       ]
     },
     {
@@ -21,10 +38,23 @@
       "language": "python",
       "port": 8000,
       "memory_mib": 192,
+      "prefix": "py_api",
       "routes": [
-        { "method": "GET", "path": "/health", "signed_in": false },
-        { "method": "GET", "path": "/hello", "signed_in": false },
-        { "method": "POST", "path": "/echo", "signed_in": true }
+        {
+          "method": "GET",
+          "path": "/health",
+          "signed_in": false
+        },
+        {
+          "method": "GET",
+          "path": "/hello",
+          "signed_in": false
+        },
+        {
+          "method": "POST",
+          "path": "/echo",
+          "signed_in": true
+        }
       ]
     }
   ]

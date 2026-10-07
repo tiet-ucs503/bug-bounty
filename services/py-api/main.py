@@ -8,7 +8,7 @@ are replaced by yours.
     POST /echo     a signed-in caller: the body back, with who sent it
 
 In front of this process, the box's nginx (rendered from
-box/project.json, docs/how-the-box-works.md):
+box/project.json, docs/onboarding/README.md):
 
 - an allow-list: a route added here is unreachable until
   box/project.json names it, and the box's owner rolls it out;

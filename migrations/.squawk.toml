@@ -1,0 +1,5 @@
+# Squawk's settings for db/*/migrations/ (make db-lint). dbmate runs each
+# migration in a transaction unless it says transaction:false, so Squawk
+# is told to assume one; a transaction:false file ignores the rule that
+# assumption brings, by name (docs/onboarding/write-a-migration.md)
+assume_in_transaction = true

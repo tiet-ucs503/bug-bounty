@@ -1,0 +1,191 @@
+# A release: a tag vX.Y.Z. It tells the box what changed since the tag
+# before it, and nothing else (docs/onboarding/ci-cd.md):
+#   - a service or migrations/ changed: its image built on the box's
+#     CodeBuild, its digest in the release record the box pins from
+#   - ui/, docs/ or static/ changed: a sync to www, docs or static; ui/
+#     built first if it has a package.json
+#   - box/project.json changed: the box's pieces rendered and attached
+#     to the release, for the box's owner to roll out
+# One role, the project's CI role, by GitHub's OIDC: no AWS key here.
+# The repository's variables: AWS_ROLE_ARN, ZONE, COGNITO_AUTH_DOMAIN,
+# COGNITO_UI_CLIENT_ID, all given by the box's owner, none a secret
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-south-1
+
+jobs:
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      units: ${{ steps.plan.outputs.units }}
+      www: ${{ steps.plan.outputs.www }}
+      docs: ${{ steps.plan.outputs.docs }}
+      static: ${{ steps.plan.outputs.static }}
+      handover: ${{ steps.plan.outputs.handover }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - id: plan
+        name: What changed since the tag before
+        run: |
+          tools/release-plan.sh "${GITHUB_REF_NAME}" | tee plan.txt
+          {
+            echo "units=$(awk '$1 == "build" {print $2}' plan.txt | paste -sd' ' -)"
+            for s in www docs static; do
+              if grep -qx "sync ${s}" plan.txt; then echo "${s}=true"; else echo "${s}=false"; fi
+            done
+            if grep -qx hand-over plan.txt; then echo "handover=true"; else echo "handover=false"; fi
+          } >> "${GITHUB_OUTPUT}"
+          cat plan.txt >> "${GITHUB_STEP_SUMMARY}"
+
+  images:
+    needs: [check, plan]
+    if: needs.plan.outputs.units != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Build each changed image on the box's CodeBuild, at once
+        env:
+          UNITS: ${{ needs.plan.outputs.units }}
+        run: |
+          pids=()
+          for u in ${UNITS}; do
+            tools/box-build.sh "${u}" "${GITHUB_REF_NAME}" > "digest-${u}.txt" &
+            pids+=("$!")
+          done
+          failed=0
+          for p in "${pids[@]}"; do wait "${p}" || failed=1; done
+          cat digest-*.txt > digests.txt
+          cat digests.txt >> "${GITHUB_STEP_SUMMARY}"
+          exit "${failed}"
+      - name: The release record, which the box pins from
+        run: tools/release-record.sh "${GITHUB_REF_NAME}" "${GITHUB_SHA}" digests.txt
+
+  www:
+    needs: [check, plan, images]
+    if: always() && needs.check.result == 'success' && needs.plan.outputs.www == 'true' && needs.images.result != 'failure'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - name: The UI, built if ui/ has a package.json; ui/ as it is if not
+        run: |
+          if [ -f ui/package.json ]; then
+            (cd ui && npm ci --no-audit --no-fund && npm run build)
+            echo "UI_OUT=ui/dist" >> "${GITHUB_ENV}"
+          else
+            echo "UI_OUT=ui" >> "${GITHUB_ENV}"
+          fi
+      - name: The UI's config, from the repository's variables
+        env:
+          ZONE: ${{ vars.ZONE }}
+          AUTH_DOMAIN: ${{ vars.COGNITO_AUTH_DOMAIN }}
+          CLIENT_ID: ${{ vars.COGNITO_UI_CLIENT_ID }}
+        run: |
+          [ -n "${ZONE}" ] && [ -n "${AUTH_DOMAIN}" ] && [ -n "${CLIENT_ID}" ] || { echo "::error::ZONE, COGNITO_AUTH_DOMAIN or COGNITO_UI_CLIENT_ID unset"; exit 1; }
+          apis=$(python3 -c 'import json; print(json.dumps([s["name"] for s in json.load(open("box/project.json"))["services"]]))')
+          printf 'export default {\n  authDomain: "%s",\n  clientId: "%s",\n  zone: "%s",\n  apis: %s,\n};\n' \
+            "${AUTH_DOMAIN}" "${CLIENT_ID}" "${ZONE}" "${apis}" > "${UI_OUT}/config.js"
+      - name: Sync the UI to www
+        env:
+          ZONE: ${{ vars.ZONE }}
+        run: aws s3 sync "${UI_OUT}/" "s3://www.${ZONE}/" --delete --exclude 'config.example.js' --exclude 'config.dev.example.js' --exclude 'node_modules/*'
+
+  docs:
+    needs: [check, plan]
+    if: needs.plan.outputs.docs == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: pandoc 3.11 and md-preview v0.2.4, each checked
+        run: |
+          curl -sSLo pandoc.tgz https://github.com/jgm/pandoc/releases/download/3.11/pandoc-3.11-linux-amd64.tar.gz
+          echo "37edb3bbcf722f921a009941bf5874e2e0c09263226c9b4a2d980788cb062ab6  pandoc.tgz" | sha256sum -c -
+          tar -xzf pandoc.tgz && echo "${PWD}/pandoc-3.11/bin" >> "${GITHUB_PATH}"
+          git clone -q --depth 1 --branch v0.2.4 https://github.com/bvraghav/md-preview.git "${RUNNER_TEMP}/md-preview"
+          [ "$(git -C "${RUNNER_TEMP}/md-preview" rev-parse HEAD)" = 8cb0814c297ca3271653f3842992263d9ead1bab ]
+          echo "${RUNNER_TEMP}/md-preview/bin" >> "${GITHUB_PATH}"
+      - name: Build the pages
+        run: |
+          md-preview fetch
+          md-preview build docs
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Sync docs/_site/ to docs
+        env:
+          ZONE: ${{ vars.ZONE }}
+        run: aws s3 sync docs/_site/ "s3://docs.${ZONE}/" --delete
+
+  static:
+    needs: [check, plan]
+    if: needs.plan.outputs.static == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Add static/ to static, deleting nothing
+        env:
+          ZONE: ${{ vars.ZONE }}
+        run: aws s3 sync static/ "s3://static.${ZONE}/"
+
+  hand-over:
+    needs: [check, plan]
+    if: needs.plan.outputs.handover == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: The box's pieces, attached to the release for the box's owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 box/render.py
+          name=$(python3 -c 'import json; print(json.load(open("box/project.json"))["name"])')
+          tar -czf "box-${name}-${GITHUB_REF_NAME}.tgz" -C box/out "${name}"
+          gh release view "${GITHUB_REF_NAME}" > /dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --verify-tag --notes "The manifest changed: hand box-${name}-${GITHUB_REF_NAME}.tgz to the box's owner."
+          gh release upload "${GITHUB_REF_NAME}" "box-${name}-${GITHUB_REF_NAME}.tgz" --clobber
+          echo "::warning::box/project.json changed: the box's owner rolls the new pieces out before they take effect"

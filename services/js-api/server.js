@@ -7,7 +7,7 @@
 //   POST /echo     a signed-in caller: the body back, with who sent it
 //
 // In front of this process, the box's nginx (rendered from
-// box/project.json, docs/how-the-box-works.md):
+// box/project.json, docs/onboarding/README.md):
 //   - an allow-list: a route added here is unreachable until
 //     box/project.json names it, and the box's owner rolls it out;
 //   - CORS for your www alone, and the rate of writes;
@@ -23,6 +23,9 @@ import Fastify from "fastify";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
 const PORT = Number(process.env.PORT ?? 3000);
+// Every address in a container; 127.0.0.1 alone when run as a program
+// on a shared machine (tools/native-dev.sh)
+const HOST = process.env.HOST ?? "0.0.0.0";
 const SERVICE = process.env.SERVICE ?? "js-api";
 
 // From the env file the box writes for your project at upload, from
@@ -81,5 +84,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const s of ["SIGTERM", "SIGINT"]) {
     process.on(s, () => app.close().then(() => process.exit(0)));
   }
-  await app.listen({ host: "0.0.0.0", port: PORT });
+  await app.listen({ host: HOST, port: PORT });
 }

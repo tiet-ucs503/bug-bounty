@@ -1,0 +1,3 @@
+A public object, served by the dev stack at static.localhost: the
+static bucket, as a folder. Put what your UI reads from static.<zone>
+here; a release adds it to the bucket.

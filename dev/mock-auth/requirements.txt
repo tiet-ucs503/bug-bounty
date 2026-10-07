@@ -1,0 +1,5 @@
+# PyJWT with its crypto extra, at the starters' pins (services/py-api)
+cffi==2.1.1
+cryptography==50.0.2
+pycparser==3.0
+PyJWT[crypto]==2.15.1

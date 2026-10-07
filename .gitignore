@@ -1,7 +1,12 @@
 box/out/
 ui/config.js
+ui/public/config.js
+ui/dist/
 node_modules/
 __pycache__/
 .venv/
 probes/.signed-in
 probes/.rate
+docs/_site/
+dev/out/
+dev/dev.env

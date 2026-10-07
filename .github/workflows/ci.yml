@@ -1,0 +1,38 @@
+# Every push and pull request, and every release before it publishes:
+# the manifest, the services' tests, the migrations' lint, the renders.
+# Nothing here reaches AWS or the box
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: The manifest, the folders and the migrations' prefixes
+        run: make check
+      - name: The services' tests
+        run: make test
+      - name: The UI builds, if ui/ has a package.json
+        run: |
+          if [ -f ui/package.json ]; then cd ui && npm ci --no-audit --no-fund && npm run build; fi
+      - name: The migrations, by Squawk
+        run: make db-lint
+      - name: The box's pieces and the dev stack render
+        run: |
+          python3 box/render.py
+          python3 box/render.py --dev
