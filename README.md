@@ -1,6 +1,5 @@
 # A Project on the Box
 
-
 A template for a project whose API, UI and documentation run on the
 box kept by `aws-iac`. Fork it on GitHub, name your project, write
 your services, migrations, UI and pages; a release is a tag. The box's
