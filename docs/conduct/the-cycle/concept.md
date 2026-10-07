@@ -76,8 +76,8 @@ whenever the contract is silent.
   permission it needs
 - **5 Notes:** a file's mode, (u=rw, a=r), and the two
   columns it adds to the matrix
-- **6 A Svelte UI:** what the dashboard shows, by what
-  `/users/me` answers
+- **6 A Svelte UI:** the dashboard's wireframe, each
+  part marked with the permission that shows it
 - **7 Uploads:** the key,
   `objects/<owner's tag>/<the bytes' SHA-256>`, and an
   object's life, drawn
