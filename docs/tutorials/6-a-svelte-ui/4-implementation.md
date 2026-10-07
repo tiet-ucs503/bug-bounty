@@ -742,8 +742,12 @@ in turn:
 3.  **As `you` again,** tick `reader` for zed
 4.  **As `zed`:** the notes, to read, no add box; the
     header by the name you saved
-5.  **As `asha`,** a member: add a note, edit it,
-    delete it. Another's note has no buttons
+5.  **Sign in as `asha`:** no role either, as zed at
+    first. Then **as `you`,** tick `member` for her
+6.  **As `asha`,** now a member: add a note, edit it,
+    delete it. Add another, and leave it
+7.  **As `zed`:** asha's note, marked `another's`, with
+    no buttons
 
 ## 7 Build and Release
 

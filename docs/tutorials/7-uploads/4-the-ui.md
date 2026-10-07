@@ -422,8 +422,8 @@ cd ui && npm test && cd ..
 As asha, a member: edit a note of yours; choose a PNG;
 drop another on the dashed zone; drop an `.html` file
 and expect `page.html: text/html is not allowed`; save;
-and expect both images under the note. Then as bhanu, a
-reader: the images, and no Edit.
+and expect both images under the note. Then as zed, a
+reader since tutorial 6: the images, and no Edit.
 
 Take one image off, keep its link, and wait out the
 grace: the link answers `404`, unless another note of
