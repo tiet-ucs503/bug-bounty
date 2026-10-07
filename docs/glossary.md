@@ -167,7 +167,8 @@ Prefix
 Published function
 : A unit's function that other units may call, marked
   `published:` in its comment, its signature a promise.
-  `users_may` is the one the template's tutorials make
+  The template's tutorials make three: `users_may`,
+  `users_permission_add` and `users_permission_drop`
 
 Refinement
 : Step 5 of the cycle: run the tests, read them, and

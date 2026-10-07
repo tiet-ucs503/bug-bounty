@@ -90,9 +90,12 @@ do](../tutorials/2-authorisation/1-concept.md) §4, R6).
   saying so in its comment,
   `COMMENT ON FUNCTION ... IS 'published: ...'`, and
   keeps its signature as a promise to every caller. The
-  users unit's `users_may` is the example: every unit
-  asks it whether a person may do a thing, and none
-  reads `users_*` tables
+  users unit publishes three: `users_may`, which every
+  unit's accessors ask whether a person may do a thing;
+  and `users_permission_add` and
+  `users_permission_drop`, which a unit's migrations
+  call to bring its permissions and take them away. No
+  unit reads or writes `users_*` tables
 - **Never** another service's other objects, and never
   the schema: the project's login holds rows and
   `EXECUTE`, and only the migrator changes the schema.

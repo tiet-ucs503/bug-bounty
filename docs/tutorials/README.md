@@ -422,7 +422,7 @@ you should know about.
 ## 7 See Also
 
 - [The database's conduct](../conduct/database.md):
-  prefixes, accessors, and the one function a unit
+  prefixes, accessors, and the functions a unit
   publishes
 - [Write a
   migration](../migrations/write-a-migration.md)
