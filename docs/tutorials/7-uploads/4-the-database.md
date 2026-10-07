@@ -335,9 +335,11 @@ The same life, asserted, is T7.1 to T7.8 in
 
 ## 5 Prove the Down, and Write the Schema
 
-As tutorial 3's
+`rollback`, and expect nothing of the objects left;
+then `up` and `make db CMD=dump`, as tutorial 3's
 [implementation](../3-the-migration/4-implementation.md)
-§6 and §7: `rollback`, `up`, and `make db CMD=dump`.
+§6 and §7 apply and dump. On the native stack, `dbmate`
+for each, as there.
 
 ## 6 What Can Go Wrong
 

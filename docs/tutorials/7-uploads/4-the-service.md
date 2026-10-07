@@ -29,7 +29,7 @@ version: v0.1.0
 - [What you need](../README.md) §2, installed and
   checked
 - [The database](4-the-database.md), applied
-- py-api with tutorial 6's notes routes
+- py-api with tutorial 5's notes routes
 
 ## 2 The Routes
 

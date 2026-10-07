@@ -73,7 +73,7 @@ def challenge(verifier: str) -> str:
     return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
 
 
-FORM = """<!doctype html><meta charset="utf-8"><title>Mock sign-in</title>
+FORM = """<!doctype html><meta charset="utf-8"><title>Mock sign-in</title><link rel="icon" href="data:,">
 <style>body{{font:16px system-ui;max-width:24rem;margin:3rem auto;padding:0 1rem}}
 input{{font:inherit;width:100%;margin:.25rem 0 1rem}}</style>
 <h1>Mock sign-in</h1><p>Local development only: any name is accepted.</p>
