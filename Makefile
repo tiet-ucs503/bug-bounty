@@ -20,6 +20,7 @@
 #   make plan TAG=v0.2.0  what a release of that tag would do
 #
 # The outside probes, against your live hosts, are probes/Makefile.
+# Every target and variable: docs/onboarding/makefile.md.
 
 # The compose command: Docker's, or rootless Podman's,
 # make dev COMPOSE=podman-compose (docs/onboarding/podman.md)

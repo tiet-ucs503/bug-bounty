@@ -35,6 +35,8 @@ In the order a newcomer reads them.
       root](shared-box.md)
 4.  [The manifest, key by key](manifest.md): what the
     box reads from you
+    - [The Makefile, target by target](makefile.md):
+      every `make` these pages name
 5.  [How a release reaches the box](ci-cd.md): a tag,
     and only what changed
     - [A release by hand](release-by-hand.md)
