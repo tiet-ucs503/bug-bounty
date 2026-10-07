@@ -36,7 +36,7 @@ version: v0.1.0
   [implementation](../6-a-svelte-ui/4-implementation.md)
   §3)
 - [The UI's conduct](../../conduct/ui.md): the look is
-  Tailwind's utilities and tutorial 6's five parts, no
+  Tailwind's utilities and tutorial 6's six parts, no
   class and no `<style>` of your own
 
 ## 2 Step 1: a File Selector
@@ -94,7 +94,7 @@ shows only on a note you are editing, which is always
 your own:
 
 ``` svelte
-          <Attach {note} onchange={load} />
+            <Attach {note} onchange={load} />
 ```
 
 Edit a note of yours, choose a PNG, and expect
@@ -116,20 +116,20 @@ its attachments, an image as an image and anything else
 as its type, each a link to the object:
 
 ``` svelte
-          {#if note.objects.length}
-            <div class="my-2 flex flex-wrap items-center gap-2">
-              {#each note.objects as o (o.key)}
-                <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
-                  {#if o.type.startsWith("image/")}
-                    <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
-                         alt="An attachment" loading="lazy" />
-                  {:else}
-                    <Chip>{o.type}</Chip>
-                  {/if}
-                </a>
-              {/each}
-            </div>
-          {/if}
+            {#if note.objects.length}
+              <div class="my-2 flex flex-wrap items-center gap-2">
+                {#each note.objects as o (o.key)}
+                  <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
+                    {#if o.type.startsWith("image/")}
+                      <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
+                           alt="An attachment" loading="lazy" />
+                    {:else}
+                      <Chip>{o.type}</Chip>
+                    {/if}
+                  </a>
+                {/each}
+              </div>
+            {/if}
 ```
 
 The image's size is in its classes, `max-h-24` and
@@ -300,18 +300,26 @@ And `ui/src/Notes.svelte`, whole:
   import Card from "./lib/Card.svelte";
   import Chip from "./lib/Chip.svelte";
   import Field from "./lib/Field.svelte";
+  import Loaded from "./lib/Loaded.svelte";
   import Section from "./lib/Section.svelte";
 
   let { canWrite } = $props();
-  let notes = $state([]);
+  // null until the first answer: waiting is not the same as none
+  let notes = $state(null);
   let draft = $state("");
   let editing = $state(null);
   let error = $state("");
+  let failed = $state("");
 
   async function load() {
-    const r = await api("py-api", "/notes");
-    if (r.status === 200) notes = r.data;
-    else error = r.data.error ?? `py-api: ${r.status}`;
+    failed = "";
+    try {
+      const r = await api("py-api", "/notes");
+      if (r.status === 200) notes = r.data;
+      else failed = r.data.error ?? `py-api: ${r.status}`;
+    } catch {
+      failed = "py-api: no answer";
+    }
   }
 
   async function call(path, opts) {
@@ -334,52 +342,54 @@ And `ui/src/Notes.svelte`, whole:
 </script>
 
 <Section title="Notes">
-  {#if error}<p class="my-2 text-danger">{error}</p>{/if}
-  {#if canWrite}
-    <Field multiline label="A new note" bind:value={draft} />
-    <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
-  {/if}
-  <ul class="flex flex-col gap-2" aria-label="Notes">
-    {#each notes as note (note.id)}
-      <Card>
-        {#if editing?.id === note.id}
-          <Field multiline label="Edit the note" bind:value={editing.body} />
-          <div class="mt-2 flex flex-wrap gap-2">
-            <Button primary onclick={save}>Save</Button>
-            <Button onclick={() => (editing = null)}>Cancel</Button>
-          </div>
-          <Attach {note} onchange={load} />
-        {:else}
-          <p class="break-words">{note.body}</p>
-          {#if note.objects.length}
-            <div class="my-2 flex flex-wrap items-center gap-2">
-              {#each note.objects as o (o.key)}
-                <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
-                  {#if o.type.startsWith("image/")}
-                    <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
-                         alt="An attachment" loading="lazy" />
-                  {:else}
-                    <Chip>{o.type}</Chip>
-                  {/if}
-                </a>
-              {/each}
-            </div>
-          {/if}
-          <p class="mt-1 text-sm text-muted">
-            {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
-          </p>
-          {#if note.mine && canWrite}
+  <Loaded what="the notes" waiting={notes === null} {failed} retry={load}>
+    {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+    {#if canWrite}
+      <Field multiline label="A new note" bind:value={draft} />
+      <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
+    {/if}
+    <ul class="flex flex-col gap-2">
+      {#each notes as note (note.id)}
+        <Card>
+          {#if editing?.id === note.id}
+            <Field multiline label="Edit the note" bind:value={editing.body} />
             <div class="mt-2 flex flex-wrap gap-2">
-              <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
-              <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+              <Button primary onclick={save}>Save</Button>
+              <Button onclick={() => (editing = null)}>Cancel</Button>
             </div>
+            <Attach {note} onchange={load} />
+          {:else}
+            <p class="break-words">{note.body}</p>
+            {#if note.objects.length}
+              <div class="my-2 flex flex-wrap items-center gap-2">
+                {#each note.objects as o (o.key)}
+                  <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
+                    {#if o.type.startsWith("image/")}
+                      <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
+                           alt="An attachment" loading="lazy" />
+                    {:else}
+                      <Chip>{o.type}</Chip>
+                    {/if}
+                  </a>
+                {/each}
+              </div>
+            {/if}
+            <p class="mt-1 text-sm text-muted">
+              {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
+            </p>
+            {#if note.mine && canWrite}
+              <div class="mt-2 flex flex-wrap gap-2">
+                <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
+                <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+              </div>
+            {/if}
           {/if}
-        {/if}
-      </Card>
-    {:else}
-      <li class="text-muted">No notes yet.</li>
-    {/each}
-  </ul>
+        </Card>
+      {:else}
+        <li class="text-muted">No notes yet.</li>
+      {/each}
+    </ul>
+  </Loaded>
 </Section>
 ```
 
@@ -401,7 +411,7 @@ const NOTES = [
 ```
 
 Why, [the refinement](5-refinement.md) §5 tells. Expect
-`10 passed`:
+`13 passed`:
 
 ``` sh
 cd ui && npm test && cd ..
