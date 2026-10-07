@@ -47,42 +47,50 @@ for itself.
 
 ## 2 The Users Unit
 
-- **`users_may(sub, permission)`**
+- **`users_may(sub, permission)`** : *Whether Bhanu or
+  Chitra holds a permission, such as `example.write`.*
   - Needs: nothing
   - Answers: `boolean`
   - Refuses: never
-- **`users_me(sub)`**
+- **`users_me(sub)`** : *GET my `sub`, `email`, `roles`
+  and `permissions`.*
   - Needs: nothing
   - Answers: a row: `sub`, `email`, `roles`,
     `permissions`; no row if never signed in
   - Refuses: never
-- **`users_list(caller)`**
+- **`users_list(caller)`** : *GET the list of `users`.*
   - Needs: `users.read`
   - Answers: rows: `sub`, `email`, `roles`,
     `first_seen_at`, `seen_at`; by e-mail, at most 1000
   - Refuses: `42501`
-- **`users_matrix(caller)`**
+- **`users_matrix(caller)`** : *GET the access control
+  `matrix`.*
   - Needs: `users.read`
   - Answers: rows: `role`, `about`, `permissions`
   - Refuses: `42501`
-- **`users_grant(caller, sub, role)`**
+- **`users_grant(caller, sub, role)`** : *GRANT a ROLE
+  to a USER.*
   - Needs: `users.grant`
   - Answers: nothing; twice is once
   - Refuses: `42501`; `P0002` for a person or a role
     that does not exist
-- **`users_revoke(caller, sub, role)`**
+- **`users_revoke(caller, sub, role)`** : *REVOKE a
+  ROLE from a USER.*
   - Needs: `users.grant`
   - Answers: nothing
   - Refuses: `42501`; `P0002` if the person lacks the
     role; `23001` for the last `users.grant`
-- **`users_permission_add(permission, about, roles)`**
+- **`users_permission_add(permission, about,
+  roles)`** : *ADD a PERMISSION (along with ROLES) into
+  the MATRIX.*
   - Called by: a unit's migration, on its way up
   - Answers: nothing; twice is once. The permission,
     and a cell for each role named; `roles` may be
     empty
   - Refuses: `P0002` for a role that does not exist;
     `23514` for a name not `<unit>.<verb>`
-- **`users_permission_drop(permission)`**
+- **`users_permission_drop(permission)`** : *DROP a
+  PERMISSION from the MATRIX.*
   - Called by: a unit's migration, on its way down
   - Answers: nothing; twice is once. The permission
     gone, and every cell of it
