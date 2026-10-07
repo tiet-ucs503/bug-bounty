@@ -172,7 +172,7 @@ contract, the tests and the code, in that order.
 
 - [6 A Svelte UI](../6-a-svelte-ui/README.md): next, a
   page over the notes and `/users`
-- [Bring an existing service under
+- [Bring an existing unit under
   authorisation](../../migrations/bring-under-authorisation.md):
   the same, for a unit that was there first
 - [The cycle](../../conduct/the-cycle/README.md) §3:

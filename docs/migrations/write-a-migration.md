@@ -290,6 +290,8 @@ PostgreSQL's version or later.
   and its image
 - [The database's conduct](../conduct/database.md):
   prefixes and accessors
+- [Bring an existing unit under
+  authorisation](bring-under-authorisation.md)
 - [dbmate](https://github.com/amacneil/dbmate) and
   [Squawk's rules](https://squawkhq.com/docs/rules),
   read 2026-10-06

@@ -123,6 +123,8 @@ on it, is the last step of the box's `feature/postgres`
 ## 6 See Also
 
 - [Write a migration](write-a-migration.md)
+- [Bring an existing unit under
+  authorisation](bring-under-authorisation.md)
 - [The database's conduct](../conduct/database.md)
 - [How a release reaches the
   box](../onboarding/ci-cd.md)

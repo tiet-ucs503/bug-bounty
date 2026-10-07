@@ -173,6 +173,8 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 - `draft` [The database](migrations/README.md)
 - `draft` [Write a
   migration](migrations/write-a-migration.md)
+- `draft` [Bring an existing unit under
+  authorisation](migrations/bring-under-authorisation.md)
 
 ### UI
 

@@ -80,7 +80,7 @@ step. Read them in order.
 
 - [The cycle](../../conduct/the-cycle/README.md): the
   five steps in general
-- [Bring an existing service under
+- [Bring an existing unit under
   authorisation](../../migrations/bring-under-authorisation.md):
   the same, for a unit that was there before the users
   unit
