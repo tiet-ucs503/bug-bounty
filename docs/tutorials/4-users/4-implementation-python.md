@@ -405,7 +405,7 @@ What it adds to the starter:
 - **The starter's three,** `/health`, `/hello` and
   `/echo`, as they were
 
-Tutorial 6's notes use the same `pool`, `run` and
+Tutorial 5's notes use the same `pool`, `run` and
 `answer`.
 
 **Document the routes.** In `docs/py-api/api.md`, after

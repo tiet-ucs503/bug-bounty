@@ -53,7 +53,10 @@ the `users` prefix beside its own.
 - **U3 `/users/me` answers who you are:** your `sub`,
   e-mail, provider, profile, roles and permissions.
   Signed in with no role, you are recorded, and may do
-  nothing
+  nothing. The permissions are every unit's that your
+  roles hold, so a UI can tell what to show for any
+  unit, however many come later. A service never asks
+  `/users`: it asks `users_may`, in the database
 - **U4 Your profile is yours.** `PUT /users/me/profile`
   changes the caller's own, and nobody else's
 - **U5 The database decides.** Each route calls one
@@ -78,7 +81,8 @@ the `users` prefix beside its own.
   matrix: a turn of the cycle for when a project needs
   it
 - **Serve the notes.** They are py-api's own routes,
-  tutorial 6's
+  tutorial 5's, and ask the database, not `/users`,
+  what the caller may do
 
 ## 5 See Also
 
