@@ -319,8 +319,42 @@ def note_drop(id: int, authorization: str | None = Header(default=None)):
     return r if isinstance(r, JSONResponse) else answer({"id": id})
 ```
 
-Run py-api's tests, `make test`, then restart the
-stack: `make dev`, or the native `stop` and `start`.
+**Its own tests.** The routes, with the database
+replaced by the accessors' answers, so no database is
+needed. In `services/py-api/test/test_main.py`,
+`import psycopg` beside `import jwt`, and after the
+last test:
+
+``` python
+    # The database replaced by the accessors' answers; a refusal raised
+    # as psycopg raises one
+    def database(self, sql, args):
+        if sql.startswith("SELECT * FROM py_api_notes_all"):
+            return [{"id": 1, "body": "hi", "mine": True, "created_at": None, "updated_at": None}]
+        if sql.startswith("SELECT py_api_note_edit"):
+            raise psycopg.errors.lookup("42501")("not your note")
+        if sql.startswith("SELECT py_api_note_drop"):
+            raise psycopg.errors.lookup("P0002")("no such note")
+        raise AssertionError(sql)
+
+    def bearer(self):
+        return {"Authorization": f"Bearer {self.sign(token_use='access', client_id='ui-client')}"}
+
+    def test_notes_by_the_databases_answers(self):
+        self.main.query = self.database
+        self.assertEqual(self.client.get("/notes").status_code, 401)
+        self.assertEqual(self.client.get("/notes", headers=self.bearer()).json()[0]["body"], "hi")
+        self.assertEqual(self.client.put("/notes/1", headers=self.bearer(), json={"body": "x"}).status_code, 403)
+        self.assertEqual(self.client.delete("/notes/9", headers=self.bearer()).status_code, 404)
+        self.assertEqual(self.client.post("/notes", headers=self.bearer(), json={"body": ""}).status_code, 422)
+```
+
+Expect `OK`, then restart the stack, `make dev`, or the
+native `stop` and `start`:
+
+``` sh
+make test
+```
 
 ## 5 The Manifest's Routes
 

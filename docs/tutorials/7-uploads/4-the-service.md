@@ -283,7 +283,17 @@ note also has `objects`, a list of `{key, type}`".
 
 ## 4 Its Tests
 
-Beside tutorial 6's, in `test/test_main.py`:
+Beside tutorial 5's, in `test/test_main.py`. Its
+`database` answers for `py_api_notes_all`, which
+`GET /notes` no longer calls; make it answer for the
+new one, each note with its objects:
+
+``` python
+        if sql.startswith("SELECT * FROM py_api_notes_page"):
+            return [{"id": 1, "body": "hi", "mine": True, "created_at": None, "updated_at": None, "objects": []}]
+```
+
+Then the uploads' own test, after the last:
 
 ``` python
     def test_an_upload_of_a_type_not_allowed_is_refused(self):
