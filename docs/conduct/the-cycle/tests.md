@@ -15,7 +15,7 @@ keywords:
 - cycle
 kind: explanation
 sources:
-- docs/tutorials/2-authorisation/2-tests.md
+- docs/tutorials/2-authorisation/3-tests.md
 status: draft
 subtitle: The questions a concept raises, as tests
 title: The Tests
@@ -31,9 +31,9 @@ and they fail until it does. Written after, they pass
 by construction, and they keep the code's mistakes as
 carefully as its intentions.
 
-The tests are step 2 of [the cycle](README.md), beside
-the contract, and both follow from [the
-concept](concept.md).
+The tests are step 3 of [the cycle](README.md). They
+ask [the concept](concept.md)'s questions, through the
+contract of step 2: its signatures, and its refusals.
 
 ## 2 The Questions That Follow
 
@@ -50,9 +50,8 @@ expects.
 - **Who may not?** A `reader` tries to write a note.
   Expect a refusal, `403`
 - **And by default?** Someone has just signed in and
-  holds no role yet. They ask for the notes.
-  Expect a refusal: nobody gets anything until a role
-  says so
+  holds no role yet. They ask for the notes. Expect a
+  refusal: nobody gets anything until a role says so
 - **Together?** You hold `admin` and `member` at once.
   `admin` alone cannot read notes, `member` can. Expect
   you can read them: roles add up, and one role never
@@ -166,4 +165,4 @@ test is a reader that never tires and never skims.
   from
 - [The cycle](README.md): what to do when a test fails
 - [2 What each may do: its
-  tests](../../tutorials/2-authorisation/2-tests.md)
+  tests](../../tutorials/2-authorisation/3-tests.md)

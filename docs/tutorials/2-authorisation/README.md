@@ -47,20 +47,21 @@ back, so your database is as it was.
 
 This tutorial follows [the project's
 cycle](../../conduct/the-cycle/README.md), one page a
-step. Read them in order; steps 2 and 3 run side by
-side, both from the concept, neither waiting for the
-other.
+step. Read them in order: the contract before the
+tests, because the tests call its signatures and expect
+its refusals.
 
 1.  **[The concept](1-concept.md).** Who may do what,
     drawn as one table, the matrix, and ten rules read
     from it. Until the contract exists, the concept is
     the source of truth
-2.  **[The tests](2-tests.md).** Each rule asked what
-    could go wrong, and the answers fixed as 27 tests.
-    You run them first, and every one fails
-3.  **[The contract](3-contract.md).** What tutorials 4
+2.  **[The contract](2-contract.md).** What tutorials 4
     to 7 rely on: each accessor's signature, the
     permission it needs, and how it refuses
+3.  **[The tests](3-tests.md).** Each rule asked what
+    could go wrong, and the answers fixed as 27 tests,
+    held to the contract. You run them first, and every
+    one fails
 4.  **[The implementation](4-implementation.md).** The
     SQL, a piece at a time, each piece justified by the
     rules and tests it answers
@@ -72,7 +73,7 @@ other.
 
 The cycle then begins again. Tutorial 7 is such a turn:
 it adds `objects.write` to the matrix, and the concept,
-tests and contract grow with it.
+contract and tests grow with it.
 
 ## 3 Before You Start
 

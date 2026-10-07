@@ -74,8 +74,8 @@ Its commits, in the cycle's order:
 
 1.  **The concept,** as a page, or the issue's text
     moved into one
-2.  **The tests and the contract,** together or one
-    after the other: the tests fail, and say so
+2.  **The contract, then the tests,** or the two
+    together: the tests fail, and say so
 3.  **The implementation,** a commit a step, each
     passing more tests than the last
 4.  **The refinements,** each saying which step it

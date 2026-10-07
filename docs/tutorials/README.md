@@ -65,7 +65,7 @@ flowchart LR
     access control matrix, and notes as (u=rw, a=r), in
     [the project's five
     steps](../conduct/the-cycle/README.md): concept,
-    tests, contract, implementation, refinement
+    contract, tests, implementation, refinement
 3.  [Make it a migration](3-the-migration.md): both as
     migrations, each proved down and up
 4.  [/users in Python](4-users-in-python.md): who comes

@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 2 of tutorial 2: the concept's ten rules, each
+  Step 3 of tutorial 2: the concept's ten rules, each
   asked what could go wrong, and the answers fixed as
   27 tests in one SQL file, before any code. Run it
   now, and every test fails; the implementation is
@@ -15,8 +15,8 @@ kind: reference
 sources:
 - migrations/sql/20261006120000_py_api_create_notes.sql
 status: draft
-subtitle: Step 2, how we measure it
-title: "2.2 What Each May Do: the Tests"
+subtitle: Step 3, how we measure it
+title: "2.3 What Each May Do: the Tests"
 version: v0.1.0
 ---
 
@@ -26,7 +26,9 @@ Each rule of [the concept](1-concept.md) §4, asked the
 questions of [the tests'
 conduct](../../conduct/the-cycle/tests.md) §2. Three
 people: you, the first admin; asha; and bhanu, both
-signed in with no role.
+signed in with no role. Each test calls an accessor as
+[the contract](2-contract.md) signs it, and expects its
+refusals by the SQLSTATEs the contract names.
 
   -------------------------------------------------------------
   Rule              Test    Asks                 Expects
@@ -128,7 +130,7 @@ signed in with no role.
   -------------------------------------------------------------
 
 An SQLSTATE is the refusal [the
-contract](3-contract.md) §4 names. Note the pairs that
+contract](2-contract.md) §4 names. Note the pairs that
 look alike and must not: T2.19 and T2.21, another's
 note against no note at all; T2.12 and T2.13, the last
 `users.grant` against any other.
@@ -265,7 +267,8 @@ whatever you wrote next.
 
 ## 4 See Also
 
-- [The contract](3-contract.md): beside this step
+- [The contract](2-contract.md): the step before,
+  whose signatures and refusals these tests call
 - [The implementation](4-implementation.md): what makes
   these pass
 - [The tests](../../conduct/the-cycle/tests.md): the

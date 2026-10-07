@@ -22,10 +22,10 @@ version: v0.1.0
 
 ## 1 Before You Start
 
-- [The tests](2-tests.md), saved as `test-2.sql`, run
-  once and failing
-- [The contract](3-contract.md): every signature below
+- [The contract](2-contract.md): every signature below
   is one of its rows
+- [The tests](3-tests.md), saved as `test-2.sql`, run
+  once and failing
 
 Each piece below is added, in order, to the end of a
 file. Run the tests after any piece, if you like: the

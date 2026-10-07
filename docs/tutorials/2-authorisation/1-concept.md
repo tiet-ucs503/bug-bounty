@@ -23,7 +23,7 @@ version: v0.1.0
 > [!NOTE]
 > This concept is subject to refinement during the
 > development process. Until [the
-> contract](3-contract.md) exists, and wherever it is
+> contract](2-contract.md) exists, and wherever it is
 > silent, this page is the source of truth.
 
 ## 1 The Goal
@@ -89,7 +89,7 @@ column says whose note it is.
 ## 4 The Rules
 
 Read from the matrix, and numbered, so [the
-tests](2-tests.md) can say which each one checks:
+tests](3-tests.md) can say which each one checks:
 
 - **R1 Nothing unless a role says so.** No cell says
   no. Someone who signed in holds no role until one is
@@ -195,8 +195,8 @@ FROM unnest(ARRAY['asha@example.org', 'Chitra@Example.org', 'bhanu@elsewhere.net
 
 ## 7 See Also
 
-- [The tests](2-tests.md): next, beside [the
-  contract](3-contract.md)
+- [The contract](2-contract.md): next, then [the
+  tests](3-tests.md)
 - [The concept](../../conduct/the-cycle/concept.md):
   what a concept holds, in general
 - [OWASP's Authorization Cheat

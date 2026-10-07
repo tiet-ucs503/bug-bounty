@@ -1,7 +1,7 @@
 ---
 abstract: |
   How a feature is made and rolled out here: in turns,
-  each of five steps (concept, tests, contract,
+  each of five steps (concept, contract, tests,
   implementation, refinement), each turn returning to
   the concept and its questions. What the contract is
   for, what a refinement may change, and how a turn
@@ -39,34 +39,38 @@ config:
 ---
 flowchart LR
   C["1 Concept<br/>what, for whom"]
-  T["2 Tests<br/>how we measure it"]
-  K["3 Contract<br/>what others may rely on"]
+  K["2 Contract<br/>what others may rely on"]
+  T["3 Tests<br/>how we measure it"]
   I["4 Implementation<br/>the code"]
   R["5 Refinement<br/>run, read, change"]
-  C --> T
   C --> K
+  C -->|"its rules"| T
+  K -->|"its signatures"| T
   T --> I
   K --> I
   I --> R
   R -->|"the next turn"| C
   classDef step fill:#fff6eb,stroke:#804900,color:#804900
-  class C,T,K,I,R step
+  class C,K,T,I,R step
 ```
 
 1.  **[The concept](concept.md):** what you mean to
     build, for whom, and one artefact that holds it
-2.  **[The tests](tests.md):** the concept's questions,
-    each with its answer fixed, written to fail until
-    the work is done
-3.  **The contract,** beside the tests: what other
-    people may rely on
+2.  **The contract:** what other people may rely on
+3.  **[The tests](tests.md):** the concept's questions,
+    each with its answer fixed, asked through the
+    contract, and written to fail until the work is
+    done
 4.  **The implementation:** the code, each step
     justified by a test or a clause of the contract
 5.  **The refinement:** run the tests, read what they
     say, and change whichever step is wrong
 
-Steps 2 and 3 run side by side: both follow from the
-concept, and neither waits for the other.
+The contract comes before the tests, because the tests
+call its signatures and expect its refusals. They may
+still be written together, by different people: a test
+that needs something the contract lacks refines the
+contract.
 
 ## 2 The Contract
 

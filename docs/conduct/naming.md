@@ -90,7 +90,7 @@ newcomer cannot learn a habit by reading.
 - **A file, a page:** kebab-case; `native-dev.sh`,
   `shared-box.md`
 - **A step's page:** its step's number first;
-  `2-tests.md`
+  `3-tests.md`
 - **A Python name:** a function or a variable
   snake_case, `email_of`, `note_edit`; a class
   PascalCase, `Note`; a module's constant UPPER_SNAKE,

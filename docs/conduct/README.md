@@ -25,8 +25,8 @@ In the order a newcomer reads them.
 
 1.  [The philosophy](philosophy.md): one thing, done
     well, by each part
-2.  [The cycle](the-cycle/README.md): concept, tests,
-    contract, implementation, refinement
+2.  [The cycle](the-cycle/README.md): concept,
+    contract, tests, implementation, refinement
     - [The concept](the-cycle/concept.md): before the
       first line of code
     - [The tests](the-cycle/tests.md): the questions a

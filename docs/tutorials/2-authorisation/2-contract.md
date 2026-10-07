@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 3 of tutorial 2: what tutorials 4 to 7 may rely
+  Step 2 of tutorial 2: what tutorials 4 to 7 may rely
   on, and nothing about how. Each accessor's signature,
   the permission it needs, what it answers, and how it
   refuses; the one function the users unit publishes;
@@ -16,8 +16,8 @@ kind: reference
 sources:
 - migrations/sql/20261006120000_py_api_create_notes.sql
 status: draft
-subtitle: Step 3, what others may rely on
-title: "2.3 What Each May Do: the Contract"
+subtitle: Step 2, what others may rely on
+title: "2.2 What Each May Do: the Contract"
 version: v0.1.0
 ---
 
@@ -136,7 +136,7 @@ turns into HTTP:
 
 ## 5 See Also
 
-- [The tests](2-tests.md): beside this step, and [the
-  implementation](4-implementation.md): after it
+- [The tests](3-tests.md): next, held to this page, and
+  [the implementation](4-implementation.md): after it
 - [The cycle](../../conduct/the-cycle/README.md) §2:
   what a contract is for, and how it changes

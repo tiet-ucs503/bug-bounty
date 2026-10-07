@@ -74,7 +74,7 @@ Concept
   exists. [The concept](conduct/the-cycle/concept.md)
 
 Contract
-: Step 3 of the cycle: what a feature promises other
+: Step 2 of the cycle: what a feature promises other
   people, exactly: routes and answers, accessors'
   signatures and refusals. Changed by adding beside,
   never in place. [The
@@ -82,7 +82,7 @@ Contract
 
 Cycle
 : The five steps a feature is built in, in turns:
-  concept, tests, contract, implementation, refinement.
+  concept, contract, tests, implementation, refinement.
   [The cycle](conduct/the-cycle/README.md)
 
 

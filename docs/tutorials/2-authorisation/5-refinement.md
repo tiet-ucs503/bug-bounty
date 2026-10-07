@@ -64,7 +64,7 @@ wants, and what it got. What it got says where to look:
                 implementation](4-implementation.md)
                 not yet added, or added under another
                 signature than [the
-                contract](3-contract.md)'s
+                contract](2-contract.md)'s
 
   `42P01`       A table is not there: the same, for a
                 table

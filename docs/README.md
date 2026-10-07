@@ -98,9 +98,9 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   authorisation](tutorials/2-authorisation/README.md):
   [the
   concept](tutorials/2-authorisation/1-concept.md),
-  [the tests](tutorials/2-authorisation/2-tests.md),
   [the
-  contract](tutorials/2-authorisation/3-contract.md),
+  contract](tutorials/2-authorisation/2-contract.md),
+  [the tests](tutorials/2-authorisation/3-tests.md),
   [the
   implementation](tutorials/2-authorisation/4-implementation.md),
   [the

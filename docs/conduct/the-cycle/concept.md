@@ -31,8 +31,8 @@ Written after, it describes the code, and nobody can
 tell what the code was meant to do.
 
 It is step 1 of [the cycle](README.md). The questions
-it raises become [the tests](tests.md); its promises to
-other people become the contract.
+its promises to other people become the contract; the
+questions it raises become [the tests](tests.md).
 
 ## 2 What a Concept Holds
 
