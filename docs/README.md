@@ -126,6 +126,13 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   [in
   JavaScript](tutorials/4-users/4-implementation-javascript.md),
   [the refinement](tutorials/4-users/5-refinement.md)
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
+  Notes](tutorials/5-notes/README.md): [the
+  concept](tutorials/5-notes/1-concept.md), [the
+  contract](tutorials/5-notes/2-contract.md), [the
+  tests](tutorials/5-notes/3-tests.md), [the
+  implementation](tutorials/5-notes/4-implementation.md),
+  [the refinement](tutorials/5-notes/5-refinement.md)
 - `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
   A Svelte UI](tutorials/6-a-svelte-ui/README.md): [the
   concept](tutorials/6-a-svelte-ui/1-concept.md), [the

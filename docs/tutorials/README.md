@@ -62,8 +62,8 @@ flowchart LR
 1.  [Who is signed in](1-authentication.md): a record
     of each person, and a profile, in the database
 2.  [What each may do](2-authorisation/README.md): the
-    access control matrix, and notes as (u=rw, a=r), in
-    [the project's five
+    access control matrix, which each later unit joins,
+    in [the project's five
     steps](../conduct/the-cycle/README.md): concept,
     contract, tests, implementation, refinement
 3.  [Make it a migration](3-the-migration/README.md):
@@ -71,6 +71,9 @@ flowchart LR
 4.  [/users](4-users/README.md): the door, the profile
     and the roles, as routes of py-api in Python, or of
     js-api in JavaScript
+5.  [Notes](5-notes/README.md): a unit of py-api's own
+    on the users unit: a migration that brings its
+    permissions, its routes, and a page of its own
 6.  [A Svelte UI](6-a-svelte-ui/README.md): the
     dashboard: who you are, your profile, the notes,
     the people
