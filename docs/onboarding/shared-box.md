@@ -210,7 +210,7 @@ cp dev/out/native/config.js ui/config.js
 make ui UI_PORT="${UI_PORT}"
 ```
 
-A Svelte UI ([5 A Svelte
+A Svelte UI ([6 A Svelte
 UI](../tutorials/6-a-svelte-ui/README.md)) reads its
 config from `ui/public/` instead:
 
