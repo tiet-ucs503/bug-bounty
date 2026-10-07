@@ -273,7 +273,7 @@ the old pair:
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
 -- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS py_api_bookmarks_of(text, int);
+DROP FUNCTION IF EXISTS py_api_bookmarks_of(text);
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS py_api_bookmark_add(text, text);
 
@@ -286,6 +286,13 @@ Then, under the down's two `SET` lines, paste the two
 `CREATE OR REPLACE FUNCTION` of the migration that
 first made them, so a rollback on your machine can
 run the old code.
+
+Each drop names the old accessor's argument types, as
+§1 shows them. Expect only the new pair:
+
+``` sh
+psql "${MIGRATOR_URL}" -c '\df py_api_bookmark*'
+```
 
 From here, no accessor of the unit acts without asking
 the matrix.
@@ -310,6 +317,10 @@ the matrix.
 - **`23514` applying.** A permission not
   `<unit>.<verb>`: `Bookmarks.read` or
   `bookmarks_read`. Lower case, one dot
+- **An old accessor still there after §7.** Its drop
+  names other argument types than the function has, and
+  `IF EXISTS` passes over a function it does not find.
+  `\df`, as §7, shows the types
 - **A rollback refused, `42501`.** The down names a
   `users.` permission
 
