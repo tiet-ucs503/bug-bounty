@@ -50,7 +50,7 @@ expects.
 - **Who may not?** A `reader` tries to write a note.
   Expect a refusal, `403`
 - **And by default?** Someone has just signed in and
-  holds no role but `deny-all`. They ask for the notes.
+  holds no role yet. They ask for the notes.
   Expect a refusal: nobody gets anything until a role
   says so
 - **Together?** You hold `admin` and `member` at once.

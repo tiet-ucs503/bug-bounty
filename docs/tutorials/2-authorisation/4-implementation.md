@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 2: the SQL that makes the 24 tests
+  Step 4 of tutorial 2: the SQL that makes the 27 tests
   pass, a piece at a time, each piece justified by the
   rules it keeps and the tests it answers. The matrix
   and its accessors at the end of `users-draft.sql`;
@@ -31,12 +31,41 @@ Each piece below is added, in order, to the end of a
 file. Run the tests after any piece, if you like: the
 count of passes only grows.
 
-## 2 The Matrix, a Table
+## 2 The Roles, and Who Holds Them
 
 Add to the end of `users-draft.sql`, after tutorial 1's
-part. One row for each cell that says yes, so a cell
-that says no cannot be written (R1); the `CHECK` holds
-every permission to `<unit>.<verb>` (R9, T2.24):
+part. A role is a name; a person holds any number of
+them (R3). Nobody holds one unless it is given, so a
+person who signed in may do nothing yet (R1):
+
+``` sql
+-- The roles. A person who holds none may do nothing
+CREATE TABLE IF NOT EXISTS users_roles (
+  role text PRIMARY KEY CHECK (role ~ '^[a-z][a-z0-9-]{1,30}$'),
+  about text NOT NULL DEFAULT ''
+);
+```
+
+Who holds which. Both keys are foreign, so a role is
+held only by a person who signed in, and only if the
+role exists (R4); deleting either deletes the holding:
+
+``` sql
+-- Who holds which role
+CREATE TABLE IF NOT EXISTS users_members (
+  sub text NOT NULL REFERENCES users_people (sub) ON DELETE CASCADE,
+  role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE,
+  PRIMARY KEY (sub, role)
+);
+CREATE INDEX IF NOT EXISTS users_members_role_idx ON users_members (role);
+```
+
+## 3 The Matrix, a Table
+
+Then the matrix. One row for each cell that says yes,
+so a cell that says no cannot be written (R1); the
+`CHECK` holds every permission to `<unit>.<verb>` (R9,
+T2.24):
 
 ``` sql
 -- The access control matrix: one row for each cell that says yes. A
@@ -48,7 +77,7 @@ CREATE TABLE IF NOT EXISTS users_grants (
 );
 ```
 
-## 3 The One Question
+## 4 The One Question
 
 `users_may` is what every rule comes down to: does any
 of this person's roles hold this permission? `EXISTS`
@@ -68,15 +97,15 @@ $$;
 COMMENT ON FUNCTION users_may(text, text) IS 'published: may this person do this? Called by every unit';
 ```
 
-## 4 Who You Are
+## 5 Who You Are
 
 What the door answers, in tutorial 4: the caller's
 roles and permissions, sorted. No permission is needed
-to ask about yourself; someone not in gets no row
-(T2.15):
+to ask about yourself; someone never signed in gets no
+row (T2.15):
 
 ``` sql
--- The caller: e-mail, roles and permissions; no row if not admitted
+-- The caller: e-mail, roles and permissions; no row if never signed in
 CREATE OR REPLACE FUNCTION users_me(p_sub text)
   RETURNS TABLE (sub text, email text, roles text[], permissions text[])
   LANGUAGE sql STABLE AS $$
@@ -88,7 +117,7 @@ CREATE OR REPLACE FUNCTION users_me(p_sub text)
 $$;
 ```
 
-## 5 The People and the Matrix
+## 6 The People and the Matrix
 
 Both need `users.read`, and both ask before they read
 (R6, T2.6, T2.14). `#variable_conflict use_column` lets
@@ -96,9 +125,9 @@ the column `sub` mean the table's, not the function's
 output of the same name:
 
 ``` sql
--- Everyone admitted, with their roles: users.read
+-- Everyone signed in, with their roles: users.read
 CREATE OR REPLACE FUNCTION users_list(p_caller text)
-  RETURNS TABLE (sub text, email text, roles text[], admitted_at timestamptz, seen_at timestamptz)
+  RETURNS TABLE (sub text, email text, roles text[], first_seen_at timestamptz, seen_at timestamptz)
   LANGUAGE plpgsql STABLE AS $$
 #variable_conflict use_column
 BEGIN
@@ -107,7 +136,7 @@ BEGIN
   END IF;
   RETURN QUERY
     SELECT p.sub, p.email, coalesce(array_agg(m.role ORDER BY m.role) FILTER (WHERE m.role IS NOT NULL), '{}'),
-           p.admitted_at, p.seen_at
+           p.first_seen_at, p.seen_at
     FROM users_people p LEFT JOIN users_members m ON m.sub = p.sub
     GROUP BY p.sub ORDER BY p.email LIMIT 1000;
 END
@@ -133,7 +162,7 @@ END
 $$;
 ```
 
-## 6 Give a Role
+## 7 Give a Role
 
 `users.grant` first (R4, T2.8). Then the person and the
 role must exist, each refused with `P0002`, so the
@@ -160,7 +189,7 @@ END
 $$;
 ```
 
-## 7 Take a Role Away
+## 8 Take a Role Away
 
 The delete first, then the check that some
 `users.grant` is left; if none is, the exception rolls
@@ -188,13 +217,66 @@ END
 $$;
 ```
 
-## 8 The Matrix the Project Starts With
+## 9 Starting Roles
 
-§3 of [the concept](1-concept.md), row by row (R2, T2.3
-to T2.5):
+R10, in two pieces. The rules, read like a person's
+first sign-in reads them: by position, lowest first,
+the first `LIKE` match giving its role. Patterns are
+lower case, so an address in any case matches:
 
 ``` sql
--- The matrix the project starts with
+-- Starting roles: at a person's first sign-in, the first rule by
+-- position whose pattern their e-mail is LIKE gives its role. Read
+-- once; no match, no role
+CREATE TABLE IF NOT EXISTS users_starting_roles (
+  position bigint PRIMARY KEY,
+  pattern text NOT NULL CHECK (pattern = lower(pattern)),
+  role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE
+);
+```
+
+The trigger is what keeps authentication and
+authorisation apart. Tutorial 1's `users_person_see`
+records a person and knows nothing of roles. This
+trigger runs after it, once, when the person's row is
+first inserted, and never on the updates of later
+sign-ins (T2.25 to T2.27):
+
+``` sql
+CREATE OR REPLACE FUNCTION users_person_start() RETURNS trigger
+  LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO users_members (sub, role)
+    SELECT NEW.sub, s.role FROM users_starting_roles s
+    WHERE NEW.email LIKE s.pattern ORDER BY s.position LIMIT 1
+  ON CONFLICT DO NOTHING;
+  RETURN NULL;
+END
+$$;
+CREATE OR REPLACE TRIGGER users_people_start AFTER INSERT ON users_people
+  FOR EACH ROW EXECUTE FUNCTION users_person_start();
+```
+
+Which rules to write is [the concept](1-concept.md)'s
+§5, which also has a query to try them on.
+
+## 10 What the Project Starts With
+
+Three roles, and §3 of [the concept](1-concept.md), row
+by row (R2, T2.3 to T2.5). No starting roles: until you
+add one, everyone signs in with none, and an admin
+gives roles:
+
+``` sql
+-- The roles and the matrix the project starts with; no starting roles
+INSERT INTO users_roles (role, about) VALUES
+  ('reader', 'reads notes'),
+  ('member', 'reads and writes notes'),
+  ('admin', 'reads the people and the matrix, grants and revokes roles')
+ON CONFLICT DO NOTHING;
+```
+
+``` sql
 INSERT INTO users_grants (role, permission) VALUES
   ('reader', 'notes.read'),
   ('member', 'notes.read'),
@@ -204,7 +286,7 @@ INSERT INTO users_grants (role, permission) VALUES
 ON CONFLICT DO NOTHING;
 ```
 
-## 9 The Notes
+## 11 The Notes
 
 Save the notes' part as `notes-draft.sql`. Its names
 carry `py_api_`, py-api's prefix: the notes are
@@ -299,7 +381,7 @@ END
 $$;
 ```
 
-## 10 See Also
+## 12 See Also
 
 - [The refinement](5-refinement.md): next, run the
   tests

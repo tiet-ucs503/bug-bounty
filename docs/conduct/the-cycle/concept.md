@@ -45,8 +45,8 @@ question to answer before you write code.
   nothing else*
 - **The people,** by what they may do, not by name:
   `reader`, `member`, `admin`; and the one nobody
-  thinks of, the person who is in and may do nothing,
-  `deny-all`
+  thinks of, someone signed in who holds no role, and
+  may do nothing
 - **The things** they act on: notes, objects, roles.
   Each with its owner, if it has one
 - **The rules** that join the two: who may do what to
@@ -66,8 +66,8 @@ list of routes, a header of signatures. It is the
 **source of truth until the contract exists**, and
 whenever the contract is silent.
 
-- **1 Who comes in:** the admission rules, a position,
-  a pattern and a role each, the first match winning
+- **1 Who is signed in:** the people's record, as the
+  sign-in gives it, and the profile the project keeps
 - **2 What each may do:** the access control matrix,
   roles by permissions, a cell yes or nothing; and
   notes as (u=rw, a=r)

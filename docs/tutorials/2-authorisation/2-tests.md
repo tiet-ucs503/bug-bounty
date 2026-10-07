@@ -1,8 +1,8 @@
 ---
 abstract: |
-  Step 2 of tutorial 2: the concept's nine rules, each
+  Step 2 of tutorial 2: the concept's ten rules, each
   asked what could go wrong, and the answers fixed as
-  24 tests in one SQL file, before any code. Run it
+  27 tests in one SQL file, before any code. Run it
   now, and every test fails; the implementation is
   whatever makes them pass.
 date: 2026-10-07
@@ -25,17 +25,17 @@ version: v0.1.0
 Each rule of [the concept](1-concept.md) §4, asked the
 questions of [the tests'
 conduct](../../conduct/the-cycle/tests.md) §2. Three
-people: you, the first admin; asha; and bhanu, both in
-as `deny-all`.
+people: you, the first admin; asha; and bhanu, both
+signed in with no role.
 
   -------------------------------------------------------------
   Rule              Test    Asks                 Expects
   ----------------- ------- -------------------- --------------
-  R1 Nothing unless T2.1    bhanu, `deny-all`,   `false`
+  R1 Nothing unless T2.1    bhanu, no role,      `false`
                             reads notes?
 
                     T2.2    someone never        `false`
-                            admitted reads
+                            signed in reads
                             notes?
 
   R2 Each role, its T2.3    bhanu, a `reader`,   `true`
@@ -79,7 +79,7 @@ as `deny-all`.
   R2, R6 The        T2.14   bhanu lists the      `42501`
   database decides          people
 
-                    T2.15   bhanu's own roles    his two, and
+                    T2.15   bhanu's own roles    `reader` and
                             and permissions      `notes.read`
 
   R7 (u=rw, a=r)    T2.16   bhanu, a `reader`,   `42501`
@@ -110,6 +110,21 @@ as `deny-all`.
   R9                T2.24   a permission named   `23514`
   `<unit>.<verb>`           `Notes`
 
+  R10 A starting    T2.25   chitra, at           `true`
+  role, by e-mail,          example.org, signs
+  once                      in under a rule for
+                            it: may she read
+                            notes?
+
+                    T2.26   anu, at              `0`
+                            elsewhere.net,
+                            matching no rule:
+                            how many roles?
+
+                    T2.27   a rule for everyone  `0`
+                            added, anu signs in
+                            again: how many?
+
   -------------------------------------------------------------
 
 An SQLSTATE is the refusal [the
@@ -127,7 +142,7 @@ the file ends by counting, and exits with an error if
 any failed.
 
 ``` sql
--- Tutorial 2's tests, T2.1 to T2.24: the concept's rules, each with its
+-- Tutorial 2's tests, T2.1 to T2.27: the concept's rules, each with its
 -- answer fixed. Run in a transaction that is rolled back
 
 -- expect(id, act, ask, want): run act, if any, then ask; pass if ask
@@ -149,10 +164,14 @@ BEGIN
 END
 $$;
 
--- Three people in, by tutorial 1's rules; you the first admin, by hand
-SELECT users_admit('you', 'you@example.org', true), users_admit('asha', 'asha@example.org', true),
-       users_admit('bhanu', 'bhanu@elsewhere.net', true);
-INSERT INTO users_members (sub, role) VALUES ('you', 'admin');
+-- Three people signed in, by tutorial 1; you the first admin, by hand,
+-- once there is a table to hold it
+SELECT users_person_see('you', 'you@example.org', true, 'Google'), users_person_see('asha', 'asha@example.org', true, 'Google'),
+       users_person_see('bhanu', 'bhanu@elsewhere.net', true, 'Google');
+DO $$ BEGIN
+  INSERT INTO users_members (sub, role) VALUES ('you', 'admin');
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
 
 -- R1: nothing unless a role says so
 SELECT pg_temp.expect('T2.1', NULL, $$SELECT users_may('bhanu', 'notes.read')$$, 'false');
@@ -184,7 +203,7 @@ SELECT pg_temp.expect('T2.13', $$SELECT users_grant('you', 'asha', 'admin'), use
 -- R2, R6: the people, to users.read alone; the caller's own view
 SELECT pg_temp.expect('T2.14', NULL, $$SELECT count(*) FROM users_list('bhanu')$$, '42501');
 SELECT pg_temp.expect('T2.15', NULL,
-  $$SELECT roles::text || ' ' || permissions::text FROM users_me('bhanu')$$, '{deny-all,reader} {notes.read}');
+  $$SELECT roles::text || ' ' || permissions::text FROM users_me('bhanu')$$, '{reader} {notes.read}');
 
 -- R7: notes, (u=rw, a=r)
 SELECT pg_temp.expect('T2.16', NULL, $$SELECT py_api_note_new('bhanu', 'bhanu writes')$$, '42501');
@@ -208,6 +227,16 @@ SELECT pg_temp.expect('T2.23', NULL,
 SELECT pg_temp.expect('T2.24', NULL,
   $$INSERT INTO users_grants (role, permission) VALUES ('member', 'Notes') RETURNING role$$, '23514');
 
+-- R10: a starting role, by e-mail, at the first sign-in alone
+SELECT pg_temp.expect('T2.25', $$INSERT INTO users_starting_roles VALUES (10, '%@example.org', 'reader');
+                                 SELECT users_person_see('chitra', 'Chitra@Example.org', true, 'Google')$$,
+  $$SELECT users_may('chitra', 'notes.read')$$, 'true');
+SELECT pg_temp.expect('T2.26', $$SELECT users_person_see('anu', 'anu@elsewhere.net', true, 'Google')$$,
+  $$SELECT count(*) FROM users_members WHERE sub = 'anu'$$, '0');
+SELECT pg_temp.expect('T2.27', $$INSERT INTO users_starting_roles VALUES (20, '%', 'reader');
+                                 SELECT users_person_see('anu', 'anu@elsewhere.net', true, 'Google')$$,
+  $$SELECT count(*) FROM users_members WHERE sub = 'anu'$$, '0');
+
 -- How many pass; exit 3 if any fails
 SELECT format('%s of %s pass', count(*) FILTER (WHERE ok), count(*)) FROM t2_results;
 DO $$ BEGIN
@@ -221,11 +250,11 @@ END $$;
 
 Before any of tutorial 2's code exists, with tutorial
 1's draft alone. Expect `t|t|t` for the three people
-let in, then `FAIL` on every line: most with
+recorded, then `FAIL` on every line: most with
 `got 42883`, an undefined function; T2.23 with
-`got nothing`, no such function to ask about; T2.24
-with `got 42P01`, an undefined table. At the end,
-`0 of 24 pass`, and `failed:` with every ID:
+`got nothing`, no such function to ask about; T2.24 to
+T2.27 with `got 42P01`, an undefined table. At the
+end, `0 of 27 pass`, and `failed:` with every ID:
 
 ``` sh
 psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f test-2.sql -c ROLLBACK
@@ -239,5 +268,5 @@ whatever you wrote next.
 - [The contract](3-contract.md): beside this step
 - [The implementation](4-implementation.md): what makes
   these pass
-- [The tests](../../conduct/the-cycle/tests.md): the questions,
-  in general
+- [The tests](../../conduct/the-cycle/tests.md): the
+  questions, in general

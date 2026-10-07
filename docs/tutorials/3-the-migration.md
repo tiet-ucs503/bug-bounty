@@ -24,9 +24,16 @@ title: 3 Make It a Migration
 version: v0.1.0
 ---
 
-`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+`[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
 these mean, and what they do not: [the tutorials'
 page](README.md) §5.
+
+> [!WARNING]
+> Written for an earlier tutorial 1, which let people
+> in by admission rules and gave everyone `deny-all`.
+> Tutorials 1 and 2 have since moved roles and
+> starting roles into tutorial 2. This page is next to
+> be reworked; until then it does not run as written.
 
 ## 1 Before You Start
 

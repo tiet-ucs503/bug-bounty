@@ -92,7 +92,7 @@ flowchart LR
   pool                 endpoints, `userInfo` among
                        them, and token shapes, a key
                        made at start, any name
-                       admitted
+                       accepted
 
   No database yet      PostgreSQL 17: the project's
                        one database and its two

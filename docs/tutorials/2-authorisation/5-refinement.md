@@ -41,8 +41,8 @@ version: v0.1.0
 
 ## 2 Run
 
-Expect `t|t|t`, then 24 lines starting `ok`, then
-`24 of 24 pass`:
+Expect `t|t|t`, then 27 lines starting `ok`, then
+`27 of 27 pass`:
 
 ``` sh
 psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f notes-draft.sql -f test-2.sql -c ROLLBACK
@@ -95,7 +95,7 @@ breaks a rule. Find out by breaking the code on
 purpose, in a copy, and checking that some test fails.
 Here, take out the owner from the notes' `WHERE`, so
 anyone with `notes.write` may change any note. Expect
-`FAIL` for T2.19, T2.20 and T2.22, and `21 of 24 pass`:
+`FAIL` for T2.19, T2.20 and T2.22, and `24 of 27 pass`:
 
 ``` sh
 sed 's/WHERE id = p_id AND owner = p_caller;/WHERE id = p_id;/' notes-draft.sql > broken.sql
@@ -151,7 +151,7 @@ concept](1-concept.md), "any other can", which T2.12
 had left untested. The tests after it moved up by one.
 
 The same broken `users_revoke` now fails T2.13, and
-passes 23 of 24.
+passes 26 of 27.
 
 ## 7 What Can Go Wrong
 
@@ -166,7 +166,7 @@ passes 23 of 24.
 - **A permission's name is refused by a `CHECK`.** It
   must be `<unit>.<verb>`, lower case, one dot
 - **You want "everyone but bhanu".** A matrix cannot
-  say no ([the concept](1-concept.md) §5). Take bhanu's
+  say no ([the concept](1-concept.md) §6). Take bhanu's
   role, or give the others a role he lacks
 - **`relation "t2_results" already exists`.** The tests
   ran twice in one session without a rollback. Run them

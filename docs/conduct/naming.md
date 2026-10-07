@@ -80,7 +80,7 @@ newcomer cannot learn a habit by reading.
 - **A permission:** `<unit>.<verb>`; `notes.read`,
   `users.grant`
 - **A role:** kebab-case, a noun or a short phrase;
-  `reader`, `member`, `deny-all`
+  `reader`, `member`, `site-admin`
 - **A route:** plural nouns, an ID between;
   `/users/people/{sub}/roles/{role}`
 - **An environment variable:** UPPER_SNAKE, the owner

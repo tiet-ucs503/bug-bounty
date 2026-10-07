@@ -91,7 +91,7 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 - `draft` [The path, and its
   conventions](tutorials/README.md)
 - `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [1
-  Who comes in:
+  Who is signed in:
   authentication](tutorials/1-authentication.md)
 - `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [2
   What each may do:
@@ -105,17 +105,17 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   implementation](tutorials/2-authorisation/4-implementation.md),
   [the
   refinement](tutorials/2-authorisation/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [3
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [3
   Make it a migration](tutorials/3-the-migration.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [4
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [4
   /users in Python, in
   py-api](tutorials/4-users-in-python.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
   /users in JavaScript, in
   js-api](tutorials/5-users-in-javascript.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
   A Svelte UI](tutorials/6-a-svelte-ui.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [7
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [7
   Uploads](tutorials/7-uploads/README.md): [the
   store](tutorials/7-uploads/1-the-store.md), [the
   database](tutorials/7-uploads/2-the-database.md),

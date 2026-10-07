@@ -32,11 +32,6 @@ Accessor
   `<prefix>_*`, that a service calls instead of its
   tables
 
-Admission
-: Whether a signed-in person may come into the project:
-  the first rule, by position, whose pattern their
-  verified e-mail matches, read at their first sign-in.
-  No match, no entry
 
 Allow-list
 : The box's nginx passes a request only if the manifest
@@ -90,10 +85,6 @@ Cycle
   concept, tests, contract, implementation, refinement.
   [The cycle](conduct/the-cycle/README.md)
 
-deny-all
-: The role that grants nothing: whoever holds it alone
-  is in, and may do nothing. Where everyone starts, by
-  the template's default rule
 
 Dev stack
 : `make dev`: the box's nginx, your services, a mock
@@ -162,6 +153,11 @@ PKCE
   without a client secret, by sending a hash first and
   the secret behind it later
 
+Profile
+: What the project keeps of a person beyond the
+  sign-in, in `users_profiles`: columns of its own
+  choosing, which a sign-in never writes
+
 Prefix
 : A unit's part of the database: `py_api` for `py-api`,
   every object it owns named `py_api_*`. A service owns
@@ -194,6 +190,12 @@ Render
 Role
 : A row of the access control matrix. A person holds
   any number; their rights are the union
+
+Starting role
+: The role a person is given at their first sign-in,
+  by the first rule whose pattern their e-mail matches;
+  no match, no role. Read once, then a role like any
+  other
 
 sub
 : Short for subject: the ID Cognito gives an account,
@@ -237,7 +239,7 @@ Zone
 `tests`, `build`, `dependencies`, `local-dev`, `mock`,
 `db`, `migration`, `dbmate`, `squawk`, `postgres`,
 `ci-cd`, `github`, `conduct`, `philosophy`,
-`shared-box`, `podman`, `tutorial`, `admission`,
+`shared-box`, `podman`, `tutorial`, `profile`,
 `authz`, `acm`, `svelte`, `uploads`, `static`, `s3`,
 `node`, `python`, `concept`, `cycle`, `contract`,
 `workflow`, `git`, `git-flow`, `identity`, `naming`

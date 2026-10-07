@@ -47,12 +47,12 @@ for itself.
 - **`users_me(sub)`**
   - Needs: nothing
   - Answers: a row: `sub`, `email`, `roles`,
-    `permissions`; no row if not in
+    `permissions`; no row if never signed in
   - Refuses: never
 - **`users_list(caller)`**
   - Needs: `users.read`
   - Answers: rows: `sub`, `email`, `roles`,
-    `admitted_at`, `seen_at`; by e-mail, at most 1000
+    `first_seen_at`, `seen_at`; by e-mail, at most 1000
   - Refuses: `42501`
 - **`users_matrix(caller)`**
   - Needs: `users.read`
@@ -76,6 +76,9 @@ for itself.
 - **`users_revoke` refuses `23001`** for the last
   `users.grant` there is, and for nothing else
 - **Roles and permissions** come back as arrays, sorted
+- **Starting roles are no accessor.** No service calls
+  them: a trigger gives them when tutorial 1's
+  `users_person_see` first records a person (R10)
 
 ## 3 py-api's Notes
 

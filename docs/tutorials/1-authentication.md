@@ -1,24 +1,24 @@
 ---
 abstract: |
-  Signing in and coming in are two steps. The box signs
-  people in; your project decides which of them it lets
-  in, and with which role. You read a token, ask
-  Cognito for the person's e-mail, choose rules that
-  match e-mails, and try the rules in the database.
+  Who is signed in, and what your project keeps of
+  them. The box signs people in; you read their token,
+  ask Cognito for their e-mail, and record each person
+  whose e-mail is verified, with a profile your project
+  defines. What each person may do is tutorial 2's.
 date: 2026-10-07
 keywords:
 - tutorial
 - auth
 - cognito
-- admission
+- profile
 kind: tutorial
 sources:
 - dev/mock-auth/server.py
 - services/py-api/main.py
 - Makefile
 status: draft
-subtitle: Sign-in is the box's; admission is yours
-title: "1 Who Comes In: Authentication"
+subtitle: Sign-in is the box's; the record is yours
+title: "1 Who Is Signed In: Authentication"
 version: v0.1.0
 ---
 
@@ -33,23 +33,55 @@ page](README.md) §5.
   your shell
 - A local stack, up
 
-**The box signs people in; you do not.** The box keeps
-one Cognito pool, a store of accounts, for every
-project it hosts. People sign in to it with Google.
-Its owner gives your project's UI a client of its own
-in that pool. You never create or configure a pool,
-and you cannot limit who signs in to it, because every
+## 2 What the Box Sets Up
+
+**The box signs people in; you do not.** It keeps one
+Cognito pool, a store of accounts, for every project it
+hosts. You never create or configure a pool. What the
+pool does is the box owner's to decide, and every
 project on the box shares it.
 
-**You decide who comes in.** Anyone with a Google
-account can sign in. Which of them your project lets
-in, and with which role, is yours to decide, and is
-this page.
+As the box is set up:
 
-## 2 Two Questions, Two Places
+- **Google is the only way in.** The pool's own
+  accounts exist, but only its owner can make them, for
+  the probes. Nobody can sign up
+- **Google may be limited to one organisation.** A
+  Google sign-in can be set to accept only one
+  organisation's accounts. Then every address is that
+  organisation's, and Google has verified it. Ask the
+  box's owner whether yours is
+- **What Cognito keeps from Google:** the e-mail,
+  whether it is verified, and Google's own ID for the
+  person. Nothing else: not the name, not the picture
+- **Your UI's client** signs in by PKCE, and asks for
+  the scopes `openid email`. Its tokens last an hour; a
+  sign-in lasts eight
 
-A person coming into your project answers two
-questions, in this order:
+What to ask the box's owner for:
+
+- **A client for your UI,** with your site's address,
+  and your localhost for development, as its callback
+  URLs
+- **A name or a picture from Google,** if your project
+  needs them. The owner maps them in the pool and adds
+  the `profile` scope. Every project on the box then
+  receives them, so it is the owner's call
+
+On your laptop, a mock stands in for Cognito. It hands
+out tokens of the same shape, for any name you give it.
+
+## 3 Two Questions, Two Places
+
+A person using your project raises two questions:
+
+- **Authentication: who is this?** This page. The token
+  answers, and Cognito gives the e-mail
+- **Authorisation: what may they do?** [Tutorial
+  2](2-authorisation/README.md). The roles they hold
+  answer
+
+Signing in goes like this:
 
 ``` mermaid
 ---
@@ -69,42 +101,37 @@ sequenceDiagram
   U->>U: check the token
   U->>C: userInfo, Bearer token
   C-->>U: email, email_verified
-  U->>D: users_admit(sub, email, verified)
-  D-->>U: in, or not
-  U-->>B: who you are and what you may do, or 403
+  U->>D: users_person_see(sub, email, verified, provider)
+  D-->>U: recorded, or not
+  U-->>B: who you are, or 403
 ```
 
-- **Authentication: who is this?** The token answers.
-  Cognito signs it, and your service checks it: the
-  signature, who issued it, that it is an access token,
-  and that it was issued to your UI or to the box's
-  probes. A token issued to another project's UI is
-  refused
-- **Admission: may they come in?** Your rules answer,
-  in your database, from the person's verified e-mail
-
-The browser signs in by PKCE, a way for a page that
-can keep no secret to prove that the token it collects
-is the one it asked for. The UI does this; your service
+The browser signs in by PKCE, a way for a page that can
+keep no secret to prove that the token it collects is
+the one it asked for. The UI does this; your service
 only sees the token.
 
-The token names the person by `sub`, short for
-subject: an ID Cognito gives each account, which never
-changes. An e-mail can change; `sub` cannot, so your
-database keys people by `sub`, and uses the e-mail only
-at the door.
+Your service checks the token: Cognito's signature, who
+issued it, that it is an access token, and that it was
+issued to your UI or to the box's probes. A token
+issued to another project's UI is refused.
 
-`/users/me` is the door. Tutorials 4 and 5 build it,
-in Python and in JavaScript. This page builds what the
-door asks: the rules, in the database.
+The token names the person by `sub`, short for subject:
+an ID Cognito gives each account, which never changes.
+An e-mail can change; `sub` cannot, so your database
+keys people by `sub`.
 
-## 3 Read a Token
+`/users/me` is where a signed-in person is first seen.
+Tutorials 4 and 5 build it, in Python and in
+JavaScript. This page builds what it calls: the
+records, in the database.
+
+## 4 Read a Token
 
 A token is a JWT: three parts, joined by dots. The
 first says how it is signed; the second holds its
 claims, the facts it states; the third is the
-signature. On the local stack, a mock stands in for
-Cognito and hands out tokens of the same shape.
+signature.
 
 Ask the mock for a token for asha:
 
@@ -116,7 +143,7 @@ Decode its middle part. It is base64url: base64 with
 `-` and `_` in place of `+` and `/`, so the command
 swaps them back before decoding. Expect
 `"token_use": "access"`, a `client_id`,
-`"sub": "asha"`, and **no e-mail**:
+`"sub": "asha"`, a `username`, and **no e-mail**:
 
 ``` sh
 echo "${A}" | jq -R 'split(".")[1] | gsub("-"; "+") | gsub("_"; "/") | @base64d | fromjson'
@@ -128,7 +155,13 @@ the ID token, has the e-mail, but the ID token is for
 the browser to read. A service accepts access tokens
 only.
 
-## 4 Ask for the E-mail
+**The `username` names the way in.** On the box,
+someone who signed in by Google has a `username` like
+`Google_<number>`: the part before `_` is the provider.
+One of the pool's own accounts has no prefix. The
+mock's `username` is the `sub` you gave it.
+
+## 5 Ask for the E-mail
 
 Cognito's `userInfo` endpoint gives the e-mail. Send it
 a person's access token, and it answers with that
@@ -157,207 +190,145 @@ Cognito limits how often `userInfo` may be called. So
 your service asks once for each person, and keeps the
 answer for ten minutes.
 
-## 5 Choose Your Rules
+## 6 Record the People
 
-A rule says: an e-mail like this comes in with this
-role. For example, `(10, '%@example.org', 'member')`
-lets in anyone at example.org as a `member`. Each rule
-has three parts:
-
-- **A position,** 10 here. The rules are tried in
-  order, lowest first, and the first that matches
-  wins
-- **A pattern,** matched with SQL's `LIKE`: `%` stands
-  for any run of characters, including none, and `_`
-  for any single character
-- **A role,** given to the person when they come in
-
-**No match, no entry.** An unverified e-mail matches
-no rule.
-
-Four sets of rules cover most projects:
-
-  ---------------------------------------------------------------
-  You want                 The rules
-  ------------------------ --------------------------------------
-  **Anyone in, rights      `(100, '%', 'deny-all')`
-  later.** The default:    
-  everyone comes in with   
-  none, and an admin gives 
-  roles                    
-
-  **One organisation       `(10, '%@example.org', 'member')`, and
-  only**                   no `%` rule
-
-  **One organisation as    `(10, '%@example.org', 'member')`,
-  members, everyone else   `(100, '%', 'deny-all')`
-  in with none**           
-
-  **A named list**         `(10, 'anu@example.org', 'member')`,
-                           `(11, 'raj@example.net', 'reader')`,
-                           ...
-  ---------------------------------------------------------------
-
-**The default is everyone in, as `deny-all`.**
-`deny-all` is a role that may do nothing. A person who
-holds only it is in, and known by name, but can do no
-more than someone signed out. An admin then gives them
-roles, one at a time. Rights are added by someone
-allowed to add them, never handed out at the door.
-Build up from nothing; never trim down from everything.
-
-**`deny-all` is not a veto.** Roles add up: someone
-who holds `deny-all` and `member` may do everything
-`member` may. To shut out someone already in, take
-their roles away (tutorial 2).
-
-Try the third set on four addresses, without any
-tables yet. Expect `member` for the two at example.org,
-whatever their case, and `deny-all` for the other two:
-
-``` sh
-psql "${MIGRATOR_URL}" -c "WITH rules (position, pattern, role) AS (VALUES (10, '%@example.org', 'member'), (100, '%', 'deny-all'))
-SELECT e AS email, (SELECT r.role FROM rules r WHERE lower(e) LIKE r.pattern ORDER BY r.position LIMIT 1) AS role
-FROM unnest(ARRAY['asha@example.org', 'Chitra@Example.org', 'bhanu@elsewhere.net', 'manthara@evil-example.org']) AS e"
-```
-
-> [!WARNING]
-> Mind the `@`. `'%example.org'`, without it, would
-> also let in `manthara@evil-example.org`. And since
-> `_` matches any character, write it `\_` in a
-> pattern that means a real underscore.
-
-## 6 Write the Rules Down
-
-Now write the rules, and the tables that hold them, as
-a draft: SQL you run by hand until tutorial 3 turns it
-into a migration. Save it as `users-draft.sql` at the
-root of your fork. Keep it out of `migrations/sql/`:
-`make check` holds every file there to a migration's
-naming rules, and a draft would fail them.
+Write the tables and the functions as a draft: SQL you
+run by hand until tutorial 3 turns it into a migration.
+Save it as `users-draft.sql` at the root of your fork.
+Keep it out of `migrations/sql/`: `make check` holds
+every file there to a migration's naming rules, and a
+draft would fail them.
 
 Every name in the draft starts `users_`. That is the
 prefix of the `users` unit, the part of the project
 that will own these tables; each unit keeps its names
 under its own prefix ([Naming](../conduct/naming.md)).
 
+Two tables, because the data has two owners:
+
+- **`users_people`: what the sign-in says.** `sub`, the
+  e-mail and the provider, as Cognito gave them.
+  Cognito is their source, so each sign-in writes them
+  afresh
+- **`users_profiles`: what your project keeps.** Its
+  columns are yours to choose, from your project's
+  requirements. A display name and an affiliation here,
+  for the example. The person fills them in; a sign-in
+  never touches them
+
 ``` sql
--- The roles. deny-all grants nothing: whoever holds it alone may do
--- nothing, as if signed out
-CREATE TABLE IF NOT EXISTS users_roles (
-  role text PRIMARY KEY CHECK (role ~ '^[a-z][a-z0-9-]{1,30}$'),
-  about text NOT NULL DEFAULT ''
-);
-
--- Who may come in, and with which role: the first rule, by position,
--- whose pattern the verified e-mail is LIKE. No rule, no entry
-CREATE TABLE IF NOT EXISTS users_admission (
-  position bigint PRIMARY KEY,
-  pattern text NOT NULL CHECK (pattern = lower(pattern)),
-  role text NOT NULL REFERENCES users_roles (role)
-);
-
--- The people admitted, by Cognito's sub
+-- The people who have signed in, one row each, by Cognito's sub: what
+-- the sign-in says of them. Rewritten at every sign-in, since Cognito
+-- is its source of truth
 CREATE TABLE IF NOT EXISTS users_people (
   sub text PRIMARY KEY,
-  email text NOT NULL,
-  admitted_at timestamptz NOT NULL DEFAULT now(),
+  email text NOT NULL CHECK (email = lower(email)),
+  provider text NOT NULL,
+  first_seen_at timestamptz NOT NULL DEFAULT now(),
   seen_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Who holds which role
-CREATE TABLE IF NOT EXISTS users_members (
-  sub text NOT NULL REFERENCES users_people (sub) ON DELETE CASCADE,
-  role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE,
-  PRIMARY KEY (sub, role)
+-- What the project keeps of each person beyond the sign-in. Its columns
+-- are the project's to choose; a sign-in never writes them
+CREATE TABLE IF NOT EXISTS users_profiles (
+  sub text PRIMARY KEY REFERENCES users_people (sub) ON DELETE CASCADE,
+  display_name text NOT NULL DEFAULT '' CHECK (length(display_name) <= 80),
+  affiliation text NOT NULL DEFAULT '' CHECK (length(affiliation) <= 120),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS users_members_role_idx ON users_members (role);
 
--- The door. Someone already in is seen again; someone new comes in if
--- their e-mail is verified and a rule matches it, with that rule's
--- role. True if the person is in
-CREATE OR REPLACE FUNCTION users_admit(p_sub text, p_email text, p_verified boolean) RETURNS boolean
-  LANGUAGE plpgsql AS $$
-DECLARE
-  v_role text;
+-- At every sign-in: a person whose e-mail is verified is recorded, or
+-- their record brought up to date, and given an empty profile the first
+-- time. True if recorded; anyone else is not kept
+CREATE OR REPLACE FUNCTION users_person_see(p_sub text, p_email text, p_verified boolean, p_provider text)
+  RETURNS boolean LANGUAGE plpgsql AS $$
 BEGIN
-  UPDATE users_people SET seen_at = now() WHERE sub = p_sub;
-  IF FOUND THEN
-    RETURN true;
-  END IF;
-  IF NOT p_verified OR coalesce(p_email, '') = '' THEN
+  IF NOT coalesce(p_verified, false) OR coalesce(p_email, '') = '' THEN
     RETURN false;
   END IF;
-  SELECT a.role INTO v_role FROM users_admission a
-    WHERE lower(p_email) LIKE a.pattern ORDER BY a.position LIMIT 1;
-  IF v_role IS NULL THEN
-    RETURN false;
-  END IF;
-  INSERT INTO users_people (sub, email) VALUES (p_sub, lower(p_email)) ON CONFLICT (sub) DO NOTHING;
-  INSERT INTO users_members (sub, role) VALUES (p_sub, v_role) ON CONFLICT DO NOTHING;
+  INSERT INTO users_people (sub, email, provider) VALUES (p_sub, lower(p_email), p_provider)
+    ON CONFLICT (sub) DO UPDATE SET email = EXCLUDED.email, provider = EXCLUDED.provider, seen_at = now();
+  INSERT INTO users_profiles (sub) VALUES (p_sub) ON CONFLICT DO NOTHING;
   RETURN true;
 END
 $$;
 
--- The roles the project starts with; what each may do is tutorial 2's
-INSERT INTO users_roles (role, about) VALUES
-  ('deny-all', 'admitted, and may do nothing: where everyone starts'),
-  ('reader', 'reads notes'),
-  ('member', 'reads and writes notes'),
-  ('admin', 'reads the people and the matrix, grants and revokes roles')
-ON CONFLICT DO NOTHING;
+-- A person's record and profile together; no row if never recorded
+CREATE OR REPLACE FUNCTION users_profile_get(p_sub text)
+  RETURNS TABLE (sub text, email text, provider text, display_name text, affiliation text)
+  LANGUAGE sql STABLE AS $$
+  SELECT p.sub, p.email, p.provider, f.display_name, f.affiliation
+  FROM users_people p JOIN users_profiles f ON f.sub = p.sub WHERE p.sub = p_sub
+$$;
 
--- Everyone may come in, and starts as deny-all
-INSERT INTO users_admission (position, pattern, role) VALUES
-  (100, '%', 'deny-all')
-ON CONFLICT DO NOTHING;
+-- A person's own profile, changed. The service passes the caller's own
+-- sub; who may change another's is tutorial 2's
+CREATE OR REPLACE FUNCTION users_profile_set(p_sub text, p_display_name text, p_affiliation text) RETURNS void
+  LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE users_profiles SET display_name = p_display_name, affiliation = p_affiliation, updated_at = now()
+    WHERE sub = p_sub;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'no such person' USING ERRCODE = 'no_data_found';
+  END IF;
+END
+$$;
 ```
 
 What each piece does:
 
-- **`users_roles`:** the roles. What each may do is
-  tutorial 2's
-- **`users_admission`:** the rules, in lower case, so
-  an address in any case matches
-- **`users_people`:** everyone let in, by `sub`, with
-  their e-mail as it was when they came in
-- **`users_members`:** who holds which role
-- **`users_admit`:** the door. Someone already in is
-  marked as seen, and stays in. Someone new comes in by
-  the first rule that matches, with its role
+- **`users_person_see`,** at every sign-in: records a
+  person whose e-mail is verified, brings their record
+  up to date, and gives them an empty profile the first
+  time. Anyone else is not kept, and the answer is
+  `false`
+- **`users_profile_get`:** a person's record and
+  profile together
+- **`users_profile_set`:** changes a profile. Your
+  service passes the caller's own `sub`, so each person
+  changes their own
 
 > [!NOTE]
-> The rules are read only at a person's first sign-in.
-> A rule changed later changes nothing for people
-> already in; change their roles instead.
+> Only verified e-mails are kept. If the box limits
+> Google to one organisation, every e-mail is verified,
+> and the check costs nothing. It stays, because the
+> pool's own accounts, and the box's set-up, may
+> change.
+
+To fit the profile to your project, change the columns
+of `users_profiles`, and the two functions that read
+and write them, together.
 
 ## 7 Try It
 
-Run the draft inside a transaction and roll it back,
-so the database is left as it was. Save this trial as
+Run the draft inside a transaction and roll it back, so
+the database is left as it was. Save this trial as
 `try-1.sql`:
 
 ``` sql
--- One rule more: anyone at example.org comes in as a member
-INSERT INTO users_admission (position, pattern, role) VALUES (10, '%@example.org', 'member');
+-- Three sign-ins: two verified, one not
+SELECT users_person_see('asha', 'Asha@Example.org', true, 'Google') AS asha,
+       users_person_see('bhanu', 'bhanu@elsewhere.net', true, 'Google') AS bhanu,
+       users_person_see('esha', 'esha@example.org', false, 'Google') AS esha;
 
-SELECT users_admit('asha', 'Asha@Example.org', true) AS asha,
-       users_admit('bhanu', 'bhanu@elsewhere.net', true) AS bhanu,
-       users_admit('esha', 'esha@example.org', false) AS esha;
+-- Asha fills in her profile, then signs in again
+SELECT users_profile_set('asha', 'Asha', 'Physics');
+SELECT users_person_see('asha', 'asha@example.org', true, 'Google');
 
-SELECT p.email, m.role FROM users_people p JOIN users_members m USING (sub) ORDER BY p.email;
+SELECT * FROM users_profile_get('asha');
+SELECT sub, email, provider FROM users_people ORDER BY sub;
 ```
 
-Then run both. Expect `t`, `t` and `f`, then two
-people: asha a `member`, and bhanu `deny-all`:
+Then run both. Expect, in order:
+
+- `t`, `t` and `f`: esha's e-mail is not verified
+- asha's record and profile: `Asha`, `Physics`. Her
+  second sign-in left her profile alone
+- two people, asha and bhanu, both by `Google`
 
 ``` sh
 psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f try-1.sql -c ROLLBACK
 ```
-
-Esha's address matches a rule, but it is not verified,
-so she stays out. Bhanu's matches only `%`, so he is
-in, with nothing.
 
 ## 8 What Can Go Wrong
 
@@ -368,15 +339,16 @@ in, with nothing.
 - **`userInfo` answers `401`.** The token is not an
   access token, has expired, or lacks the `openid`
   scope. The UI asks for `openid email`; keep both
-- **Everyone is let in.** A `%` rule has a lower
-  position than the narrower ones. Rules are tried
-  lowest first
-- **Someone you shut out is still in.** The rules
-  apply only at a first sign-in. Take their roles away
-- **`relation "users_roles" already exists`.** Tutorial
-  3's migration has run in this database. The draft is
-  for before it; from then on, change the database by
-  migrations
+- **A profile's change is lost at the next sign-in.**
+  It was written to `users_people`, which each sign-in
+  rewrites. Keep it in `users_profiles`
+- **`no such person` from `users_profile_set`.** The
+  person has not been seen: `users_person_see` runs
+  first, at their sign-in
+- **`relation "users_people" already exists`.**
+  Tutorial 3's migration has run in this database. The
+  draft is for before it; from then on, change the
+  database by migrations
 
 ## 9 See Also
 

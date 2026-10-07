@@ -33,10 +33,11 @@ Three files at your fork's root, carried into tutorial
 3's migrations as they are:
 
 - **`users-draft.sql`,** grown from tutorial 1's: the
-  matrix, and the accessors that read and change it
+  roles and who holds them, the matrix, starting roles,
+  and the accessors that read and change them
 - **`notes-draft.sql`:** notes as (u=rw, a=r), each
   accessor asking the matrix first
-- **`test-2.sql`:** 24 tests, written before either,
+- **`test-2.sql`:** 27 tests, written before either,
   that both must pass
 
 At the end, every test passes, in a transaction rolled
@@ -51,11 +52,11 @@ side, both from the concept, neither waiting for the
 other.
 
 1.  **[The concept](1-concept.md).** Who may do what,
-    drawn as one table, the matrix, and nine rules read
+    drawn as one table, the matrix, and ten rules read
     from it. Until the contract exists, the concept is
     the source of truth
 2.  **[The tests](2-tests.md).** Each rule asked what
-    could go wrong, and the answers fixed as 24 tests.
+    could go wrong, and the answers fixed as 27 tests.
     You run them first, and every one fails
 3.  **[The contract](3-contract.md).** What tutorials 4
     to 7 rely on: each accessor's signature, the
@@ -77,8 +78,8 @@ tests and contract grow with it.
 
 - [What you need](../README.md) §2, installed and
   checked
-- [1 Who comes in](../1-authentication.md), with its
-  `users-draft.sql`
+- [1 Who is signed in](../1-authentication.md), with
+  its `users-draft.sql`
 - A local stack, up, with the template's own migration
   applied, as `make dev` and
   `tools/native-dev.sh start` do

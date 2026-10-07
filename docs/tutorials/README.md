@@ -2,8 +2,8 @@
 abstract: |
   Seven tutorials, in order, that take a fork of the
   template from a sign-in to a notes dashboard with
-  uploads: who comes in, what each person may do, the
-  database that holds both, `/users` in py-api or
+  uploads: who is signed in, what each person may do,
+  the database that holds both, `/users` in py-api or
   js-api, a Svelte UI, and files in the static bucket.
   What you build, what you need, and the conventions
   every page shares.
@@ -42,7 +42,7 @@ config:
 flowchart LR
   browser(["The dashboard<br/>Svelte, at www"])
   cognito["Cognito<br/>the box's pool"]
-  notes["py-api<br/>/users: who comes in, who may what<br/>/notes, /objects: notes and uploads"]
+  notes["py-api<br/>/users: who is signed in, who may what<br/>/notes, /objects: notes and uploads"]
   db[("The project's database<br/>users_*, py_api_*")]
   bucket[("The static bucket<br/>objects/")]
   browser -->|"signs in"| cognito
@@ -59,8 +59,8 @@ flowchart LR
   class db,bucket storage
 ```
 
-1.  [Who comes in](1-authentication.md): the rules of
-    who may sign in, tried in the database
+1.  [Who is signed in](1-authentication.md): a record
+    of each person, and a profile, in the database
 2.  [What each may do](2-authorisation/README.md): the
     access control matrix, and notes as (u=rw, a=r), in
     [the project's five
@@ -278,25 +278,25 @@ changed since its run goes back to `NO`.
   -----------------------------------------------------
   Tutorial                  Badges
   ------------------------- ---------------------------
-  1 Who comes in            `[OK:NATIVE]` `[NO:PODMAN]`
+  1 Who is signed in        `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
   2 What each may do        `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  3 Make it a migration     `[OK:NATIVE]` `[NO:PODMAN]`
+  3 Make it a migration     `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  4 /users in Python        `[OK:NATIVE]` `[NO:PODMAN]`
+  4 /users in Python        `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 /users in JavaScript    `[OK:NATIVE]` `[NO:PODMAN]`
+  5 /users in JavaScript    `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 A Svelte UI             `[OK:NATIVE]` `[NO:PODMAN]`
+  6 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  7 Uploads                 `[OK:NATIVE]` `[NO:PODMAN]`
+  7 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
