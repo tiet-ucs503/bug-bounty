@@ -13,7 +13,7 @@ keywords:
 kind: explanation
 sources:
 - migrations/Dockerfile
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/render.py
 status: draft
 subtitle: One database, two logins, one image of

@@ -13,7 +13,6 @@ keywords:
 - migration
 kind: explanation
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
 - box/render.py
 status: draft
 subtitle: Prefixes, accessors, and what a service may
@@ -36,9 +35,9 @@ careful.
 A service may own more than one prefix, `prefixes` in
 the manifest, its own first: py-api holding `/users`
 owns `py_api` and `users` ([tutorial
-4](../tutorials/4-users/README.md)). Each prefix is
-a **unit**, its tables, accessors and migrations its
-own, whichever service runs its code.
+4](../tutorials/4-users/README.md)). Each prefix is a
+**unit**, its tables, accessors and migrations its own,
+whichever service runs its code.
 
 A unit reads and writes its own objects alone. Another
 unit's data is that unit's to give, through its
@@ -50,7 +49,8 @@ exception: a function the other unit **publishes**
 
 The basic reading and writing of a service's data are
 functions and procedures beside the tables, written in
-the same migration:
+the same migration. One in its simplest form, before
+any rule of who may call it:
 
 ``` sql
 CREATE OR REPLACE FUNCTION py_api_note_add(p_owner text, p_body text) RETURNS bigint
@@ -78,8 +78,7 @@ takes the caller first, checks before it acts, and
 refuses with an SQLSTATE the service turns into HTTP
 (`42501` for `403`, `P0002` for `404`). A service that
 forgets a check cannot skip it ([2 What each may
-do](../tutorials/2-authorisation/1-concept.md) §4,
-R6).
+do](../tutorials/2-authorisation/1-concept.md) §4, R6).
 
 ## 3 What a Service May Touch
 
