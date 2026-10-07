@@ -1,12 +1,12 @@
 ---
 abstract: |
   What each person may do, decided in the database: an
-  access control matrix of roles and permissions, and
-  notes as (u=rw, a=r). Built in the project's five
-  steps, a page each: the concept, the tests, the
-  contract, the implementation, and the refinement.
-  This page is the way in: what you build, and how the
-  steps get you there.
+  access control matrix of roles and permissions, which
+  each unit that comes later adds its own columns to.
+  Built in the project's five steps, a page each: the
+  concept, the tests, the contract, the implementation,
+  and the refinement. This page is the way in: what you
+  build, and how the steps get you there.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -16,7 +16,7 @@ keywords:
 - cycle
 kind: tutorial
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- tools/native-dev.sh
 status: draft
 subtitle: An access control matrix, in the database
 title: "2 What Each May Do: Authorisation"
@@ -29,16 +29,16 @@ page](../README.md) §5.
 
 ## 1 What You Build
 
-Three files at your fork's root, carried into tutorial
+Two files at your fork's root, carried into tutorial
 3's migrations as they are:
 
 - **`users-draft.sql`,** grown from tutorial 1's: the
   roles and who holds them, the matrix, starting roles,
-  and the accessors that read and change them
-- **`notes-draft.sql`:** notes as (u=rw, a=r), each
-  accessor asking the matrix first
-- **`test-2.sql`:** 27 tests, written before either,
-  that both must pass
+  the accessors that read and change them, and the two
+  functions a later unit's migration calls to bring its
+  permissions
+- **`test-2.sql`:** 27 tests, written before it, that
+  it must pass
 
 At the end, every test passes, in a transaction rolled
 back, so your database is as it was.
@@ -56,7 +56,7 @@ its refusals.
     from it. Until the contract exists, the concept is
     the source of truth
 2.  **[The contract](2-contract.md).** What tutorials 3
-    to 6 rely on: each accessor's signature, the
+    to 7 rely on: each accessor's signature, the
     permission it needs, and how it refuses
 3.  **[The tests](3-tests.md).** Each rule asked what
     could go wrong, and the answers fixed as 27 tests,
@@ -71,9 +71,11 @@ its refusals.
     concept. One refinement made while this tutorial
     was written, shown whole
 
-The cycle then begins again. Tutorial 6 is such a turn:
-it adds `objects.write` to the matrix, and the concept,
-contract and tests grow with it.
+The cycle then begins again, for each unit that comes
+later. Tutorial 5's notes are the first: their
+migration brings `notes.read` and `notes.write` by the
+functions this tutorial publishes, and their own
+concept, contract and tests say who may do what.
 
 ## 3 Before You Start
 
