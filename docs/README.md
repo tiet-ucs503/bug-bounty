@@ -70,6 +70,8 @@ not yet checked; **planned** --- not yet written.
   box](onboarding/ci-cd.md)
 - `draft` [A release by
   hand](onboarding/release-by-hand.md)
+- `draft` [Publish the pages to GitHub
+  Pages](onboarding/github-pages.md)
 - `draft` [Hand a change to the box's
   owner](onboarding/hand-over.md)
 - `draft` [Probe your

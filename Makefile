@@ -16,7 +16,8 @@
 #   make db-lint   every migration, by Squawk
 #   make db        dbmate in the dev stack: CMD=status (or up,
 #                  rollback, or dump, which writes migrations/schema.sql)
-#   make docs-build  the pages, by md-preview, into docs/_site/
+#   make docs-build  the pages, by md-preview, into docs/_site/;
+#                  .github/workflows/pages.yml publishes them
 #   make plan TAG=v0.2.0  what a release of that tag would do
 #
 # The outside probes, against your live hosts, are probes/Makefile.

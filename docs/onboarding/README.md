@@ -40,6 +40,8 @@ In the order a newcomer reads them.
 5.  [How a release reaches the box](ci-cd.md): a tag,
     and only what changed
     - [A release by hand](release-by-hand.md)
+    - [Publish the pages to GitHub
+      Pages](github-pages.md)
 6.  [Hand a change to the box's owner](hand-over.md)
 7.  [Probe your hosts](run-the-probes.md): check them
     from outside
