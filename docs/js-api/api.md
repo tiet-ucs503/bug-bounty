@@ -38,6 +38,12 @@ POST /echo
   with `Cache-Control: no-store`. `401` without a valid
   token; `413` over 1 MiB
 
+Your fork adds routes as [the
+tutorials](../tutorials/README.md) go: `/users` in
+tutorial 4, if you take JavaScript there. Each tutorial
+gives the entries for this page; add them here, in the
+same commit as the routes.
+
 ## 3 What the Box Answers Instead
 
   ----------------------------------------------------

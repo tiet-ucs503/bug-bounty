@@ -1,11 +1,12 @@
 ---
 abstract: |
-  The uploads in the database: a permission in the
-  users unit's matrix, and py-api's objects, the notes'
-  links to them, their count, and what the collector
-  may take. Two migrations, one a unit, applied and
-  tried through an object's whole life, the passing of
-  the grace faked in a transaction that is rolled back.
+  Step 4 of tutorial 6, part 2. The uploads in the
+  database: a permission in the users unit's matrix,
+  and py-api's objects, the notes' links to them, their
+  count, and what the collector may take. Two
+  migrations, one a unit, applied and tried through an
+  object's whole life, the passing of the grace faked
+  in a transaction that is rolled back.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -18,7 +19,7 @@ sources:
 - migrations/sql/20261006120000_py_api_create_notes.sql
 status: draft
 subtitle: Objects, owners, references and the grace
-title: 7.2 The Database
+title: "6.4 Uploads: the Database"
 version: v0.1.0
 ---
 
@@ -26,7 +27,7 @@ version: v0.1.0
 
 - [What you need](../README.md) §2, installed and
   checked
-- [7.1 The store](1-the-store.md)
+- [The store](4-the-store.md)
 - Tutorial 3's migrations, applied
 
 ## 2 A Permission, in the Users Unit
@@ -42,7 +43,7 @@ make db-new PREFIX=users NAME=grant_objects_write
 
 ``` sql
 -- objects.write, uploading to the static bucket's objects/, for
--- members (docs/tutorials/7-uploads/2-the-database.md). The matrix is
+-- members (docs/tutorials/6-uploads/4-the-database.md). The matrix is
 -- the users unit's, so its cell is a users migration, though py-api
 -- is what asks for it.
 
@@ -67,7 +68,7 @@ make db-new PREFIX=py_api NAME=objects
 ``` sql
 -- Uploads: an object in the static bucket's objects/ for each row here,
 -- (u=rw, a=r): its owner writes it, anyone reads it at static.<zone>
--- (docs/tutorials/7-uploads/2-the-database.md). A key names its owner
+-- (docs/tutorials/6-uploads/4-the-database.md). A key names its owner
 -- and its content, objects/<owner's tag>/<SHA-256>, so it is never
 -- overwritten with other bytes, and one object has one owner. A note
 -- refers to objects by its links; an object no note refers to is
@@ -294,12 +295,12 @@ for the second.
 
 ## 5 Try an Object's Life
 
-Save as `try-7.sql`:
+Save as `try-6.sql`:
 
 ``` sql
 -- Asha a member, with an upload: its row first, then, once the
 -- bucket holds it, marked stored
-SELECT users_admit('asha', 'asha@example.org', true);
+SELECT users_person_see('asha', 'asha@example.org', true, 'Google');
 INSERT INTO users_members (sub, role) VALUES ('asha', 'member') ON CONFLICT DO NOTHING;
 SELECT key AS object, stored FROM py_api_object_add('asha', repeat('a', 64), 10, 'image/png') \gset
 SELECT :'object' AS object, :'stored' AS stored;
@@ -311,7 +312,7 @@ SELECT py_api_note_objects_set('asha', :note, ARRAY[:'object']);
 SELECT refs FROM py_api_objects_mine('asha') WHERE key = :'object';
 
 -- Bhanu may not take it up into a note of his
-SELECT users_admit('bhanu', 'bhanu@example.org', true);
+SELECT users_person_see('bhanu', 'bhanu@example.org', true, 'Google');
 INSERT INTO users_members (sub, role) VALUES ('bhanu', 'member') ON CONFLICT DO NOTHING;
 SELECT py_api_note_new('bhanu', 'bhanu''s') AS bhanus \gset
 DO $$ BEGIN
@@ -334,12 +335,12 @@ SELECT py_api_objects_forget(ARRAY[:'object']) AS forgotten;
 Run it, rolled back:
 
 ``` sh
-psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f try-7.sql -c ROLLBACK
+psql "${MIGRATOR_URL}" -q -v ON_ERROR_STOP=1 -c BEGIN -f try-6.sql -c ROLLBACK
 ```
 
 Expect, in order:
 
-- asha in; her object's key,
+- asha signed in, a member; her object's key,
   `objects/<16 hex>/aaa...`, and `stored` `f`;
 - one reference, once her note refers to it;
 - a notice: bhanu may not take it up,
@@ -350,11 +351,16 @@ Expect, in order:
   to collect; and `forgotten` `1`.
 
 The collector deletes from the bucket between those
-last two steps: tutorial 7.3.
+last two steps: [the service](4-the-service.md).
+
+The same life, asserted, is T6.1 to T6.8 in
+`test-6.sql`; `./test-6.sh` runs them.
 
 ## 6 Prove the Down, and Write the Schema
 
-As tutorial 3's §9 and §10: `rollback` twice, `up`, and
+As tutorial 3's
+[implementation](../3-the-migration/4-implementation.md)
+§7 and §8: `rollback` twice, `up`, and
 `make db CMD=dump`.
 
 ## 7 What Can Go Wrong
@@ -373,5 +379,5 @@ As tutorial 3's §9 and §10: `rollback` twice, `up`, and
 
 ## 8 See Also
 
-- [7.3 The service](3-the-service.md): next
-- [3 Make it a migration](../3-the-migration.md)
+- [The service](4-the-service.md): next
+- [3 Make it a migration](../3-the-migration/README.md)

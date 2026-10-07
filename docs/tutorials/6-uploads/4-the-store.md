@@ -1,12 +1,12 @@
 ---
 abstract: |
-  The static bucket's `objects/` on your machine: a
-  mock of S3 that takes an unsigned write, checks its
-  checksum as S3 does, and serves the object back
-  through the stack's nginx at `static.localhost`.
-  Write one by hand, read it, see a bad checksum
-  refused, and see that nothing writes through the
-  static host.
+  Step 4 of tutorial 6, part 1. The static bucket's
+  `objects/` on your machine: a mock of S3 that takes
+  an unsigned write, checks its checksum as S3 does,
+  and serves the object back through the stack's nginx
+  at `static.localhost`. Write one by hand, read it,
+  see a bad checksum refused, and see that nothing
+  writes through the static host.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -20,7 +20,7 @@ sources:
 - box/render.py
 status: draft
 subtitle: S3's part, mocked, and what it refuses
-title: 7.1 The Store
+title: "6.4 Uploads: the Store"
 version: v0.1.0
 ---
 
@@ -28,7 +28,7 @@ version: v0.1.0
 
 - [What you need](../README.md) §2, installed and
   checked
-- [7 Uploads](README.md), read
+- [The tests](3-tests.md), saved and failing
 - A local stack up, and [the conventions](../README.md)
   §3 set, `STORE_URL` and `STATIC_URL` among them
 
@@ -130,7 +130,7 @@ the collector may delete twice without harm.
 
 ## 8 See Also
 
-- [7.2 The database](2-the-database.md): next
+- [The database](4-the-database.md): next
 - [S3's checks of an object's
   integrity](https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity.html),
   read 2026-10-06

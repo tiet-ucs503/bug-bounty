@@ -122,9 +122,9 @@ An e-mail can change; `sub` cannot, so your database
 keys people by `sub`.
 
 `/users/me` is where a signed-in person is first seen.
-Tutorials 4 and 5 build it, in Python and in
-JavaScript. This page builds what it calls: the
-records, in the database.
+Tutorial 4 builds it, in Python or in JavaScript. This
+page builds what it calls: the records, in the
+database.
 
 ## 4 Read a Token
 

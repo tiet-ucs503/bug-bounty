@@ -1,12 +1,13 @@
 ---
 abstract: |
-  The dashboard's half of the uploads, a step at a
-  time: a file selector on a note you are editing; each
-  note's attachments shown, images as images; the type
-  and size checked before anything is sent; then drag
-  and drop onto the same place; and a way to take an
-  attachment off. The finished component whole, and the
-  dashboard driven through it.
+  Step 4 of tutorial 6, part 4. The dashboard's half of
+  the uploads, a step at a time: a file selector on a
+  note you are editing; each note's attachments shown,
+  images as images; the type and size checked before
+  anything is sent; then drag and drop onto the same
+  place; and a way to take an attachment off. The
+  finished component whole, and the dashboard driven
+  through it.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -19,7 +20,7 @@ sources:
 - ui/src/lib/box.js
 status: draft
 subtitle: From a file selector to drag and drop
-title: 7.4 The UI
+title: "6.4 Uploads: the UI"
 version: v0.1.0
 ---
 
@@ -27,11 +28,13 @@ version: v0.1.0
 
 - [What you need](../README.md) §2, installed and
   checked
-- [7.3 The service](3-the-service.md), running
-- [6 A Svelte UI](../6-a-svelte-ui.md), with `make ui`
-  serving it
+- [The service](4-the-service.md), running
+- [5 A Svelte UI](../5-a-svelte-ui/README.md), with
+  `make ui` serving it
 - `api()` in `ui/src/lib/box.js` already sends a file
-  as itself, by `raw` (tutorial 6 §4)
+  as itself, by `raw` (tutorial 5's
+  [implementation](../5-a-svelte-ui/4-implementation.md)
+  §4)
 
 ## 2 Step 1: a File Selector
 
@@ -96,9 +99,9 @@ Edit a note of yours, choose a PNG, and expect
 
 ## 3 Step 2: Show What a Note Has
 
-Each note now brings its objects, key and type
-(tutorial 7.3 §3). In `Notes.svelte`, `staticBase` from
-`box.js`:
+Each note now brings its objects, key and type ([the
+service](4-the-service.md) §3). In `Notes.svelte`,
+`staticBase` from `box.js`:
 
 ``` svelte
   import { api, staticBase } from "./lib/box.js";
@@ -372,7 +375,31 @@ And `ui/src/Notes.svelte`, whole:
 </style>
 ```
 
-## 8 Try It
+## 8 Its Tests
+
+`ui/test/attach.test.js`, from [the tests](3-tests.md)
+§2, beside tutorial 5's. And one change to tutorial
+5's: the notes it fakes now carry their objects, as
+`GET /notes` answers them since [the
+service](4-the-service.md) §3. In
+`ui/test/dashboard.test.js`, `NOTES` becomes:
+
+``` javascript
+// Each with its objects, as GET /notes answers since tutorial 6
+const NOTES = [
+  { id: 2, body: "mine", mine: true, created_at: "2026-10-07T10:00:00Z", updated_at: null, objects: [] },
+  { id: 1, body: "theirs", mine: false, created_at: "2026-10-07T09:00:00Z", updated_at: null, objects: [] },
+];
+```
+
+Why, [the refinement](5-refinement.md) §5 tells. Expect
+`10 passed`:
+
+``` sh
+cd ui && npm test && cd ..
+```
+
+## 9 Try It
 
 As asha, a member: edit a note of yours; choose a PNG;
 drop another on the dashed zone; drop an `.html` file
@@ -384,26 +411,28 @@ Take one image off, keep its link, and wait out the
 grace: the link answers `404`, unless another note of
 yours still refers to it.
 
-## 9 What Can Go Wrong
+## 10 What Can Go Wrong
 
 - **The browser opens the dropped file.** `drop`'s
   default was not prevented, or the drop missed the
   zone
 - **The zone never lights.** `dragover`'s default was
   not prevented
-- **`objects.write needed`, for a member.** 7.2's users
-  migration has not run: the role lacks the cell
+- **`objects.write needed`, for a member.** [The
+  database](4-the-database.md)'s users migration has
+  not run: the role lacks the cell
 - **Images do not load, `404`.** The object was
   collected, or `staticUrl` in `config.js` names
   another host: `http://static.localhost:8080` here,
   your `static.<zone>` on the box
 - **A large photo is refused.** 1 MiB is the box's
-  limit on an API host ([7 Uploads](README.md) §6).
-  Shrink it in the browser before upload, or ask the
-  box's owner
+  limit on an API host ([the concept](1-concept.md) §2,
+  O4). Shrink it in the browser before upload, or ask
+  the box's owner
 
-## 10 See Also
+## 11 See Also
 
+- [The refinement](5-refinement.md): next
 - [The HTML Drag and Drop
   API](https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API)
   and [the file

@@ -1,20 +1,14 @@
 ---
 abstract: |
-  `/users` as routes of py-api, at
-  `py-api.<zone>/users`: the door at `/users/me`, which
-  asks Cognito's userInfo and the database who may come
-  in, and the people and their roles for whoever may
-  run them. FastAPI and psycopg, the database's
-  refusals turned into HTTP, tests that need no
-  database, and the routes run behind the stack's
-  nginx.
-date: 2026-10-06
+  Step 4 of tutorial 4, in Python: `/users` as routes
+  of py-api, FastAPI and psycopg. Its packages, its
+  code whole, its own tests, and how to run it.
+date: 2026-10-07
 keywords:
 - tutorial
 - py-api
 - python
 - auth
-- authz
 - db
 kind: tutorial
 sources:
@@ -22,90 +16,24 @@ sources:
 - services/py-api/requirements.txt
 - box/project.json
 status: draft
-subtitle: FastAPI, psycopg, and the database deciding
-title: 4 /users in Python, in py-api
+subtitle: Step 4, the code, in py-api
+title: "4.4 /users: the Implementation in Python"
 version: v0.1.0
 ---
 
-`[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
-these mean, and what they do not: [the tutorials'
-page](README.md) §5.
-
-> [!WARNING]
-> Written for an earlier tutorial 1, which let people
-> in by admission rules and gave everyone `deny-all`.
-> Tutorials 1 and 2 have since moved roles and
-> starting roles into tutorial 2. This page is next to
-> be reworked; until then it does not run as written.
-
 ## 1 Before You Start
 
-- [What you need](README.md) §2, installed and checked
-- [3 Make it a migration](3-the-migration.md), its
-  migrations applied, with `users` among py-api's
-  `prefixes` (§2 there)
-- The JavaScript version is [tutorial
-  5](5-users-in-javascript.md): the same routes, in
-  js-api; take one
+- [The contract](2-contract.md): its routes added to
+  py-api's in `box/project.json` (§3 there)
+- [The tests](3-tests.md), saved as `test-4.sh`, run
+  once and failing
+- `users` among py-api's `prefixes`: [tutorial
+  3](../3-the-migration/4-implementation.md) §2
 
-## 2 The Routes
+The JavaScript version is [its own
+page](4-implementation-javascript.md); take one.
 
-`/users` is a part of py-api, not a service of its own:
-the same host, `py-api.<zone>`, the same image and the
-same process, its routes under `/users`. Its tables are
-its own, `users_*`, by the prefix py-api owns beside
-`py_api`.
-
-- **`GET /users/me`,** signed in: the door. It admits
-  you if the rules let you in, then answers who you
-  are, your roles and your permissions
-- **`GET /users/people`,** `users.read`: everyone in,
-  with their roles
-- **`GET /users/roles`,** `users.read`: the matrix,
-  role by role
-- **`PUT /users/people/{sub}/roles/{role}`,**
-  `users.grant`: give a role
-- **`DELETE /users/people/{sub}/roles/{role}`,**
-  `users.grant`: take it away
-
-Add them to py-api's `routes` in the manifest, after
-the starter's three:
-
-``` json
-[
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "signed_in": true
-  },
-  {
-    "method": "GET",
-    "path": "/users/people",
-    "signed_in": true
-  },
-  {
-    "method": "GET",
-    "path": "/users/roles",
-    "signed_in": true
-  },
-  {
-    "method": "PUT",
-    "path": "/users/people/{sub}/roles/{role}",
-    "signed_in": true
-  },
-  {
-    "method": "DELETE",
-    "path": "/users/people/{sub}/roles/{role}",
-    "signed_in": true
-  }
-]
-```
-
-nginx passes these and nothing else. A `{sub}` or
-`{role}` is letters, digits, `-` and `_`, up to 64: a
-Cognito `sub` is a UUID, and fits.
-
-## 3 Its Packages
+## 2 Its Packages
 
 psycopg 3, the PostgreSQL driver, with its binary build
 and its pool. In `services/py-api/requirements.txt`,
@@ -121,7 +49,7 @@ psycopg-pool==3.3.3
 The binary build has wheels for arm64, the box's, and
 x86-64, so nothing compiles.
 
-## 4 The Code
+## 3 The Code
 
 `services/py-api/main.py`, whole, as this page leaves
 it: the starter, and what `/users` adds.
@@ -136,14 +64,14 @@ rest are yours.
     GET  /hello    anyone
     POST /echo     a signed-in caller: the body back, with who sent it
 
-and who comes in, and what each may do, the database deciding
-(docs/tutorials/4-users-in-python.md):
+and who is signed in, and what each may do, the database deciding
+(docs/tutorials/4-users/):
 
-    GET    /users/me                          the door: admits the caller
-                                              if the rules let them in,
-                                              then says who they are and
-                                              what they may do
-    GET    /users/people                      everyone admitted: users.read
+    GET    /users/me                          records the caller, then
+                                              says who they are, their
+                                              profile, and what they may do
+    PUT    /users/me/profile                  the caller's own profile
+    GET    /users/people                      everyone signed in: users.read
     GET    /users/roles                       the matrix: users.read
     PUT    /users/people/{sub}/roles/{role}   give a role: users.grant
     DELETE /users/people/{sub}/roles/{role}   take it away: users.grant
@@ -161,8 +89,8 @@ Who the caller is, this service decides itself: a Bearer access token
 from the box's Cognito pool, issued to your project's UI client or the
 box's probe client, verified against the pool's keys. What the caller
 may then do, the project's database decides: every accessor takes the
-caller first, and its refusals by SQLSTATE become 403, 404 and 409
-here.
+caller first, and its refusals by SQLSTATE become 400, 403, 404 and
+409 here.
 """
 
 import json
@@ -175,7 +103,7 @@ from contextlib import asynccontextmanager
 
 import jwt
 import psycopg
-from fastapi import APIRouter, FastAPI, Header, Request
+from fastapi import APIRouter, Body, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool, PoolTimeout
@@ -215,7 +143,7 @@ def _key(kid: str) -> jwt.PyJWK | None:
 
 
 def caller(header: str | None) -> dict | None:
-    """The caller's sub, groups and token, if the token is the pool's access
+    """The caller's sub, groups, provider and token, if the token is the pool's access
     token for one of our clients and unexpired; None otherwise.
     Cognito's access tokens carry client_id, not aud. Blocking: the
     first call fetches the keys, so run it off the event loop"""
@@ -235,7 +163,10 @@ def caller(header: str | None) -> dict | None:
         return None
     if claims.get("token_use") != "access" or claims.get("client_id") not in CLIENTS:
         return None
-    return {"sub": claims["sub"], "groups": claims.get("cognito:groups", []), "token": m[1]}
+    # Google_<number> for a Google sign-in; no prefix for the pool's own
+    username = claims.get("username", "")
+    provider = username.split("_", 1)[0] if "_" in username else "Cognito"
+    return {"sub": claims["sub"], "groups": claims.get("cognito:groups", []), "provider": provider, "token": m[1]}
 
 
 # userInfo's answer for each sub, kept ten minutes: Cognito limits how
@@ -351,10 +282,24 @@ async def echo(request: Request):
     )
 
 
-# /users: who may come in, and what each person may do; the database
-# decides (docs/tutorials/4-users-in-python.md). Sync routes: FastAPI
-# runs each in its thread pool, so userInfo and the database may block
+# /users: who is signed in, and what each person may do; the database
+# decides (docs/tutorials/4-users/). Sync routes: FastAPI runs each in
+# its thread pool, so userInfo and the database may block
 users = APIRouter(prefix="/users")
+
+
+def you(sub: str) -> JSONResponse:
+    """The caller as /users/me and its profile answer them: who, their
+    profile, their roles and permissions"""
+    r = run("SELECT * FROM users_profile_get(%s)", (sub,))
+    if isinstance(r, JSONResponse):
+        return r
+    m = run("SELECT roles, permissions FROM users_me(%s)", (sub,))
+    if isinstance(m, JSONResponse):
+        return m
+    p = r[0]
+    return answer({"sub": p["sub"], "email": p["email"], "provider": p["provider"],
+                   "profile": {"display_name": p["display_name"], "affiliation": p["affiliation"]}, **m[0]})
 
 
 @users.get("/me")
@@ -366,13 +311,24 @@ def me(authorization: str | None = Header(default=None)):
         email, verified = email_of(who)
     except OSError:
         return answer({"error": "Cognito's userInfo is not answering"}, 503)
-    r = run("SELECT users_admit(%s, %s, %s) AS admitted", (who["sub"], email, verified))
+    r = run("SELECT users_person_see(%s, %s, %s, %s) AS seen", (who["sub"], email, verified, who["provider"]))
     if isinstance(r, JSONResponse):
         return r
-    if not r[0]["admitted"]:
-        return answer({"error": "not admitted", "email": email, "verified": verified}, 403)
-    r = run("SELECT * FROM users_me(%s)", (who["sub"],))
-    return r if isinstance(r, JSONResponse) else answer(r[0])
+    if not r[0]["seen"]:
+        return answer({"error": "e-mail not verified", "email": email}, 403)
+    return you(who["sub"])
+
+
+@users.put("/me/profile")
+def profile(body: dict = Body(default={}), authorization: str | None = Header(default=None)):
+    who = caller(authorization)
+    if who is None:
+        return signed_out()
+    name, affiliation = body.get("display_name", ""), body.get("affiliation", "")
+    if not isinstance(name, str) or not isinstance(affiliation, str):
+        return answer({"error": "display_name and affiliation are text"}, 400)
+    r = run("SELECT users_profile_set(%s, %s, %s)", (who["sub"], name, affiliation))
+    return r if isinstance(r, JSONResponse) else you(who["sub"])
 
 
 @users.get("/people")
@@ -416,12 +372,13 @@ app.include_router(users)
 
 What it adds to the starter:
 
-- **`USERINFO`:** Cognito's userInfo, from
+- **`USERINFO`:** Cognito's `userInfo`, from
   `COGNITO_USERINFO_URL`
-- **`caller`:** the starter's check of the token,
-  unchanged but for keeping the token itself, which
-  userInfo needs
-- **`email_of`:** asks userInfo with the caller's own
+- **`caller`:** the starter's check of the token (U1),
+  keeping the token itself, which `userInfo` needs, and
+  reading the provider from `username`: the part before
+  `_`, or `Cognito` for the pool's own accounts
+- **`email_of`:** asks `userInfo` with the caller's own
   token, keeps the answer ten minutes, and reads
   `email_verified` as the string it is. The `sub` it
   answers must be the token's
@@ -433,22 +390,66 @@ What it adds to the starter:
 - **`query`:** one statement, its rows. The tests
   replace it
 - **`run` and `STATUS`:** an accessor's refusal, by its
-  SQLSTATE, as HTTP, with its message
+  SQLSTATE, as HTTP, with its message (U5)
+- **`you`:** the answer of `/users/me` and of the
+  profile's `PUT`: the record and profile, then the
+  roles and permissions (U3)
 - **`users`, an `APIRouter` with the prefix `/users`:**
   the routes, each `def`, not `async def`. FastAPI runs
   them in its thread pool, where the token check and
   psycopg may block. Each passes the caller first; none
-  checks a permission itself. `app.include_router`
-  mounts them
+  checks a permission itself. `/me` records the caller
+  before it answers (U2); `/me/profile` passes the
+  caller's own `sub` (U4). `app.include_router` mounts
+  them
 - **The starter's three,** `/health`, `/hello` and
   `/echo`, as they were
 
-Tutorial 6's notes use the same `pool`, `run` and
+Tutorial 5's notes use the same `pool`, `run` and
 `answer`.
 
-## 5 Its Tests
+**Document the routes.** In `docs/py-api/api.md`, after
+the starter's three in §2, the entries from [the
+contract](2-contract.md) §2, in the page's own form:
 
-Offline: a key pair and a userInfo of their own on a
+``` markdown
+GET /users/me
+: Signed in. Records the caller at their first call,
+  if their e-mail is verified. `200` and
+  `{sub, email, provider, profile: {display_name, affiliation}, roles, permissions}`.
+  `403` for an e-mail not verified; `503` if Cognito's
+  `userInfo` or the database does not answer
+
+PUT /users/me/profile
+: Signed in. `{display_name, affiliation}`, text, 80
+  and 120 characters at most. `200` and the caller as
+  `GET /users/me` answers. `400` for a value not text
+  or too long; `404` if never recorded
+
+GET /users/people
+: `users.read`. `200` and a list of
+  `{sub, email, roles, first_seen_at, seen_at}`, by
+  e-mail, at most 1000. `403` without it
+
+GET /users/roles
+: `users.read`. `200` and a list of
+  `{role, about, permissions}`. `403` without it
+
+PUT /users/people/{sub}/roles/{role}
+: `users.grant`. `200` and
+  `{sub, role, granted: true}`; twice is once. `403`
+  without it; `404` for no such person or role
+
+DELETE /users/people/{sub}/roles/{role}
+: `users.grant`. `200` and
+  `{sub, role, granted: false}`. `403` without it;
+  `404` if the person lacks the role; `409` for the
+  last `users.grant` there is
+```
+
+## 4 Its Tests
+
+Offline: a key pair and a `userInfo` of their own on a
 local port, and the database replaced by what the
 accessors would answer. The starter's tests share
 `main` in the same process, so these set the pool's
@@ -456,7 +457,7 @@ address and the database on it, and put them back.
 `services/py-api/test/test_users.py`:
 
 ``` python
-"""/users: the token check and the door, against a pool of our own: a
+"""/users: the token check, the door and the profile, against a pool of our own: a
 key pair made here, its public half served as the pool's JWKS, and a
 userInfo, on a local port. The database is replaced by a function that
 answers as the accessors would. Nothing leaves the machine:
@@ -510,13 +511,28 @@ def refused(sqlstate, message):
     return psycopg.errors.lookup(sqlstate)(message)
 
 
+# What the fake database was last told, by accessor
+seen = {}
+
+
 def database(sql, args):
     """The accessors, as the tests need them"""
-    if sql.startswith("SELECT users_admit"):
-        sub, email, verified = args
-        return [{"admitted": verified and email.endswith("@example.org")}]
-    if sql.startswith("SELECT * FROM users_me"):
-        return [{"sub": args[0], "email": "asha@example.org", "roles": ["deny-all"], "permissions": []}]
+    if sql.startswith("SELECT users_person_see"):
+        sub, email, verified, provider = args
+        seen["person"] = args
+        return [{"seen": verified}]
+    if sql.startswith("SELECT * FROM users_profile_get"):
+        provider = seen.get("person", ("", "", True, "Cognito"))[3]
+        name, affiliation = seen.get("profile", ("", ""))
+        return [{"sub": args[0], "email": "asha@example.org", "provider": provider,
+                 "display_name": name, "affiliation": affiliation}]
+    if sql.startswith("SELECT users_profile_set"):
+        if len(args[1]) > 80:
+            raise refused("23514", "value too long")
+        seen["profile"] = args[1:]
+        return [{"users_profile_set": None}]
+    if sql.startswith("SELECT roles, permissions FROM users_me"):
+        return [{"roles": [], "permissions": []}]
     if sql.startswith("SELECT * FROM users_list"):
         raise refused("42501", "users.read needed")
     if sql.startswith("SELECT users_revoke"):
@@ -561,14 +577,29 @@ class Users(unittest.TestCase):
     def test_me_another_client(self):
         self.assertEqual(self.client.get("/users/me", headers=self.token("asha", client_id="other")).status_code, 401)
 
-    def test_me_admitted(self):
+    def test_me_recorded(self):
         r = self.client.get("/users/me", headers=self.token("asha"))
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.json()["roles"], ["deny-all"])
+        self.assertEqual((r.json()["roles"], r.json()["profile"]["display_name"]), ([], ""))
+
+    def test_me_provider_from_username(self):
+        self.client.get("/users/me", headers=self.token("asha", username="Google_1234"))
+        self.assertEqual(seen["person"][3], "Google")
+        self.client.get("/users/me", headers=self.token("asha", username="asha"))
+        self.assertEqual(seen["person"][3], "Cognito")
 
     def test_me_unverified(self):
         r = self.client.get("/users/me", headers=self.token("esha"))
-        self.assertEqual((r.status_code, r.json()["error"]), (403, "not admitted"))
+        self.assertEqual((r.status_code, r.json()["error"]), (403, "e-mail not verified"))
+
+    def test_profile(self):
+        r = self.client.put("/users/me/profile", headers=self.token("asha"),
+                            json={"display_name": "Asha", "affiliation": "Physics"})
+        self.assertEqual((r.status_code, r.json()["profile"]), (200, {"display_name": "Asha", "affiliation": "Physics"}))
+        r = self.client.put("/users/me/profile", headers=self.token("asha"), json={"display_name": 7})
+        self.assertEqual(r.status_code, 400)
+        r = self.client.put("/users/me/profile", headers=self.token("asha"), json={"display_name": "a" * 81})
+        self.assertEqual(r.status_code, 400)
 
     def test_refusals_by_sqlstate(self):
         self.assertEqual(self.client.get("/users/people", headers=self.token("asha")).status_code, 403)
@@ -587,7 +618,7 @@ starter's tests and these:
 make test
 ```
 
-## 6 Run It
+## 5 Run It
 
 **The dev stack:** `make dev` builds py-api again and
 starts it. **The native stack:** stop, install its
@@ -605,95 +636,28 @@ Expect `py-api health 200`:
 tools/native-dev.sh status
 ```
 
-## 7 Call It
+Then [the refinement](5-refinement.md).
 
-Three people: you, the first admin by tutorial 3's
-migration; asha; and esha, whose e-mail is not
-verified:
-
-``` sh
-Y=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=you EMAIL=you@example.org)
-A=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=asha)
-E=$(make -s dev-token MOCK_URL=${MOCK_URL} SUB=esha VERIFIED=false)
-```
-
-The door. Expect you with `["admin"]`, asha with
-`["deny-all"]` and no permissions, and esha `403`,
-`not admitted`:
-
-``` sh
-curl -s -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/me
-curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
-curl -s -H "Authorization: Bearer ${E}" http://py-api.${H}/users/me
-```
-
-The people, which asha may not read,
-`users.read needed`, and you may:
-
-``` sh
-curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/people
-curl -s -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people
-```
-
-Asha a member. Expect `"granted":true`, then asha
-with `notes.read` and `notes.write`:
-
-``` sh
-curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/asha/roles/member
-curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/users/me
-```
-
-And the refusals. Expect `no such person` (`404`), then
-`the last users.grant` (`409`):
-
-``` sh
-curl -s -X PUT -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/nobody/roles/member
-curl -s -X DELETE -H "Authorization: Bearer ${Y}" http://py-api.${H}/users/people/you/roles/admin
-```
-
-## 8 What Reaches the Box
+## 6 What Reaches the Box
 
 A tag: py-api's image is built again, and the
 manifest's change handed to the box's owner. No new
 host, image or build: `/users` is py-api's, so the
 owner renders its allow-list again and the new routes
 answer ([Hand a change to the box's
-owner](../onboarding/hand-over.md)).
+owner](../../onboarding/hand-over.md)).
 
 The box must also give py-api **`userInfo`'s address**,
 `COGNITO_USERINFO_URL`, with the issuer, in the
 project's `cognito.env`: Cognito's own domain, not the
-issuer's. Until the owner adds it, `/users/me` admits
+issuer's. Until the owner adds it, `/users/me` records
 no one, since it cannot learn an e-mail. And the
 database waits for the box's `feature/postgres`.
 
-## 9 What Can Go Wrong
+## 7 See Also
 
-- **`/users/me` says `not admitted`,
-  `"verified": false`, for everyone.**
-  `COGNITO_USERINFO_URL` is unset: the service asks no
-  one, and admits no one. Or the box's pool does not
-  map `email_verified`
-- **`503`, `the database is not answering`.** The pool
-  could not connect within five seconds:
-  `DATABASE_URL`, or the database is down
-- **`500`, and
-  `function users_admit(...) does not exist` in the
-  log.** The migrations have not run:
-  `make db CMD=status`
-- **Every `/users` route `404`.** The manifest does not
-  name them for py-api, or nginx was not rendered
-  again: `make dev`, or the native stack's `start`
-- **`make check` refuses a `users_` migration.**
-  `users` is not among py-api's `prefixes`: tutorial 3
-  §2
-- **`403` from nginx, an HTML page, not JSON.** A
-  method the manifest does not name for that path
-
-## 10 See Also
-
-- [6 A Svelte UI](6-a-svelte-ui.md): next
-- [Develop and change py-api](../py-api/develop.md):
+- [The refinement](5-refinement.md): next
+- [Develop and change py-api](../../py-api/develop.md):
   the starter this came from
 - [psycopg 3](https://www.psycopg.org/psycopg3/docs/),
   read 2026-10-06

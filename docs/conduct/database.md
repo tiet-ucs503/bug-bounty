@@ -36,7 +36,7 @@ careful.
 A service may own more than one prefix, `prefixes` in
 the manifest, its own first: py-api holding `/users`
 owns `py_api` and `users` ([tutorial
-4](../tutorials/4-users-in-python.md)). Each prefix is
+4](../tutorials/4-users/README.md)). Each prefix is
 a **unit**, its tables, accessors and migrations its
 own, whichever service runs its code.
 

@@ -1,64 +1,42 @@
 ---
 abstract: |
-  Tutorials 1 and 2's drafts, carried as they are into
-  migrations: one for the users unit, one for its first
-  admin, one for the notes. The unit's prefix given to
-  the service that will serve it; each file complete
-  and consistent, linted, applied, rolled back and
-  applied again, and the schema written down.
-date: 2026-10-06
+  Step 4 of tutorial 3: what makes the eight tests
+  pass. The prefix given, four migrations made from the
+  drafts, each with its undoing, the lint, and the
+  schema written down.
+date: 2026-10-07
 keywords:
 - tutorial
 - db
 - migration
 - dbmate
-- authz
 kind: tutorial
 sources:
 - migrations/sql/20261006120000_py_api_create_notes.sql
 - box/render.py
 - Makefile
 status: draft
-subtitle: The drafts, as migrations the box will run
-title: 3 Make It a Migration
+subtitle: Step 4, the code
+title: "3.4 Make It a Migration: the Implementation"
 version: v0.1.0
 ---
 
-`[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
-these mean, and what they do not: [the tutorials'
-page](README.md) §5.
-
-> [!WARNING]
-> Written for an earlier tutorial 1, which let people
-> in by admission rules and gave everyone `deny-all`.
-> Tutorials 1 and 2 have since moved roles and
-> starting roles into tutorial 2. This page is next to
-> be reworked; until then it does not run as written.
-
 ## 1 Before You Start
 
-- [What you need](README.md) §2, installed and checked
-- `users-draft.sql` and `notes-draft.sql`, from
-  tutorials [1](1-authentication.md) and
-  [2](2-authorisation/README.md)
-- A local stack, up
-- [Write a
-  migration](../migrations/write-a-migration.md) is the
-  how-to; this page follows it
+- [The contract](2-contract.md): every file and
+  function below is one of its entries
+- [The tests](3-tests.md), saved as `test-3.sh`, run
+  once and failing
+
+Make the four migrations in this order: `make db-new`
+stamps each with the time, and the time is the order.
+Run the tests after any step, if you like: the count of
+passes only grows.
 
 ## 2 Give the Unit Its Prefix
 
-A migration's names carry a prefix the manifest gives a
-service, and `make check` refuses any other. `/users`
-will be routes of the service you write it in: py-api,
-for tutorial 4's Python, or js-api, for tutorial 5's
-JavaScript. Not a service of its own: that would be a
-host, an image and a build more, and memory from the
-box's 1 GiB, for five routes.
-
-So that service owns the `users` prefix beside its own.
 In `box/project.json`, py-api's `"prefix": "py_api"`
-becomes, its own first:
+becomes, its own first (R1, T3.1):
 
 ``` json
 "prefixes": ["py_api", "users"],
@@ -72,53 +50,136 @@ services as before, agreeing with `services/`:
 make check
 ```
 
-## 3 The Users Migration
+## 3 The People
 
 Make the file. Expect its path,
-`migrations/sql/<time>_users_create_tables.sql`:
+`migrations/sql/<version>_users_create_people.sql`:
 
 ``` sh
-make db-new PREFIX=users NAME=create_tables
+make db-new PREFIX=users NAME=create_people
 ```
 
 Under `-- migrate:up`, after the two `SET` lines, the
-whole of `users-draft.sql`, as it is. Under
-`-- migrate:down`, its undoing: every function, then
-every table, each in the reverse of the order it was
-made, since a table cannot go before those that refer
-to it. The file, whole:
+whole of tutorial 1's part of `users-draft.sql`, as it
+is. Under `-- migrate:down`, its undoing: the
+functions, then the tables, each in the reverse of the
+order it was made, since a table cannot go before one
+that refers to it. A `squawk-ignore` line above each
+drop tells the linter the drop is meant. The file,
+whole:
 
 ``` sql
--- The users unit: who may come in, and what each person may do
--- (docs/tutorials/1-authentication.md, 2-authorisation/). Every name
--- carries the prefix users_. Other units call users_may alone, the one
--- function published for them (docs/conduct/database.md §3).
+-- The users unit's people: who signed in, as the sign-in says, and the
+-- profile the project keeps of each (docs/tutorials/1-authentication.md).
+-- Every name carries the prefix users_.
 
 -- migrate:up
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
 
--- The roles. deny-all grants nothing: whoever holds it alone may do
--- nothing, as if signed out
+-- The people who have signed in, one row each, by Cognito's sub: what
+-- the sign-in says of them. Rewritten at every sign-in, since Cognito
+-- is its source of truth
+CREATE TABLE IF NOT EXISTS users_people (
+  sub text PRIMARY KEY,
+  email text NOT NULL CHECK (email = lower(email)),
+  provider text NOT NULL,
+  first_seen_at timestamptz NOT NULL DEFAULT now(),
+  seen_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- What the project keeps of each person beyond the sign-in. Its columns
+-- are the project's to choose; a sign-in never writes them
+CREATE TABLE IF NOT EXISTS users_profiles (
+  sub text PRIMARY KEY REFERENCES users_people (sub) ON DELETE CASCADE,
+  display_name text NOT NULL DEFAULT '' CHECK (length(display_name) <= 80),
+  affiliation text NOT NULL DEFAULT '' CHECK (length(affiliation) <= 120),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- At every sign-in: a person whose e-mail is verified is recorded, or
+-- their record brought up to date, and given an empty profile the first
+-- time. True if recorded; anyone else is not kept
+CREATE OR REPLACE FUNCTION users_person_see(p_sub text, p_email text, p_verified boolean, p_provider text)
+  RETURNS boolean LANGUAGE plpgsql AS $$
+BEGIN
+  IF NOT coalesce(p_verified, false) OR coalesce(p_email, '') = '' THEN
+    RETURN false;
+  END IF;
+  INSERT INTO users_people (sub, email, provider) VALUES (p_sub, lower(p_email), p_provider)
+    ON CONFLICT (sub) DO UPDATE SET email = EXCLUDED.email, provider = EXCLUDED.provider, seen_at = now();
+  INSERT INTO users_profiles (sub) VALUES (p_sub) ON CONFLICT DO NOTHING;
+  RETURN true;
+END
+$$;
+
+-- A person's record and profile together; no row if never recorded
+CREATE OR REPLACE FUNCTION users_profile_get(p_sub text)
+  RETURNS TABLE (sub text, email text, provider text, display_name text, affiliation text)
+  LANGUAGE sql STABLE AS $$
+  SELECT p.sub, p.email, p.provider, f.display_name, f.affiliation
+  FROM users_people p JOIN users_profiles f ON f.sub = p.sub WHERE p.sub = p_sub
+$$;
+
+-- A person's own profile, changed. The service passes the caller's own
+-- sub; who may change another's is tutorial 2's
+CREATE OR REPLACE FUNCTION users_profile_set(p_sub text, p_display_name text, p_affiliation text) RETURNS void
+  LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE users_profiles SET display_name = p_display_name, affiliation = p_affiliation, updated_at = now()
+    WHERE sub = p_sub;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'no such person' USING ERRCODE = 'no_data_found';
+  END IF;
+END
+$$;
+
+-- migrate:down
+SET lock_timeout = '2s';
+SET statement_timeout = '30s';
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_profile_set(text, text, text);
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_profile_get(text);
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_person_see(text, text, boolean, text);
+-- squawk-ignore ban-drop-table
+DROP TABLE IF EXISTS users_profiles;
+-- squawk-ignore ban-drop-table
+DROP TABLE IF EXISTS users_people;
+```
+
+The draft was already written to run twice:
+`IF NOT EXISTS` on every table and index, `OR REPLACE`
+on every function, `ON CONFLICT DO NOTHING` on every
+seed. A migration that fails part way runs again (R8).
+
+## 4 The Roles
+
+``` sh
+make db-new PREFIX=users NAME=create_roles
+```
+
+Under `-- migrate:up`, tutorial 2's part of
+`users-draft.sql`. Under `-- migrate:down`, the trigger
+first, since it lives on tutorial 1's `users_people`,
+which this file must leave as it found it; then the
+functions, then the tables:
+
+``` sql
+-- The users unit's roles: what each person may do, an access control
+-- matrix, and the role a person starts with
+-- (docs/tutorials/2-authorisation/). Other units call users_may alone,
+-- the one function published for them (docs/conduct/database.md §3).
+
+-- migrate:up
+SET lock_timeout = '2s';
+SET statement_timeout = '30s';
+
+-- The roles. A person who holds none may do nothing
 CREATE TABLE IF NOT EXISTS users_roles (
   role text PRIMARY KEY CHECK (role ~ '^[a-z][a-z0-9-]{1,30}$'),
   about text NOT NULL DEFAULT ''
-);
-
--- Who may come in, and with which role: the first rule, by position,
--- whose pattern the verified e-mail is LIKE. No rule, no entry
-CREATE TABLE IF NOT EXISTS users_admission (
-  position bigint PRIMARY KEY,
-  pattern text NOT NULL CHECK (pattern = lower(pattern)),
-  role text NOT NULL REFERENCES users_roles (role)
-);
-
--- The people admitted, by Cognito's sub
-CREATE TABLE IF NOT EXISTS users_people (
-  sub text PRIMARY KEY,
-  email text NOT NULL,
-  admitted_at timestamptz NOT NULL DEFAULT now(),
-  seen_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- Who holds which role
@@ -128,45 +189,6 @@ CREATE TABLE IF NOT EXISTS users_members (
   PRIMARY KEY (sub, role)
 );
 CREATE INDEX IF NOT EXISTS users_members_role_idx ON users_members (role);
-
--- The door. Someone already in is seen again; someone new comes in if
--- their e-mail is verified and a rule matches it, with that rule's
--- role. True if the person is in
-CREATE OR REPLACE FUNCTION users_admit(p_sub text, p_email text, p_verified boolean) RETURNS boolean
-  LANGUAGE plpgsql AS $$
-DECLARE
-  v_role text;
-BEGIN
-  UPDATE users_people SET seen_at = now() WHERE sub = p_sub;
-  IF FOUND THEN
-    RETURN true;
-  END IF;
-  IF NOT p_verified OR coalesce(p_email, '') = '' THEN
-    RETURN false;
-  END IF;
-  SELECT a.role INTO v_role FROM users_admission a
-    WHERE lower(p_email) LIKE a.pattern ORDER BY a.position LIMIT 1;
-  IF v_role IS NULL THEN
-    RETURN false;
-  END IF;
-  INSERT INTO users_people (sub, email) VALUES (p_sub, lower(p_email)) ON CONFLICT (sub) DO NOTHING;
-  INSERT INTO users_members (sub, role) VALUES (p_sub, v_role) ON CONFLICT DO NOTHING;
-  RETURN true;
-END
-$$;
-
--- The roles the project starts with; what each may do is tutorial 2's
-INSERT INTO users_roles (role, about) VALUES
-  ('deny-all', 'admitted, and may do nothing: where everyone starts'),
-  ('reader', 'reads notes'),
-  ('member', 'reads and writes notes'),
-  ('admin', 'reads the people and the matrix, grants and revokes roles')
-ON CONFLICT DO NOTHING;
-
--- Everyone may come in, and starts as deny-all
-INSERT INTO users_admission (position, pattern, role) VALUES
-  (100, '%', 'deny-all')
-ON CONFLICT DO NOTHING;
 
 -- The access control matrix: one row for each cell that says yes. A
 -- permission is <unit>.<verb>: notes.read, users.grant
@@ -185,7 +207,7 @@ CREATE OR REPLACE FUNCTION users_may(p_sub text, p_permission text) RETURNS bool
 $$;
 COMMENT ON FUNCTION users_may(text, text) IS 'published: may this person do this? Called by every unit';
 
--- The caller: e-mail, roles and permissions; no row if not admitted
+-- The caller: e-mail, roles and permissions; no row if never signed in
 CREATE OR REPLACE FUNCTION users_me(p_sub text)
   RETURNS TABLE (sub text, email text, roles text[], permissions text[])
   LANGUAGE sql STABLE AS $$
@@ -196,9 +218,9 @@ CREATE OR REPLACE FUNCTION users_me(p_sub text)
   FROM users_people p WHERE p.sub = p_sub
 $$;
 
--- Everyone admitted, with their roles: users.read
+-- Everyone signed in, with their roles: users.read
 CREATE OR REPLACE FUNCTION users_list(p_caller text)
-  RETURNS TABLE (sub text, email text, roles text[], admitted_at timestamptz, seen_at timestamptz)
+  RETURNS TABLE (sub text, email text, roles text[], first_seen_at timestamptz, seen_at timestamptz)
   LANGUAGE plpgsql STABLE AS $$
 #variable_conflict use_column
 BEGIN
@@ -207,7 +229,7 @@ BEGIN
   END IF;
   RETURN QUERY
     SELECT p.sub, p.email, coalesce(array_agg(m.role ORDER BY m.role) FILTER (WHERE m.role IS NOT NULL), '{}'),
-           p.admitted_at, p.seen_at
+           p.first_seen_at, p.seen_at
     FROM users_people p LEFT JOIN users_members m ON m.sub = p.sub
     GROUP BY p.sub ORDER BY p.email LIMIT 1000;
 END
@@ -266,7 +288,35 @@ BEGIN
 END
 $$;
 
--- The matrix the project starts with
+-- Starting roles: at a person's first sign-in, the first rule by
+-- position whose pattern their e-mail is LIKE gives its role. Read
+-- once; no match, no role
+CREATE TABLE IF NOT EXISTS users_starting_roles (
+  position bigint PRIMARY KEY,
+  pattern text NOT NULL CHECK (pattern = lower(pattern)),
+  role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE
+);
+
+CREATE OR REPLACE FUNCTION users_person_start() RETURNS trigger
+  LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO users_members (sub, role)
+    SELECT NEW.sub, s.role FROM users_starting_roles s
+    WHERE NEW.email LIKE s.pattern ORDER BY s.position LIMIT 1
+  ON CONFLICT DO NOTHING;
+  RETURN NULL;
+END
+$$;
+CREATE OR REPLACE TRIGGER users_people_start AFTER INSERT ON users_people
+  FOR EACH ROW EXECUTE FUNCTION users_person_start();
+
+-- The roles and the matrix the project starts with; no starting roles
+INSERT INTO users_roles (role, about) VALUES
+  ('reader', 'reads notes'),
+  ('member', 'reads and writes notes'),
+  ('admin', 'reads the people and the matrix, grants and revokes roles')
+ON CONFLICT DO NOTHING;
+
 INSERT INTO users_grants (role, permission) VALUES
   ('reader', 'notes.read'),
   ('member', 'notes.read'),
@@ -278,6 +328,10 @@ ON CONFLICT DO NOTHING;
 -- migrate:down
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
+-- squawk-ignore ban-drop-trigger
+DROP TRIGGER IF EXISTS users_people_start ON users_people;
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_person_start();
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS users_revoke(text, text, text);
 -- squawk-ignore ban-drop-function
@@ -290,82 +344,21 @@ DROP FUNCTION IF EXISTS users_list(text);
 DROP FUNCTION IF EXISTS users_me(text);
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS users_may(text, text);
--- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS users_admit(text, text, boolean);
 -- squawk-ignore ban-drop-table
-DROP TABLE IF EXISTS users_members;
--- squawk-ignore ban-drop-table
-DROP TABLE IF EXISTS users_people;
--- squawk-ignore ban-drop-table
-DROP TABLE IF EXISTS users_admission;
+DROP TABLE IF EXISTS users_starting_roles;
 -- squawk-ignore ban-drop-table
 DROP TABLE IF EXISTS users_grants;
+-- squawk-ignore ban-drop-table
+DROP TABLE IF EXISTS users_members;
 -- squawk-ignore ban-drop-table
 DROP TABLE IF EXISTS users_roles;
 ```
 
-The draft was already written to run twice:
-`IF NOT EXISTS` on every table and index, `OR REPLACE`
-on every function, `ON CONFLICT DO NOTHING` on every
-seed. A migration that fails part way runs again.
+## 5 The First Admin
 
-## 4 Complete
-
-A unit's migration is complete when nothing it makes is
-left without a way to use it, and nothing it names is
-missing. Check it against the draft's own parts:
-
-  ----------------------------------------------------
-  Every              Has
-  ------------------ ---------------------------------
-  Table              An accessor that writes it, and
-                     one that reads it
-
-  Accessor that acts A permission it asks `users_may`
-  for a caller       for, and a role in the seeds that
-                     holds it
-
-  Role in a seed     A row in `users_roles`
-
-  Object the up      A `DROP` in the down
-  makes              
-  ----------------------------------------------------
-
-Once applied (§8), list what the unit made; expect five
-tables, the index and seven functions, all `users_*`:
-
-``` sh
-psql "${MIGRATOR_URL}" -c "SELECT 'table' AS kind, tablename AS name FROM pg_tables WHERE tablename LIKE 'users\_%' UNION ALL SELECT 'index', indexname FROM pg_indexes WHERE indexname LIKE 'users\_%\_idx' UNION ALL SELECT 'function', proname FROM pg_proc WHERE proname LIKE 'users\_%' ORDER BY 1, 2"
-```
-
-## 5 Consistent
-
-The data keeps its own rules, so no caller has to:
-
-- **Primary keys:** one membership a person and role,
-  one grant a role and permission, one rule a position
-- **Foreign keys:** no grant, member or rule for a role
-  that does not exist; no member who is not a person. A
-  role deleted takes its grants and memberships with
-  it; a role in a rule cannot be deleted
-- **`CHECK`s:** a role's name, a permission's
-  `<unit>.<verb>`, a rule's pattern in lower case
-- **The last `users.grant`:** `users_revoke` refuses to
-  take it, `23001`
-
-Try one, in a transaction rolled back. Expect
-`violates foreign key constraint`:
-
-``` sh
-psql "${MIGRATOR_URL}" -c BEGIN -c "INSERT INTO users_grants VALUES ('nobody', 'notes.read')" -c ROLLBACK
-```
-
-## 6 The First Admin
-
-Everyone comes in as `deny-all`, and only an admin
-gives roles: someone must be the first. A migration of
-its own, so it is the one place your address is
-written. Make it:
+Nobody starts with a role, and only an admin gives
+roles, so someone must be the first. A migration of its
+own, so it is the one place an address is written (R7):
 
 ``` sh
 make db-new PREFIX=users NAME=first_admin
@@ -374,15 +367,15 @@ make db-new PREFIX=users NAME=first_admin
 And write, with **your** address for `you@example.org`:
 
 ``` sql
--- The project's first admin, by e-mail: admitted as admin at their
--- first sign-in, or made admin now if already in. Your own address:
--- the repository holds it, so mind who can read the repository
--- (docs/tutorials/3-the-migration.md §5).
+-- The project's first admin, by e-mail: a starting role, admin, for
+-- their first sign-in, or admin now if they have signed in already.
+-- Your own address: the repository holds it, so mind who can read the
+-- repository (docs/tutorials/3-the-migration/4-implementation.md §4).
 
 -- migrate:up
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
-INSERT INTO users_admission (position, pattern, role) VALUES (1, 'you@example.org', 'admin')
+INSERT INTO users_starting_roles (position, pattern, role) VALUES (1, 'you@example.org', 'admin')
 ON CONFLICT DO NOTHING;
 INSERT INTO users_members (sub, role)
   SELECT p.sub, 'admin' FROM users_people p WHERE p.email = 'you@example.org'
@@ -391,19 +384,23 @@ ON CONFLICT DO NOTHING;
 -- migrate:down
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
-DELETE FROM users_admission WHERE position = 1 AND pattern = 'you@example.org';
+DELETE FROM users_starting_roles WHERE position = 1 AND pattern = 'you@example.org';
 ```
 
-A rule at position 1, before every other: at your first
-sign-in, you come in as `admin`. If you are in already,
-the second statement makes you one now.
+A starting role at position 1, before every other: at
+your first sign-in, you start as `admin`. If you have
+signed in already, the second statement makes you one
+now.
 
 > [!WARNING]
 > The address is in the repository for good, and in its
 > history. If the repository is public, so is it. An
 > address made for the role keeps your own out of it.
 
-## 7 The Notes Migration
+Then run the tests with your address:
+`FIRST_ADMIN=<your address> ./test-3.sh`.
+
+## 6 The Notes
 
 py-api's prefix, py-api's file:
 
@@ -425,6 +422,7 @@ under `-- migrate:down`, its undoing:
 -- migrate:up
 SET lock_timeout = '2s';
 SET statement_timeout = '30s';
+
 ALTER TABLE py_api_notes ADD COLUMN IF NOT EXISTS updated_at timestamptz;
 
 -- A new note, the caller its owner: notes.write
@@ -503,19 +501,20 @@ DROP FUNCTION IF EXISTS py_api_note_new(text, text);
 ALTER TABLE py_api_notes DROP COLUMN IF EXISTS updated_at;
 ```
 
-Its file name sorts after the users migration's, so it
-runs after: its `py_api_note_*` call `users_may`, which
-must exist first.
+Its file sorts after the roles', so it runs after: its
+functions call `users_may`, which must exist first
+(R2).
 
-## 8 Lint, and Apply
+## 7 Lint, and Apply
 
-Expect `Found 0 issues`:
+Squawk reads every migration for what could lock or
+lose data on a live database. Expect `Found 0 issues`:
 
 ``` sh
 make db-lint
 ```
 
-Then apply. Expect `Applied:` for each of the three:
+Then apply. Expect `Applied:` for each of the four:
 
 ``` sh
 make db CMD=up
@@ -527,51 +526,7 @@ On the native stack, dbmate itself, as the migrator:
 dbmate --url "${MIGRATOR_URL}" -d migrations/sql --no-dump-schema up
 ```
 
-Then §4's list.
-
-## 9 Prove the Downs
-
-> [!CAUTION]
-> A rollback runs the down, and its rows go with what
-> it drops: every person, role and note the three made.
-> On your machine, that is test data alone.
-
-Note the schema as it stands:
-
-``` sh
-pg_dump -s --no-owner --no-privileges "${MIGRATOR_URL}" | grep -v '^\\\|^--\|^$' > /tmp/after-up.sql
-```
-
-Roll the three back, newest first. Expect
-`Rolled back:` three times:
-
-``` sh
-make db CMD=rollback
-make db CMD=rollback
-make db CMD=rollback
-```
-
-The schema now should be the template's, as
-`migrations/schema.sql` was before you began. Expect no
-output:
-
-``` sh
-diff <(pg_dump -s --no-owner --no-privileges "${MIGRATOR_URL}" | grep -v '^\\\|^--\|^$') <(git show HEAD:migrations/schema.sql | grep -v '^\\\|^--\|^$\|^INSERT\|^    (')
-```
-
-Apply them again, and expect the schema exactly as it
-was, no output:
-
-``` sh
-make db CMD=up
-diff <(pg_dump -s --no-owner --no-privileges "${MIGRATOR_URL}" | grep -v '^\\\|^--\|^$') /tmp/after-up.sql
-```
-
-On the native stack,
-`dbmate --url "${MIGRATOR_URL}" -d migrations/sql --no-dump-schema rollback`
-for `make db CMD=rollback`, and `up` for `up`.
-
-## 10 Write the Schema, and Commit
+## 8 Write the Schema, and Commit
 
 Expect `Writing:`:
 
@@ -582,46 +537,27 @@ make db CMD=dump
 On the native stack,
 `dbmate --url "${MIGRATOR_URL}" -d migrations/sql -s migrations/schema.sql dump`.
 
-Commit the three migrations, `schema.sql` and
-`box/project.json` together. Delete the drafts: from
-here on, the migrations are the truth, and a change to
-them is a new migration.
+Run [the tests](3-tests.md) once more; expect
+`8 of 8 pass`. Then commit the four migrations,
+`schema.sql`, `box/project.json` and `test-3.sh`
+together. Delete `users-draft.sql` and
+`notes-draft.sql`: from here on, the migrations are the
+truth, and a change to them is a new migration.
 
-## 11 What Reaches the Box
+## 9 What Reaches the Box
 
 A release tag builds the migrations image and records
 its digest; the manifest's change is handed to the
 box's owner. No new host or image: `users` is a prefix
 of py-api or js-api ([How a release reaches the
-box](../onboarding/ci-cd.md)). The box runs the
+box](../../onboarding/ci-cd.md)). The box runs the
 migrations once its PostgreSQL is there, the last step
 of its `feature/postgres`; until then, the database is
 your stack's alone.
 
-## 12 What Can Go Wrong
+## 10 See Also
 
-- **`make check`:
-  `not <14-digit version>_<prefix>_<what>.sql`.**
-  `users` is not among a service's `prefixes` yet, §2;
-  or the file was named by hand
-- **`function users_may(text, text) does not exist`,
-  applying the notes.** Its file sorts before the users
-  migration's. Rename it with a later time; nothing has
-  run anywhere else yet
-- **The diff after the rollbacks shows `GRANT` lines.**
-  `--no-privileges` is missing: the dev stack's logins
-  hold grants that `schema.sql` does not record
-- **`permission denied for table schema_migrations`, as
-  the services' login.** As meant: only the migrator
-  writes dbmate's ledger
-- **A table you expect is missing, and the migration
-  shows `[X]`.** It was edited after it ran. Write a
-  new one
-
-## 13 See Also
-
-- [4 users in Python](4-users-in-python.md), or [5 in
-  JavaScript](5-users-in-javascript.md): next
+- [The refinement](5-refinement.md): next
 - [Write a
-  migration](../migrations/write-a-migration.md)
-- [The database's conduct](../conduct/database.md)
+  migration](../../migrations/write-a-migration.md):
+  the rules for a migration that changes a live table

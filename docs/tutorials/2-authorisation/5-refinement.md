@@ -174,7 +174,8 @@ passes 26 of 27.
 
 ## 8 See Also
 
-- [3 Make it a migration](../3-the-migration.md): next,
-  the drafts as migrations, as they are
+- [3 Make it a
+  migration](../3-the-migration/README.md): next, the
+  drafts as migrations, as they are
 - [The cycle](../../conduct/the-cycle/README.md) §3:
   what to refine, in general

@@ -58,7 +58,7 @@ welcome: give `ui/` a `package.json` whose `build`
 writes `ui/dist/`, and the release builds it; `make ui`
 then runs Vite's dev server, its config in
 `ui/public/config.js` ([A Svelte
-UI](../tutorials/6-a-svelte-ui.md)).
+UI](../tutorials/5-a-svelte-ui/README.md)).
 
 ## 5 What Can Go Wrong
 

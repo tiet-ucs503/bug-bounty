@@ -71,11 +71,13 @@ whenever the contract is silent.
 - **2 What each may do:** the access control matrix,
   roles by permissions, a cell yes or nothing; and
   notes as (u=rw, a=r)
-- **4 /users:** the five routes, each with the
+- **3 Make it a migration:** the four migrations, in
+  their order
+- **4 /users:** the six routes, each with the
   permission it needs
-- **6 A Svelte UI:** the dashboard's three panels: who
-  you are, the notes, the people
-- **7 Uploads:** the key,
+- **5 A Svelte UI:** what the dashboard shows, by what
+  `/users/me` answers
+- **6 Uploads:** the key,
   `objects/<owner's tag>/<the bytes' SHA-256>`, and an
   object's life, drawn
 

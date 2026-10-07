@@ -1,12 +1,12 @@
 ---
 abstract: |
-  py-api's half of the uploads: a route that takes a
-  file's bytes, names them, writes the row, stores the
-  object and confirms it; a route that sets a note's
-  objects; and the collector, which deletes from the
-  bucket what no note needs, then forgets it. Tested
-  offline, then end to end through nginx, with a
-  collector made quick.
+  Step 4 of tutorial 6, part 3. py-api's half of the
+  uploads: a route that takes a file's bytes, names
+  them, writes the row, stores the object and confirms
+  it; a route that sets a note's objects; and the
+  collector, which deletes from the bucket what no note
+  needs, then forgets it. Tested offline, then end to
+  end through nginx, with a collector made quick.
 date: 2026-10-06
 keywords:
 - tutorial
@@ -20,7 +20,7 @@ sources:
 - box/project.json
 status: draft
 subtitle: Upload, link, collect
-title: 7.3 The Service
+title: "6.4 Uploads: the Service"
 version: v0.1.0
 ---
 
@@ -28,8 +28,8 @@ version: v0.1.0
 
 - [What you need](../README.md) §2, installed and
   checked
-- [7.2 The database](2-the-database.md), applied
-- py-api with tutorial 6's notes routes
+- [The database](4-the-database.md), applied
+- py-api with tutorial 5's notes routes
 
 ## 2 The Routes
 
@@ -251,9 +251,39 @@ def collector():
   refuses stays for the next round. Its failures are
   logged, and it goes on
 
+**Document the routes.** In `docs/py-api/api.md`, after
+the starter's three in §2, the entries from [the
+contract](2-contract.md) §2, in the page's own form:
+
+``` markdown
+POST /objects/new
+: `objects.write`. The body is the file, its type in
+  `Content-Type`: PNG, JPEG, GIF, WebP, PDF or plain
+  text, 1 MiB at most. `201` and
+  `{key, url, size, type}`; the same bytes again, the
+  same key. `400` for no body; `403` without it; `413`
+  over 1 MiB; `415` for another type; `502` if the
+  bucket refuses
+
+GET /objects/mine
+: Signed in. `200` and a list of the caller's
+  `{key, size, type, created_at, refs, url}`, newest
+  first, 500 at most
+
+PUT /notes/{id}/objects
+: `notes.write`, and the note your own. `{keys}`, the
+  note's whole list, 20 at most. `200` and
+  `{id, keys}`. `403`; `404` for no such note, or an
+  object not yours or not stored; `422` for more than
+  20
+```
+
+And in the entry for `GET /notes`, at its end: "Each
+note also has `objects`, a list of `{key, type}`".
+
 ## 4 Its Tests
 
-Beside tutorial 6's, in `test/test_main.py`:
+Beside tutorial 5's, in `test/test_main.py`:
 
 ``` python
     def test_an_upload_of_a_type_not_allowed_is_refused(self):
@@ -284,7 +314,8 @@ and `start`. Delete `dev/dev.env` when you are done.
 
 ## 6 Upload, Link, Collect
 
-Asha, a member since tutorial 4, and an image of hers.
+Asha, made a member by you, the first admin ([tutorial
+4](../4-users/2-contract.md) §2), and an image of hers.
 Any PNG will do; this one is made here:
 
 ``` sh
@@ -344,11 +375,12 @@ curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/objects/mine
 
 A tag builds py-api and the migrations; the manifest's
 new routes are handed over. Before the uploads work on
-the box, its owner adds what [7 Uploads](README.md) §5
-lists: the bucket's policy for `objects/*` and
-`store.env`. Until then a `POST /objects/new` answers
-`502`, `the bucket answered 403`, and its row is
-collected after the grace.
+the box, its owner adds what [the
+contract](2-contract.md) §5 lists: the bucket's policy
+for `objects/*` and `store.env`. Until then a
+`POST /objects/new` answers `502`,
+`the bucket answered 403`, and its row is collected
+after the grace.
 
 ## 8 What Can Go Wrong
 
@@ -368,4 +400,4 @@ collected after the grace.
 
 ## 9 See Also
 
-- [7.4 The UI](4-the-ui.md): next
+- [The UI](4-the-ui.md): next

@@ -31,7 +31,7 @@ every object named `py_api_*`, `js-api` every
 `js_api_*`. The manifest names each service's prefix,
 or its prefixes, when one service holds more than one
 part, as py-api holding `/users` does ([tutorial
-4](../tutorials/4-users-in-python.md)); `make check`
+4](../tutorials/4-users/README.md)); `make check`
 refuses a migration whose objects carry another's.
 
 For a small team, one database is simpler to run, back

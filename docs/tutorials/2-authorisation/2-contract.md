@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 2 of tutorial 2: what tutorials 4 to 7 may rely
+  Step 2 of tutorial 2: what tutorials 3 to 6 may rely
   on, and nothing about how. Each accessor's signature,
   the permission it needs, what it answers, and how it
   refuses; the one function the users unit publishes;
@@ -23,12 +23,14 @@ version: v0.1.0
 
 ## 1 Who Relies on It
 
-- **Tutorials 4 and 5,** `/users` in a service: they
-  call the users unit's accessors and turn their
-  refusals into HTTP
-- **Tutorial 6,** the dashboard: it shows what
+- **Tutorial 3,** the migrations, which carry these
+  accessors as they are
+- **Tutorial 4,** `/users` in a service: it calls the
+  users unit's accessors and turns their refusals into
+  HTTP
+- **Tutorial 5,** the dashboard: it shows what
   `users_me` answers
-- **Tutorial 7,** uploads: py-api's objects ask
+- **Tutorial 6,** uploads: py-api's objects ask
   `users_may`, as the notes do
 - **Any unit you add later:** it asks `users_may`, and
   nothing else of the users unit

@@ -28,7 +28,7 @@ the browser loads. It is a starter, to be replaced by
 yours, in any framework that writes a folder of static
 files. Once `ui/` has a `package.json`, the release
 builds it and syncs `ui/dist/`; [A Svelte
-UI](../tutorials/6-a-svelte-ui.md) does so.
+UI](../tutorials/5-a-svelte-ui/README.md) does so.
 
 ## 2 Sign-in
 

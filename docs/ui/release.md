@@ -58,7 +58,8 @@ and syncs that folder instead of `ui/`; CI builds it on
 every push. A framework that builds elsewhere: change
 the job to sync that folder. The bucket expects static
 files with `index.html` at the root. [A Svelte
-UI](../tutorials/6-a-svelte-ui.md) is the worked case.
+UI](../tutorials/5-a-svelte-ui/README.md) is the worked
+case.
 
 ## 5 What Can Go Wrong
 

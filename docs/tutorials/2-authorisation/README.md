@@ -55,8 +55,8 @@ its refusals.
     drawn as one table, the matrix, and ten rules read
     from it. Until the contract exists, the concept is
     the source of truth
-2.  **[The contract](2-contract.md).** What tutorials 4
-    to 7 rely on: each accessor's signature, the
+2.  **[The contract](2-contract.md).** What tutorials 3
+    to 6 rely on: each accessor's signature, the
     permission it needs, and how it refuses
 3.  **[The tests](3-tests.md).** Each rule asked what
     could go wrong, and the answers fixed as 27 tests,
@@ -71,7 +71,7 @@ its refusals.
     concept. One refinement made while this tutorial
     was written, shown whole
 
-The cycle then begins again. Tutorial 7 is such a turn:
+The cycle then begins again. Tutorial 6 is such a turn:
 it adds `objects.write` to the matrix, and the concept,
 contract and tests grow with it.
 
@@ -93,4 +93,5 @@ contract and tests grow with it.
   concept](../../conduct/the-cycle/concept.md) and [the
   tests](../../conduct/the-cycle/tests.md): the five
   steps in general
-- [3 Make it a migration](../3-the-migration.md): next
+- [3 Make it a
+  migration](../3-the-migration/README.md): next

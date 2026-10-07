@@ -38,6 +38,13 @@ POST /echo
   with `Cache-Control: no-store`. `401` without a valid
   token; `413` over 1 MiB
 
+Your fork adds routes as [the
+tutorials](../tutorials/README.md) go: `/users` in
+tutorial 4, if you take Python there; `/notes` in
+tutorial 5; `/objects` in tutorial 6. Each tutorial
+gives the entries for this page; add them here, in the
+same commit as the routes.
+
 ## 3 What the Box Answers Instead
 
   ----------------------------------------------------

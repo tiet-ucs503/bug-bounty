@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Seven tutorials, in order, that take a fork of the
+  Six tutorials, in order, that take a fork of the
   template from a sign-in to a notes dashboard with
   uploads: who is signed in, what each person may do,
   the database that holds both, `/users` in py-api or
@@ -66,22 +66,24 @@ flowchart LR
     [the project's five
     steps](../conduct/the-cycle/README.md): concept,
     contract, tests, implementation, refinement
-3.  [Make it a migration](3-the-migration.md): both as
-    migrations, each proved down and up
-4.  [/users in Python](4-users-in-python.md): who comes
-    in, as routes of py-api, at `py-api.<zone>/users`
-5.  [/users in JavaScript](5-users-in-javascript.md):
-    or the same, in js-api, at `js-api.<zone>/users`
-6.  [A Svelte UI](6-a-svelte-ui.md): the dashboard, who
-    you are, the notes, the people
-7.  [Uploads](7-uploads/README.md): files on notes, in
+3.  [Make it a migration](3-the-migration/README.md):
+    both as migrations, each proved down and up
+4.  [/users](4-users/README.md): the door, the profile
+    and the roles, as routes of py-api in Python, or of
+    js-api in JavaScript
+5.  [A Svelte UI](5-a-svelte-ui/README.md): the
+    dashboard: who you are, your profile, the notes,
+    the people
+6.  [Uploads](6-uploads/README.md): files on notes, in
     the static bucket, collected when no note needs
     them
 
-Take 4 **or** 5: the same routes, the same database, in
-the language your team writes. The notes and uploads
-are py-api's either way. The rest are in order; each
-starts where the one before ended.
+From tutorial 2 on, each follows the five steps. In
+tutorial 4, take Python **or** JavaScript: the same
+routes, the same tests, in the language your team
+writes. The notes and uploads are py-api's either way.
+The rest are in order; each starts where the one before
+ended.
 
 Every step on these pages was run, as written, in a
 fork of the template v0.1.0. Where, and what that does
@@ -100,7 +102,7 @@ more, and each links back to this section.
   - [the native stack](../onboarding/shared-box.md),
     without containers or root: hosts at
     `*.localhost:<your NGINX_PORT>`
-- **A browser,** for pages 6 and 7.4
+- **A browser,** for tutorials 5 and 6
 - **Reading SQL,** and Python or JavaScript
 
 ### 2.1 Install Them
@@ -155,17 +157,17 @@ macOS's recipe is written but not yet tried.
 - **`curl` and `jq` 1.6 or later:** every page
 - **Python 3.12 or later:** the render behind
   `make check` and `make dev`, tutorial 4's
-  `make test`, and the test image 7.3 draws
+  `make test`, and the test image tutorial 6 draws
 - **`psql` and `pg_dump`, PostgreSQL 17 or later:**
-  tutorials 1, 2, 3 and 7.2. `pg_dump` refuses a server
+  tutorials 1, 2, 3 and 6. `pg_dump` refuses a server
   newer than itself, and the stack's is 17. Debian and
   Ubuntu get them from PostgreSQL's own repository
-- **`openssl` and `base64`:** 7.1, a file's SHA-256 as
-  S3 wants it
+- **`openssl` and `base64`:** tutorial 6, a file's
+  SHA-256 as S3 wants it
 - **Node 24 or later, with `npm`:** tutorial 3, for
-  Squawk by `npx`; 5, 6 and 7.4. Debian and Ubuntu get
-  it from NodeSource's repository
-- **`diff`, `cmp` and `grep`:** tutorials 3 and 7.3
+  Squawk by `npx`; 4, 5 and 6. Debian and Ubuntu get it
+  from NodeSource's repository
+- **`diff`, `cmp` and `grep`:** tutorials 3 and 6
 - **With `STACK`:** Docker with Compose 2.20 or later,
   or Podman 5 with podman-compose 1.5. dbmate and the
   database run in the stack's containers, so `make db`
@@ -191,7 +193,7 @@ Security notes on these tools are §6.
 
 ## 3 Conventions
 
-Each page's commands use these settings; tutorial 7
+Each page's commands use these settings; tutorial 6
 alone needs the last two. Set them once in each shell,
 for your stack.
 
@@ -269,8 +271,8 @@ status:
   stack](../onboarding/shared-box.md); [the dev
   stack](../onboarding/local-dev.md) under [rootless
   Podman](../onboarding/podman.md); the dev stack under
-  [Docker](../onboarding/local-dev.md), its default
-  (§1 there)
+  [Docker](../onboarding/local-dev.md), its default (§1
+  there)
 
 A badge is a record of a run, not a promise: a page
 changed since its run goes back to `NO`.
@@ -287,34 +289,36 @@ changed since its run goes back to `NO`.
   3 Make it a migration     `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  4 /users in Python        `[NO:NATIVE]` `[NO:PODMAN]`
+  4 /users                  `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 /users in JavaScript    `[NO:NATIVE]` `[NO:PODMAN]`
+  5 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
-                            `[NO:DOCKER]`
-
-  7 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
+  6 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
 ### 5.2 Where They Ran
 
 - **The native stack,** without root, in a fork of the
-  template: every step of every page. Tutorial 2's
+  template. Tutorials 1 and 2, every step; tutorial 2's
   tests 2026-10-07, before and after its code, and with
-  its code broken on purpose; the rest 2026-10-06
+  its code broken on purpose. Tutorials 3 to 6, as
+  reworked 2026-10-07: every test script before the
+  code, after it, and with the code broken on purpose;
+  tutorial 4's against both languages. Not yet every
+  other step of their pages as written, so `NO`
 - **The dev stack under rootless Podman,** the same
   fork, 2026-10-06, in part: every image built, the
   door, the notes, an upload read back through nginx,
   the collector. Not every step of every page, and not
   since `/users` moved into py-api and js-api, so `NO`
 - **Docker:** not yet
-- **The dashboard,** tutorials 6 and 7.4, in a headless
-  Chromium: the sign-in, a role granted, notes added
-  and edited, files chosen and dropped
+- **The dashboard,** by its own tests in jsdom, from
+  tutorials 5 and 6; and, before the rework, in a
+  headless Chromium: the sign-in, a role granted, notes
+  added and edited, files chosen and dropped
 - **Every code block** on the pages is the file that
   ran, checked by a script, character for character
 
@@ -338,9 +342,9 @@ The box does not yet take a project. Its half is being
 built: the points where nginx and Compose include a
 project's pieces, the repositories, buckets and sign-in
 client each project gets, the right to pull its images,
-and the grants tutorial 7 needs on the static bucket
-(§5 of [its overview](7-uploads/README.md)). And the
-box's own database is MariaDB until it moves to
+and the grants tutorial 6 needs on the static bucket
+(§5 of [its contract](6-uploads/2-contract.md)). And
+the box's own database is MariaDB until it moves to
 PostgreSQL, which these pages assume.
 
 ### 5.5 What Only the Box Can Show

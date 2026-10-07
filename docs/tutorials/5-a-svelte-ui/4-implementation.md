@@ -1,19 +1,16 @@
 ---
 abstract: |
-  A dashboard in Svelte: who you are, from the door at
-  `/users/me`; every note, yours to change and the rest
-  to read; and, for whoever may run them, the people
-  and their roles. First py-api's notes routes, over
-  tutorial 3's accessors; then `ui/` turned into a
-  Svelte project by Vite, its sign-in carried over from
-  the starter; then run, built and released.
-date: 2026-10-06
+  Step 4 of tutorial 5: what makes the thirteen tests
+  pass. py-api's notes routes; `ui/` made a Svelte
+  project; the starter's sign-in carried over; the
+  dashboard's five components; then run, built and
+  released.
+date: 2026-10-07
 keywords:
 - tutorial
 - ui
 - svelte
 - py-api
-- authz
 kind: tutorial
 sources:
 - ui/app.js
@@ -21,69 +18,28 @@ sources:
 - .github/workflows/release.yml
 - Makefile
 status: draft
-subtitle: The notes and the people, in a browser
-title: 6 A Svelte UI
+subtitle: Step 4, the code
+title: "5.4 A Svelte UI: the Implementation"
 version: v0.1.0
 ---
 
-`[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
-these mean, and what they do not: [the tutorials'
-page](README.md) §5.
-
-> [!WARNING]
-> Written for an earlier tutorial 1, which let people
-> in by admission rules and gave everyone `deny-all`.
-> Tutorials 1 and 2 have since moved roles and
-> starting roles into tutorial 2. This page is next to
-> be reworked; until then it does not run as written.
-
 ## 1 Before You Start
 
-- [What you need](README.md) §2, installed and checked
-- [4](4-users-in-python.md) or
-  [5](5-users-in-javascript.md): `/users`, in py-api or
-  js-api, running
-- [Svelte 5's
-  runes](https://svelte.dev/docs/svelte/overview), in
-  passing: `$state` for what changes, `$props` for what
-  a component is given
+- [The contract](2-contract.md): its notes routes added
+  to py-api's in `box/project.json` (§3 there)
+- [The tests](3-tests.md), saved as `test-5.sh` and
+  `ui/test/dashboard.test.js`, run once and failing
 
 ## 2 The Notes Routes, in py-api
 
-Tutorial 3's accessors, called by py-api. If you took
-tutorial 4, py-api has its database already: the
-psycopg lines, the imports and the block below are
+Tutorial 2's accessors, called by py-api. If you took
+Python in tutorial 4, py-api has its database already:
+the psycopg lines, the imports and the block below are
 there, and only `pydantic`'s import and the routes are
-new. If you took tutorial 5, add them all now, starting
-with tutorial 4 §3's three psycopg lines in
+new. If you took JavaScript, add them all now, starting
+with the three psycopg lines of [the Python
+page](../4-users/4-implementation-python.md) §2 in
 `services/py-api/requirements.txt`.
-
-Add the routes to py-api's in the manifest:
-
-``` json
-[
-  {
-    "method": "GET",
-    "path": "/notes",
-    "signed_in": true
-  },
-  {
-    "method": "POST",
-    "path": "/notes",
-    "signed_in": true
-  },
-  {
-    "method": "PUT",
-    "path": "/notes/{id}",
-    "signed_in": true
-  },
-  {
-    "method": "DELETE",
-    "path": "/notes/{id}",
-    "signed_in": true
-  }
-]
-```
 
 In `services/py-api/main.py`, these imports beside the
 starter's:
@@ -158,7 +114,9 @@ async def lifespan(_app):
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 ```
 
-And the routes, at the end:
+And the routes, at the end. pydantic's `Field` holds a
+note's body to 1 to 10,000 characters, and answers
+`422` outside that before the database is asked (N4):
 
 ``` python
 class Note(BaseModel):
@@ -203,19 +161,32 @@ def note_drop(id: int, authorization: str | None = Header(default=None)):
     return r if isinstance(r, JSONResponse) else answer({"id": id})
 ```
 
-A note's body is 1 to 10,000 characters: pydantic
-answers `422` outside that, before the database is
-asked, and the table's `CHECK` holds the same line
-behind it.
+Run py-api's tests, `make test`, then restart the
+stack: `make dev`, or the native `stop` and `start`.
 
-Run py-api's tests, then restart the stack (`make dev`,
-or the native `stop` and `start`). Make asha a member
-(tutorial 4 §7), then expect `{"id":...}` and the note
-back, `"mine":true`:
+**Document the routes.** In `docs/py-api/api.md`, after
+the starter's three in §2, the entries from [the
+contract](2-contract.md) §2, in the page's own form:
 
-``` sh
-curl -s -X POST -H "Authorization: Bearer ${A}" -H 'Content-Type: application/json' -d '{"body": "a first note"}' http://py-api.${H}/notes
-curl -s -H "Authorization: Bearer ${A}" http://py-api.${H}/notes
+``` markdown
+GET /notes
+: `notes.read`. `?before=<id>` pages back. `200` and a
+  list of `{id, body, mine, created_at, updated_at}`,
+  newest first, 50 at most. `403` without it
+
+POST /notes
+: `notes.write`. `{body}`, 1 to 10,000 characters.
+  `201` and `{id}`. `403` without it; `422` for a body
+  out of bounds
+
+PUT /notes/{id}
+: `notes.write`, and the note your own. `{body}`, as
+  for `POST`. `200` and `{id}`. `403`, `not your note`
+  or without it; `404` for no such note; `422`
+
+DELETE /notes/{id}
+: As `PUT /notes/{id}`, without a body. `200` and
+  `{id}`
 ```
 
 ## 3 Make ui/ a Svelte Project
@@ -233,7 +204,8 @@ git rm ui/index.html ui/app.js
 mkdir -p ui/src/lib ui/public
 ```
 
-`ui/package.json`, every package by exact version:
+`ui/package.json`, every package by exact version.
+`vitest` and `jsdom` run the dashboard's tests:
 
 ``` json
 {
@@ -243,21 +215,25 @@ mkdir -p ui/src/lib ui/public
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "jsdom": "30.1.2",
     "svelte": "5.57.1",
-    "vite": "8.3.2"
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
   }
 }
 ```
 
-`ui/vite.config.js`:
+`ui/vite.config.js`. The last two lines are for the
+tests alone: Svelte's browser build, in jsdom:
 
 ``` javascript
 // The UI's build: Svelte by Vite, into ui/dist/, which a release syncs
-// to www (docs/tutorials/6-a-svelte-ui.md). public/ is copied as it is;
+// to www (docs/tutorials/5-a-svelte-ui/). public/ is copied as it is;
 // its config.js is read at run time, never bundled
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
@@ -265,6 +241,9 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 export default defineConfig({
   plugins: [svelte()],
   build: { outDir: "dist", emptyOutDir: true },
+  // npm test: the components in jsdom, Svelte's browser build
+  resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
+  test: { environment: "jsdom" },
 });
 ```
 
@@ -297,9 +276,8 @@ cd ui && npm install --no-audit --no-fund && cd ..
 The starter's `app.js`, as a module the components
 share: the same PKCE sign-in, the same `api()` that
 waits out a `429` and backs off a `503`. Three
-additions: `USERS`, the service that holds `/users`,
-`py-api` or, if you took tutorial 5, `js-api`; `raw`,
-to send a file as itself (tutorial 7); and
+additions: `USERS`, the service that serves `/users`;
+`raw`, to send a file as itself (tutorial 6); and
 `staticBase`, the static bucket's address.
 `ui/src/lib/box.js`:
 
@@ -317,10 +295,10 @@ export const config = (await import(/* @vite-ignore */ new URL("config.js", `${l
 
 const authBase = config.authDomain.includes("://") ? config.authDomain : `https://${config.authDomain}`;
 const apiBase = (service) => (config.apiUrl ? config.apiUrl(service) : `https://${service}.${config.zone}`);
-// The service that holds /users: py-api after tutorial 4, js-api after
-// tutorial 5
+// The service that holds /users: py-api, or js-api if you took
+// JavaScript in tutorial 4
 export const USERS = "py-api";
-// The static bucket's objects/, public reads (docs/tutorials/7-uploads/)
+// The static bucket's objects/, public reads (docs/tutorials/6-uploads/)
 export const staticBase = config.staticUrl ?? `https://static.${config.zone}`;
 
 const redirectUri = `${location.origin}/`;
@@ -423,10 +401,8 @@ export async function api(service, path, { method = "GET", body, raw } = {}) {
 ```
 
 `config.js` is read **at run time**, from the site's
-root, never bundled: the release writes it from the
-repository's variables, and the same build serves any
-zone. `/* @vite-ignore */` tells Vite to leave the
-import alone.
+root, never bundled. `/* @vite-ignore */` tells Vite to
+leave the import alone.
 
 `ui/src/main.js`, which finishes a sign-in before the
 page draws:
@@ -468,16 +444,18 @@ li.card { border: 1px solid var(--line); border-radius: .5rem; padding: .75rem; 
 
 ## 5 The Dashboard
 
-`ui/src/App.svelte`: the door first. Whatever `/me`
-answers decides what the page shows:
+`ui/src/App.svelte`: what `/users/me` answers decides
+what the page shows (D1 to D3):
 
 ``` svelte
 <script>
-  // The dashboard: who you are, by /users/me, the door; the notes, by
-  // py-api; the people and their roles, if you may read them
+  // The dashboard: who you are, by /users/me, which records you; your
+  // profile; the notes, by py-api; the people and their roles, if you
+  // may read them
   import { USERS, api, signIn, signOut, signedIn } from "./lib/box.js";
   import Notes from "./Notes.svelte";
   import People from "./People.svelte";
+  import Profile from "./Profile.svelte";
 
   let me = $state(null);
   let refused = $state("");
@@ -485,7 +463,7 @@ answers decides what the page shows:
   async function load() {
     const r = await api(USERS, "/users/me");
     if (r.status === 200) me = r.data;
-    else refused = r.status === 403 ? `Not admitted: ${r.data.email || "no e-mail"}` : `users: ${r.status}`;
+    else refused = r.status === 403 ? `E-mail not verified: ${r.data.email || "no e-mail"}` : `users: ${r.status}`;
   }
 
   const may = (p) => me?.permissions.includes(p) ?? false;
@@ -503,13 +481,14 @@ answers decides what the page shows:
     <button onclick={signOut}>Sign out</button>
   {:else if me}
     <div class="row">
-      <span class="muted">Signed in as {me.email}</span>
+      <span class="muted">Signed in as {me.profile.display_name || me.email}</span>
       {#each me.roles as role}<span class="chip">{role}</span>{/each}
       <button onclick={signOut}>Sign out</button>
     </div>
     {#if me.permissions.length === 0}
-      <p class="muted">You are in, with no rights yet: ask an admin for a role.</p>
+      <p class="muted">You are signed in, with no role yet: ask an admin for one.</p>
     {/if}
+    <Profile {me} />
     {#if may("notes.read")}
       <Notes canWrite={may("notes.write")} />
     {/if}
@@ -522,8 +501,42 @@ answers decides what the page shows:
 </main>
 ```
 
+`ui/src/Profile.svelte`: your own profile, saved by
+`PUT /users/me/profile` (D6). Its fields are the
+profile's columns of tutorial 1; change both together:
+
+``` svelte
+<script>
+  // Your own profile: what the project keeps of you beyond the sign-in.
+  // Its fields are the project's own (docs/tutorials/1-authentication.md)
+  import { untrack } from "svelte";
+  import { USERS, api } from "./lib/box.js";
+
+  let { me } = $props();
+  // The form's starting values, taken once; then the form's own
+  let name = $state(untrack(() => me.profile.display_name));
+  let affiliation = $state(untrack(() => me.profile.affiliation));
+  let note = $state("");
+
+  async function save(event) {
+    event.preventDefault();
+    const r = await api(USERS, "/users/me/profile", { method: "PUT", body: { display_name: name, affiliation } });
+    note = r.status === 200 ? "Saved" : (r.data.error ?? `users: ${r.status}`);
+  }
+</script>
+
+<h2>Profile</h2>
+<form class="row" onsubmit={save}>
+  <input aria-label="Display name" placeholder="Display name" maxlength="80" bind:value={name} />
+  <input aria-label="Affiliation" placeholder="Affiliation" maxlength="120" bind:value={affiliation} />
+  <button class="primary">Save</button>
+  {#if note}<span class="muted">{note}</span>{/if}
+</form>
+```
+
 `ui/src/Notes.svelte`: every note; the add box and the
-buttons only where the permissions and the owner allow:
+buttons only where the permissions and the owner allow
+(D4):
 
 ``` svelte
 <script>
@@ -595,11 +608,11 @@ buttons only where the permissions and the owner allow:
 ```
 
 `ui/src/People.svelte`: a checkbox a role, its
-permissions in its tooltip:
+permissions in its tooltip (D5):
 
 ``` svelte
 <script>
-  // The people admitted and their roles, users.read; a role given or
+  // The people signed in and their roles, users.read; a role given or
   // taken, users.grant. The matrix says what each role may do
   import { USERS, api } from "./lib/box.js";
 
@@ -645,10 +658,8 @@ permissions in its tooltip:
 </ul>
 ```
 
-**The buttons follow the permissions; the database
-decides regardless.** A button hidden is a courtesy.
-Whoever calls the API by hand meets the same refusals
-as tutorials 2 and 3 tried.
+Run the tests: `./test-5.sh`, or the dashboard's alone,
+`cd ui && npm test`.
 
 ## 6 Run It
 
@@ -673,10 +684,12 @@ in turn:
 1.  **Sign in as `you`,** `you@example.org`: `admin`,
     and the people; no notes, since `admin` does not
     read them
-2.  **Sign out, and in as `zed`:** in, `deny-all`, and
-    "You are in, with no rights yet"
+2.  **Sign out, and in as `zed`:** signed in, no role,
+    and the profile alone. Fill in a display name, and
+    save
 3.  **As `you` again,** tick `reader` for zed
-4.  **As `zed`:** the notes, to read, no add box
+4.  **As `zed`:** the notes, to read, no add box; the
+    header by the name you saved
 5.  **As `asha`,** a member: add a note, edit it,
     delete it. Another's note has no buttons
 
@@ -692,31 +705,13 @@ cd ui && npm run build && cd ..
 `config.js` written beside it from the repository's
 variables; `ui/public/config.js` and `ui/dist/` are
 ignored by git. A tag whose changes include `ui/` does
-it ([Release the UI](../ui/release.md)); CI builds the
-UI on every push, so a broken build fails before a tag.
+it ([Release the UI](../../ui/release.md)); CI builds
+the UI on every push, so a broken build fails before a
+tag.
 
-## 8 What Can Go Wrong
+## 8 See Also
 
-- **A blank page, and
-  `Failed to fetch dynamically imported module` for
-  `config.js`.** No `ui/public/config.js`, §6
-- **Every call fails with a CORS error.** The page's
-  origin is not admitted: `localhost:5173` is the
-  manifest's `ui.dev_callback_urls`; the native stack
-  admits your `UI_PORT`. Open the page at `localhost`,
-  not `127.0.0.1`
-- **Signed in, then straight back to "Sign in".** The
-  token was refused, `401`: the services restarted and
-  the mock made a new key. Sign in again
-- **"Not admitted".** Tutorial 1's rules let no one in
-  with that address, or it is not verified
-- **`make check` fails on `ui/`.** It does not look
-  there; `npm run build` is CI's check
-
-## 9 See Also
-
-- [7 Uploads](7-uploads/README.md): next
-- [The UI](../ui/README.md): what the box asks of any
-  UI
-- [Svelte](https://svelte.dev/docs/svelte/overview) and
-  [Vite](https://vite.dev/guide/), read 2026-10-06
+- [The refinement](5-refinement.md): next
+- [Svelte](https://svelte.dev/docs/svelte/overview),
+  [Vite](https://vite.dev/guide/) and
+  [Vitest](https://vitest.dev/guide/), read 2026-10-07

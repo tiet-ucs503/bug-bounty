@@ -171,7 +171,7 @@ $$;
 SELECT users_person_see('you', 'you@example.org', true, 'Google'), users_person_see('asha', 'asha@example.org', true, 'Google'),
        users_person_see('bhanu', 'bhanu@elsewhere.net', true, 'Google');
 DO $$ BEGIN
-  INSERT INTO users_members (sub, role) VALUES ('you', 'admin');
+  INSERT INTO users_members (sub, role) VALUES ('you', 'admin') ON CONFLICT DO NOTHING;
 EXCEPTION WHEN undefined_table THEN NULL;
 END $$;
 

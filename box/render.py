@@ -127,7 +127,7 @@ def check(m: dict) -> dict:
         # The database prefixes the service owns: its own, prefix, or
         # several, prefixes, its own first. A second is a part of the
         # service with tables of its own, as /users in
-        # docs/tutorials/4-users-in-python.md
+        # docs/tutorials/4-users/
         if "prefix" in s and "prefixes" in s:
             raise Bad(f"{sn}: prefix or prefixes, not both")
         own = s["prefixes"] if "prefixes" in s else [s.get("prefix", sn.replace("-", "_"))]
@@ -660,7 +660,7 @@ def dev_compose(p: dict) -> str:
       COGNITO_PROBE_CLIENT_ID: dev-probe
       COGNITO_USERINFO_URL: http://mock-auth:9000/oauth2/userInfo
       # The static bucket: written at S3's path-style address, read
-      # through static.<zone> (docs/tutorials/7-uploads/)
+      # through static.<zone> (docs/tutorials/6-uploads/)
       STORE_URL: http://mock-store:9100/static.localhost
       STATIC_URL: http://static.localhost:{DEV_PORT}{db_env}
     expose:
