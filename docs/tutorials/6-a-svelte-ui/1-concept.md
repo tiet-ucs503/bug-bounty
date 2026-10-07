@@ -1,7 +1,7 @@
 ---
 abstract: |
   Step 1 of tutorial 6: what the dashboard is for. The
-  goal, six rules, the page drawn as a wireframe, and
+  goal, seven rules, the page drawn as a wireframe, and
   what the rules will not do.
 date: 2026-10-07
 keywords:
@@ -47,6 +47,10 @@ What `/users/me` answers decides what the page shows:
   changed only with `users.grant`
 - **D6 The profile:** shown, the display name in the
   header, and saved as typed
+- **D7 A part that is waiting, empty or failed says
+  so,** in words. Never a blank, and never one looking
+  like another: no notes yet is not the same as none
+  loaded
 
 **The buttons follow the permissions; the database
 decides regardless.** A button hidden is a courtesy.
@@ -74,6 +78,13 @@ And the three pages with less on them:
 ![Three smaller wireframes, on a phone: D1 signed out,
 D2 an unverified e-mail, D3 no
 role](wireframe-states.svg)
+
+And one part, the notes, in the three states that are
+not its content (D7). Your account and the people wait
+and fail the same way:
+
+![The notes three times, on a phone: waiting, empty and
+failed](wireframe-parts.svg)
 
 - **How to read them:** lines and words, no colour. A
   heavy outline is the button a part is for. Grey words
