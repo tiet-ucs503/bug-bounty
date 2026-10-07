@@ -1,11 +1,13 @@
 ---
 abstract: |
-  Step 2 of tutorial 2: what tutorials 3 to 6 may rely
+  Step 2 of tutorial 2: what tutorials 3 to 7 may rely
   on, and nothing about how. Each accessor's signature,
   the permission it needs, what it answers, and how it
-  refuses; the one function the users unit publishes;
-  and the refusals as HTTP. Once written, the contract
-  outranks the concept wherever both speak.
+  refuses; the three functions the users unit
+  publishes, one to ask and two for a unit's
+  migrations; and the refusals as HTTP. Once written,
+  the contract outranks the concept wherever both
+  speak.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -14,7 +16,7 @@ keywords:
 - db
 kind: reference
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- tools/native-dev.sh
 status: draft
 subtitle: Step 2, what others may rely on
 title: "2.2 What Each May Do: the Contract"
@@ -28,12 +30,15 @@ version: v0.1.0
 - **Tutorial 4,** `/users` in a service: it calls the
   users unit's accessors and turns their refusals into
   HTTP
-- **Tutorial 5,** the dashboard: it shows what
+- **Tutorial 5,** the notes: their migration brings
+  `notes.read` and `notes.write`, and every accessor of
+  theirs asks `users_may`
+- **Tutorial 6,** the dashboard: it shows what
   `users_me` answers
-- **Tutorial 6,** uploads: py-api's objects ask
-  `users_may`, as the notes do
-- **Any unit you add later:** it asks `users_may`, and
-  nothing else of the users unit
+- **Tutorial 7,** uploads: its migration brings
+  `objects.write`, and py-api's objects ask `users_may`
+- **Any unit you add later:** the same three published
+  functions, and nothing else of the users unit
 
 Each may be written against this page before the
 implementation exists. Every accessor takes **the
@@ -70,11 +75,27 @@ for itself.
   - Answers: nothing
   - Refuses: `42501`; `P0002` if the person lacks the
     role; `23001` for the last `users.grant`
-- **`users_may` is published.** It is the one function
-  of the users unit that another unit may call; its
-  comment says so, and [the database's
+- **`users_permission_add(permission, about, roles)`**
+  - Called by: a unit's migration, on its way up
+  - Answers: nothing; twice is once. The permission,
+    and a cell for each role named; `roles` may be
+    empty
+  - Refuses: `P0002` for a role that does not exist;
+    `23514` for a name not `<unit>.<verb>`
+- **`users_permission_drop(permission)`**
+  - Called by: a unit's migration, on its way down
+  - Answers: nothing; twice is once. The permission
+    gone, and every cell of it
+  - Refuses: `42501` for a `users.` permission
+- **Three functions are published:** `users_may`, for
+  any unit's accessors, and the two above, for any
+  unit's migrations. They are the only functions of the
+  users unit that another unit may call; their comments
+  say so, and [the database's
   conduct](../../conduct/database.md) holds every unit
-  to it
+  to them
+- **The two for migrations take no caller.** A
+  migration runs for the project, not for a person
 - **`users_revoke` refuses `23001`** for the last
   `users.grant` there is, and for nothing else
 - **Roles and permissions** come back as arrays, sorted
@@ -82,37 +103,7 @@ for itself.
   them: a trigger gives them when tutorial 1's
   `users_person_see` first records a person (R10)
 
-## 3 py-api's Notes
-
-- **`py_api_note_new(caller, body)`**
-  - Needs: `notes.write`
-  - Answers: the note's `id`; the caller owns it
-  - Refuses: `42501`
-- **`py_api_notes_all(caller, before, limit)`**
-  - Needs: `notes.read`
-  - Answers: rows: `id`, `body`, `mine`, `created_at`,
-    `updated_at`; newest first
-  - Refuses: `42501`
-- **`py_api_note_edit(caller, id, body)`**
-  - Needs: `notes.write`, and the owner
-  - Answers: nothing
-  - Refuses: `42501`; `P0002` if there is no such note
-- **`py_api_note_drop(caller, id)`**
-  - Needs: `notes.write`, and the owner
-  - Answers: nothing
-  - Refuses: `42501`; `P0002` if there is no such note
-- **`py_api_notes_all` pages:** `before`, an `id`, for
-  the next page, `NULL` for the first; `limit` 50 by
-  default, at most 200
-- **Never whose:** it answers `mine`, never an owner
-- **Another's note is `42501`; no note is `P0002`.**
-  Different answers, so a client can tell them apart
-- **The template's `py_api_note_add` and
-  `py_api_notes_of` are kept** as they are: their
-  signatures were promised before this tutorial, and
-  the new accessors sit beside them
-
-## 4 The Refusals
+## 3 The Refusals
 
 Each accessor refuses with an SQLSTATE, which a service
 turns into HTTP:
@@ -136,7 +127,7 @@ turns into HTTP:
                                                bounds
   -------------------------------------------------------
 
-## 5 See Also
+## 4 See Also
 
 - [The tests](3-tests.md): next, held to this page, and
   [the implementation](4-implementation.md): after it
