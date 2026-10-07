@@ -34,7 +34,10 @@ version: v0.1.0
 - `api()` in `ui/src/lib/box.js` already sends a file
   as itself, by `raw` (tutorial 6's
   [implementation](../6-a-svelte-ui/4-implementation.md)
-  §4)
+  §3)
+- [The UI's conduct](../../conduct/ui.md): the look is
+  Tailwind's utilities and tutorial 6's six parts, no
+  class and no `<style>` of your own
 
 ## 2 Step 1: a File Selector
 
@@ -70,11 +73,11 @@ time, then the note's list is saved.
   }
 </script>
 
-<label>
+<label class="flex flex-wrap items-center gap-2">
   Attach files
-  <input type="file" multiple onchange={(e) => upload(e.currentTarget.files)} />
+  <input class="min-h-11 max-w-full text-base" type="file" multiple onchange={(e) => upload(e.currentTarget.files)} />
 </label>
-{#if status}<div class="muted" aria-live="polite">{status}</div>{/if}
+{#if status}<div class="text-muted" aria-live="polite">{status}</div>{/if}
 ```
 
 `[...files]` copies the list first: the browser may
@@ -91,7 +94,7 @@ shows only on a note you are editing, which is always
 your own:
 
 ``` svelte
-        <Attach {note} onchange={load} />
+            <Attach {note} onchange={load} />
 ```
 
 Edit a note of yours, choose a PNG, and expect
@@ -101,10 +104,11 @@ Edit a note of yours, choose a PNG, and expect
 
 Each note now brings its objects, key and type ([the
 service](4-the-service.md) §3). In `Notes.svelte`,
-`staticBase` from `box.js`:
+`staticBase` from `box.js`, and tutorial 6's `Chip`:
 
 ``` svelte
   import { api, staticBase } from "./lib/box.js";
+  import Chip from "./lib/Chip.svelte";
 ```
 
 Under each note's body, when it is not being edited,
@@ -112,28 +116,25 @@ its attachments, an image as an image and anything else
 as its type, each a link to the object:
 
 ``` svelte
-        {#if note.objects.length}
-          <div class="row">
-            {#each note.objects as o (o.key)}
-              <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
-                {#if o.type.startsWith("image/")}
-                  <img src={`${staticBase}/${o.key}`} alt="An attachment" loading="lazy" />
-                {:else}
-                  <span class="chip">{o.type}</span>
-                {/if}
-              </a>
-            {/each}
-          </div>
-        {/if}
+            {#if note.objects.length}
+              <div class="my-2 flex flex-wrap items-center gap-2">
+                {#each note.objects as o (o.key)}
+                  <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
+                    {#if o.type.startsWith("image/")}
+                      <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
+                           alt="An attachment" loading="lazy" />
+                    {:else}
+                      <Chip>{o.type}</Chip>
+                    {/if}
+                  </a>
+                {/each}
+              </div>
+            {/if}
 ```
 
-And at the end of the file, a size for them:
-
-``` svelte
-<style>
-  img { max-height: 6rem; max-width: 10rem; border-radius: .3rem; border: 1px solid var(--line); }
-</style>
-```
+The image's size is in its classes, `max-h-24` and
+`max-w-40`: no `<style>` block ([the UI's
+conduct](../../conduct/ui.md), U2).
 
 Save, cancel, and expect the image under the note.
 Everyone who may read notes sees it: (u=rw, a=r).
@@ -187,19 +188,22 @@ file:
 Around the selector, a zone that says so:
 
 ``` svelte
-<div class="drop" class:over role="group" aria-label="Attachments"
+<div class={["my-2 rounded-box border-2 border-dashed p-3", over ? "border-accent bg-accent/10" : "border-line"]}
+     role="group" aria-label="Attachments"
      ondragover={(e) => { e.preventDefault(); over = true; }}
      ondragleave={() => (over = false)}
      ondrop={drop}>
 ```
 
 `over`, a `$state`, lights the zone while a file is
-held over it.
+held over it: the second half of the class list chooses
+the accent's border and a tenth of its colour behind,
+`bg-accent/10`.
 
 ## 6 Step 5: Take One Off
 
-Each key listed, with a button that drops it from the
-list and saves. The object is let go, and the collector
+Each key listed, with tutorial 6's `Button` beside it,
+which drops it from the list and saves. The object is let go, and the collector
 takes it after the grace, if no other note of yours
 refers to it.
 
@@ -213,6 +217,7 @@ refers to it.
   // at a time to py-api, then the note's list saved. Each upload is an
   // object in the static bucket, read back from static.<zone>
   import { api } from "./lib/box.js";
+  import Button from "./lib/Button.svelte";
 
   let { note, onchange } = $props();
   let keys = $state(note.objects.map((o) => o.key));
@@ -263,26 +268,24 @@ refers to it.
   }
 </script>
 
-<div class="drop" class:over role="group" aria-label="Attachments"
+<div class={["my-2 rounded-box border-2 border-dashed p-3", over ? "border-accent bg-accent/10" : "border-line"]}
+     role="group" aria-label="Attachments"
      ondragover={(e) => { e.preventDefault(); over = true; }}
      ondragleave={() => (over = false)}
      ondrop={drop}>
-  <label class="pick">
+  <label class="flex flex-wrap items-center gap-2">
     Attach files
-    <input type="file" multiple accept={TYPES} onchange={(e) => upload(e.currentTarget.files)} />
+    <input class="min-h-11 max-w-full text-base" type="file" multiple accept={TYPES}
+           onchange={(e) => upload(e.currentTarget.files)} />
   </label>
-  <span class="muted">or drop them here</span>
-  {#if status}<div class="muted" aria-live="polite">{status}</div>{/if}
+  <span class="text-muted">or drop them here</span>
+  {#if status}<div class="text-muted" aria-live="polite">{status}</div>{/if}
   {#each keys as key (key)}
-    <div class="row"><code>{key.slice(-12)}</code><button onclick={() => remove(key)}>Remove</button></div>
+    <div class="my-2 flex flex-wrap items-center gap-2">
+      <code>{key.slice(-12)}</code><Button onclick={() => remove(key)}>Remove</Button>
+    </div>
   {/each}
 </div>
-
-<style>
-  .drop { border: 2px dashed var(--line); border-radius: .5rem; padding: .75rem; margin: .5rem 0; }
-  .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
-  .pick input { margin-left: .5rem; }
-</style>
 ```
 
 And `ui/src/Notes.svelte`, whole:
@@ -293,17 +296,30 @@ And `ui/src/Notes.svelte`, whole:
   // buttons follow the permissions; the database decides regardless
   import { api, staticBase } from "./lib/box.js";
   import Attach from "./Attach.svelte";
+  import Button from "./lib/Button.svelte";
+  import Card from "./lib/Card.svelte";
+  import Chip from "./lib/Chip.svelte";
+  import Field from "./lib/Field.svelte";
+  import Loaded from "./lib/Loaded.svelte";
+  import Section from "./lib/Section.svelte";
 
   let { canWrite } = $props();
-  let notes = $state([]);
+  // null until the first answer: waiting is not the same as none
+  let notes = $state(null);
   let draft = $state("");
   let editing = $state(null);
   let error = $state("");
+  let failed = $state("");
 
   async function load() {
-    const r = await api("py-api", "/notes");
-    if (r.status === 200) notes = r.data;
-    else error = r.data.error ?? `py-api: ${r.status}`;
+    failed = "";
+    try {
+      const r = await api("py-api", "/notes");
+      if (r.status === 200) notes = r.data;
+      else failed = r.data.error ?? `py-api: ${r.status}`;
+    } catch {
+      failed = "py-api: no answer";
+    }
   }
 
   async function call(path, opts) {
@@ -325,54 +341,56 @@ And `ui/src/Notes.svelte`, whole:
   load();
 </script>
 
-<h2>Notes</h2>
-{#if error}<p class="bad">{error}</p>{/if}
-{#if canWrite}
-  <textarea bind:value={draft} placeholder="A new note" aria-label="A new note"></textarea>
-  <div class="row"><button class="primary" onclick={add} disabled={!draft.trim()}>Add</button></div>
-{/if}
-<ul class="plain">
-  {#each notes as note (note.id)}
-    <li class="card">
-      {#if editing?.id === note.id}
-        <textarea bind:value={editing.body} aria-label="Edit the note"></textarea>
-        <div class="row">
-          <button class="primary" onclick={save}>Save</button>
-          <button onclick={() => (editing = null)}>Cancel</button>
-        </div>
-        <Attach {note} onchange={load} />
-      {:else}
-        <div>{note.body}</div>
-        {#if note.objects.length}
-          <div class="row">
-            {#each note.objects as o (o.key)}
-              <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
-                {#if o.type.startsWith("image/")}
-                  <img src={`${staticBase}/${o.key}`} alt="An attachment" loading="lazy" />
-                {:else}
-                  <span class="chip">{o.type}</span>
-                {/if}
-              </a>
-            {/each}
-          </div>
-        {/if}
-        <div class="row muted">
-          <span>{note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}</span>
-          {#if note.mine && canWrite}
-            <button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</button>
-            <button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</button>
+<Section title="Notes">
+  <Loaded what="the notes" waiting={notes === null} {failed} retry={load}>
+    {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+    {#if canWrite}
+      <Field multiline label="A new note" bind:value={draft} />
+      <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
+    {/if}
+    <ul class="flex flex-col gap-2">
+      {#each notes as note (note.id)}
+        <Card>
+          {#if editing?.id === note.id}
+            <Field multiline label="Edit the note" bind:value={editing.body} />
+            <div class="mt-2 flex flex-wrap gap-2">
+              <Button primary onclick={save}>Save</Button>
+              <Button onclick={() => (editing = null)}>Cancel</Button>
+            </div>
+            <Attach {note} onchange={load} />
+          {:else}
+            <p class="break-words">{note.body}</p>
+            {#if note.objects.length}
+              <div class="my-2 flex flex-wrap items-center gap-2">
+                {#each note.objects as o (o.key)}
+                  <a href={`${staticBase}/${o.key}`} target="_blank" rel="noopener">
+                    {#if o.type.startsWith("image/")}
+                      <img class="max-h-24 max-w-40 rounded-box border border-line" src={`${staticBase}/${o.key}`}
+                           alt="An attachment" loading="lazy" />
+                    {:else}
+                      <Chip>{o.type}</Chip>
+                    {/if}
+                  </a>
+                {/each}
+              </div>
+            {/if}
+            <p class="mt-1 text-sm text-muted">
+              {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
+            </p>
+            {#if note.mine && canWrite}
+              <div class="mt-2 flex flex-wrap gap-2">
+                <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
+                <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+              </div>
+            {/if}
           {/if}
-        </div>
-      {/if}
-    </li>
-  {:else}
-    <li class="muted">No notes yet.</li>
-  {/each}
-</ul>
-
-<style>
-  img { max-height: 6rem; max-width: 10rem; border-radius: .3rem; border: 1px solid var(--line); }
-</style>
+        </Card>
+      {:else}
+        <li class="text-muted">No notes yet.</li>
+      {/each}
+    </ul>
+  </Loaded>
+</Section>
 ```
 
 ## 8 Its Tests
@@ -393,7 +411,7 @@ const NOTES = [
 ```
 
 Why, [the refinement](5-refinement.md) §5 tells. Expect
-`10 passed`:
+`13 passed`:
 
 ``` sh
 cd ui && npm test && cd ..

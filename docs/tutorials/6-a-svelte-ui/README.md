@@ -36,9 +36,9 @@ page](../README.md) §5.
   starter's sign-in carried over, then a dashboard of
   four parts, each shown by what `/users/me` says you
   may do: your profile, the notes, and the people
-- **`test-6.sh`:** seven tests, written before the
-  code, that render the dashboard in `ui/`'s own tests,
-  with no browser and no network
+- **`test-6.sh`:** ten tests, written before the code,
+  that render the dashboard in `ui/`'s own tests, with
+  no browser and no network
 
 ## 2 Five Steps
 
@@ -47,15 +47,16 @@ cycle](../../conduct/the-cycle/README.md), one page a
 step. Read them in order.
 
 1.  **[The concept](1-concept.md).** What the dashboard
-    is for, as six rules
+    is for, as seven rules
 2.  **[The contract](2-contract.md).** What the
     dashboard relies on: tutorial 5's notes routes,
     `/users`, and its `config.js`
-3.  **[The tests](3-tests.md).** The rules as seven
+3.  **[The tests](3-tests.md).** The rules as ten
     tests. You run them first, and every one fails
 4.  **[The implementation](4-implementation.md).** The
-    Svelte project, the sign-in, and the dashboard's
-    five components
+    Svelte project, the sign-in, Tailwind and the
+    theme, six small parts, and the dashboard's four
+    components
 5.  **[The refinement](5-refinement.md).** Run the
     tests, read them, and change whichever step is
     wrong

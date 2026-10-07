@@ -25,8 +25,9 @@ version: v0.1.0
 served as they are from the `www` bucket at
 `https://www.<zone>`. No package and no build: a module
 the browser loads. It is a starter, to be replaced by
-yours, in any framework that writes a folder of static
-files. Once `ui/` has a `package.json`, the release
+yours. The box takes any folder of static files; the
+project's own rule is Svelte ([the UI's
+conduct](../conduct/ui.md)). Once `ui/` has a `package.json`, the release
 builds it and syncs `ui/dist/`; [A Svelte
 UI](../tutorials/6-a-svelte-ui/README.md) does so.
 
