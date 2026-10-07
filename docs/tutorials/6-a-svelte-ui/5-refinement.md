@@ -72,7 +72,7 @@ is the reason for T6.3's question, "and nothing else".
 - **A blank page, and
   `Failed to fetch dynamically imported module` for
   `config.js`.** No `ui/public/config.js`: the
-  implementation's §5
+  implementation's §6
 - **Every call fails with a CORS error.** The page's
   origin is not admitted: `localhost:5173` is the
   manifest's `ui.dev_callback_urls`; the native stack

@@ -45,7 +45,9 @@ mkdir -p ui/src/lib ui/public
 ```
 
 `ui/package.json`, every package by exact version.
-`vitest` and `jsdom` run the dashboard's tests:
+`vitest` and `jsdom` run the dashboard's tests;
+`tailwindcss` and its Vite plugin style it ([the UI's
+conduct](../../conduct/ui.md), U2):
 
 ``` json
 {
@@ -60,26 +62,31 @@ mkdir -p ui/src/lib ui/public
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@tailwindcss/vite": "4.3.3",
     "jsdom": "30.1.2",
     "svelte": "5.57.1",
+    "tailwindcss": "4.3.3",
     "vite": "8.3.2",
     "vitest": "5.0.3"
   }
 }
 ```
 
-`ui/vite.config.js`. The last two lines are for the
+`ui/vite.config.js`. Tailwind's plugin reads the
+classes your components use, and writes only those
+into the stylesheet. The last two lines are for the
 tests alone: Svelte's browser build, in jsdom:
 
 ``` javascript
-// The UI's build: Svelte by Vite, into ui/dist/, which a release syncs
-// to www (docs/tutorials/6-a-svelte-ui/). public/ is copied as it is;
-// its config.js is read at run time, never bundled
+// The UI's build: Svelte by Vite, styled by Tailwind, into ui/dist/,
+// which a release syncs to www (docs/tutorials/6-a-svelte-ui/). public/
+// is copied as it is; its config.js is read at run time, never bundled
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [tailwindcss(), svelte()],
   build: { outDir: "dist", emptyOutDir: true },
   // npm test: the components in jsdom, Svelte's browser build
   resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
@@ -258,31 +265,154 @@ await start();
 mount(App, { target: document.getElementById("app") });
 ```
 
-`ui/src/app.css`, the starter's look:
+`ui/src/app.css`, the UI's one stylesheet. It holds no
+class of your own: only Tailwind, and the project's
+visual language as Tailwind's theme (U4). Each token
+becomes a utility, so `--color-muted` gives
+`text-muted` and `--radius-box` gives `rounded-box`:
 
 ``` css
-:root { --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --accent: #0a66c2; --bad: #b42318; }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #161617; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --accent: #4c9aff; --bad: #f97066; }
+/* The UI's one stylesheet: Tailwind, and the project's visual language
+   as its theme (docs/conduct/ui.md, U2 and U4). Each token becomes a
+   utility: bg-ground, text-muted, border-line, rounded-box. The first
+   line takes Tailwind's own colours away, so no other colour exists */
+@import "tailwindcss";
+
+@theme {
+  --color-*: initial;
+  --color-ground: #ffffff;
+  --color-ink: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-line: #d2d2d7;
+  --color-accent: #0a66c2;
+  --color-on-accent: #ffffff;
+  --color-danger: #b42318;
+  --font-sans: system-ui, sans-serif;
+  --radius-box: 0.5rem;
 }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
-main { max-width: 44rem; margin: 0 auto; padding: 2rem 1rem; }
-h1 { font-size: 1.4rem; margin: 0 0 .25rem; }
-h2 { font-size: 1.1rem; margin: 2rem 0 .5rem; }
-.muted { color: var(--muted); }
-.bad { color: var(--bad); }
-.row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .5rem 0; }
-button { font: inherit; padding: .35rem .75rem; border: 1px solid var(--line); border-radius: .4rem;
-         background: transparent; color: var(--fg); cursor: pointer; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-textarea { font: inherit; width: 100%; box-sizing: border-box; padding: .5rem; border: 1px solid var(--line);
-           border-radius: .4rem; background: transparent; color: var(--fg); min-height: 4rem; }
-ul.plain { list-style: none; padding: 0; margin: 0; }
-li.card { border: 1px solid var(--line); border-radius: .5rem; padding: .75rem; margin: .5rem 0; }
-.chip { font-size: .85rem; border: 1px solid var(--line); border-radius: 1rem; padding: 0 .5rem; }
+
+/* The same jobs, for whoever asks for a dark page */
+@layer theme {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-ground: #161617;
+      --color-ink: #f5f5f7;
+      --color-muted: #a1a1a6;
+      --color-line: #3a3a3c;
+      --color-accent: #4c9aff;
+      --color-on-accent: #161617;
+      --color-danger: #f97066;
+    }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-ground font-sans text-ink;
+  }
+}
 ```
 
-## 4 The Dashboard
+**The colours are yours to change,** in `@theme` and
+in the dark block under it. `--color-*: initial` takes
+Tailwind's own palette away, so a colour that is not a
+token does not exist, and nobody has to be careful.
+`@apply` appears once, for the page's `body`, which no
+component holds.
+
+## 4 The Parts That Repeat
+
+A button, a field, a card: each appears in more than
+one place, and must look the same in each. [The UI's
+conduct](../../conduct/ui.md), U2, makes such a part a
+component, not a class of your own. Five, in
+`ui/src/lib/`, each a few lines.
+
+`ui/src/lib/Button.svelte`. `primary` is the one main
+action of a part; `min-h-11` is 44 px, a finger's
+width:
+
+``` svelte
+<script>
+  // A button, 44 px tall, for a finger. primary: the one main action of
+  // a part. Anything else given, onclick or disabled, is the button's
+  let { primary = false, children, ...rest } = $props();
+</script>
+
+<button
+  class={[
+    "min-h-11 cursor-pointer rounded-box border px-4 text-base disabled:cursor-default disabled:opacity-50",
+    primary ? "border-accent bg-accent font-semibold text-on-accent" : "border-line bg-transparent text-ink",
+  ]}
+  {...rest}>{@render children()}</button>
+```
+
+`ui/src/lib/Field.svelte`: an input, or a textarea. Its
+label names it for a screen reader, and is its
+placeholder; `text-base` is 16 px, so a phone does not
+zoom in when it is touched:
+
+``` svelte
+<script>
+  // A field, named by its label, which is its placeholder too. Its text
+  // is 16 px, so a phone does not zoom in on it. multiline: a textarea
+  let { value = $bindable(), label, multiline = false, ...rest } = $props();
+  const look = "w-full rounded-box border border-line bg-transparent px-3 py-2 text-base text-ink placeholder:text-muted";
+</script>
+
+{#if multiline}
+  <textarea class={[look, "min-h-24"]} aria-label={label} placeholder={label} bind:value {...rest}></textarea>
+{:else}
+  <input class={[look, "min-h-11"]} aria-label={label} placeholder={label} bind:value {...rest} />
+{/if}
+```
+
+`ui/src/lib/Card.svelte`, one item of a list:
+
+``` svelte
+<script>
+  // One item of a list, in its own box
+  let { children } = $props();
+</script>
+
+<li class="rounded-box border border-line p-3">{@render children()}</li>
+```
+
+`ui/src/lib/Chip.svelte`, a word in a pill:
+
+``` svelte
+<script>
+  // A word in a pill: a role, or a file's type
+  let { children } = $props();
+</script>
+
+<span class="rounded-full border border-line px-2 text-sm">{@render children()}</span>
+```
+
+`ui/src/lib/Section.svelte`, a part of the page under
+its heading:
+
+``` svelte
+<script>
+  // A part of the dashboard, under its heading
+  let { title, children } = $props();
+</script>
+
+<section class="mt-8">
+  <h2 class="mb-2 text-lg font-semibold">{title}</h2>
+  {@render children()}
+</section>
+```
+
+A list of classes may be an array, as in `Button`:
+Svelte joins what is true of it.
+
+## 5 The Dashboard
+
+Each component's markup carries its own look, by
+Tailwind's utilities. Read a class list left to right:
+the phone's first, then what a wider screen adds, after
+`md:`.
 
 `ui/src/App.svelte`: what `/users/me` answers decides
 what the page shows (D1 to D3):
@@ -296,6 +426,8 @@ what the page shows (D1 to D3):
   import Notes from "./Notes.svelte";
   import People from "./People.svelte";
   import Profile from "./Profile.svelte";
+  import Button from "./lib/Button.svelte";
+  import Chip from "./lib/Chip.svelte";
 
   let me = $state(null);
   let refused = $state("");
@@ -311,22 +443,22 @@ what the page shows (D1 to D3):
   if (signedIn()) load();
 </script>
 
-<main>
-  <h1>Notes</h1>
+<main class="mx-auto max-w-2xl p-4 md:p-8">
+  <h1 class="text-2xl font-semibold">Notes</h1>
   {#if !signedIn()}
-    <p class="muted">Not signed in</p>
-    <button class="primary" onclick={signIn}>Sign in</button>
+    <p class="my-2 text-muted">Not signed in</p>
+    <Button primary onclick={signIn}>Sign in</Button>
   {:else if refused}
-    <p class="bad">{refused}</p>
-    <button onclick={signOut}>Sign out</button>
+    <p class="my-2 text-danger">{refused}</p>
+    <Button onclick={signOut}>Sign out</Button>
   {:else if me}
-    <div class="row">
-      <span class="muted">Signed in as {me.profile.display_name || me.email}</span>
-      {#each me.roles as role}<span class="chip">{role}</span>{/each}
-      <button onclick={signOut}>Sign out</button>
+    <div class="my-2 flex flex-wrap items-center gap-2">
+      <span class="text-muted">Signed in as {me.profile.display_name || me.email}</span>
+      {#each me.roles as role}<Chip>{role}</Chip>{/each}
+      <Button onclick={signOut}>Sign out</Button>
     </div>
     {#if me.permissions.length === 0}
-      <p class="muted">You are signed in, with no role yet: ask an admin for one.</p>
+      <p class="my-2 text-muted">You are signed in, with no role yet: ask an admin for one.</p>
     {/if}
     <Profile {me} />
     {#if may("notes.read")}
@@ -336,7 +468,7 @@ what the page shows (D1 to D3):
       <People canGrant={may("users.grant")} />
     {/if}
   {:else}
-    <p class="muted">…</p>
+    <p class="my-2 text-muted">…</p>
   {/if}
 </main>
 ```
@@ -351,6 +483,9 @@ profile's columns of tutorial 1; change both together:
   // Its fields are the project's own (docs/tutorials/1-authentication.md)
   import { untrack } from "svelte";
   import { USERS, api } from "./lib/box.js";
+  import Button from "./lib/Button.svelte";
+  import Field from "./lib/Field.svelte";
+  import Section from "./lib/Section.svelte";
 
   let { me } = $props();
   // The form's starting values, taken once; then the form's own
@@ -365,13 +500,14 @@ profile's columns of tutorial 1; change both together:
   }
 </script>
 
-<h2>Profile</h2>
-<form class="row" onsubmit={save}>
-  <input aria-label="Display name" placeholder="Display name" maxlength="80" bind:value={name} />
-  <input aria-label="Affiliation" placeholder="Affiliation" maxlength="120" bind:value={affiliation} />
-  <button class="primary">Save</button>
-  {#if note}<span class="muted">{note}</span>{/if}
-</form>
+<Section title="Profile">
+  <form class="flex flex-col gap-2 md:flex-row md:items-center" onsubmit={save}>
+    <Field label="Display name" maxlength="80" bind:value={name} />
+    <Field label="Affiliation" maxlength="120" bind:value={affiliation} />
+    <Button primary>Save</Button>
+    {#if note}<span class="text-muted" aria-live="polite">{note}</span>{/if}
+  </form>
+</Section>
 ```
 
 `ui/src/Notes.svelte`: every note; the add box and the
@@ -383,6 +519,10 @@ buttons only where the permissions and the owner allow
   // Every note, (u=rw, a=r): yours to change, the rest to read. The
   // buttons follow the permissions; the database decides regardless
   import { api } from "./lib/box.js";
+  import Button from "./lib/Button.svelte";
+  import Card from "./lib/Card.svelte";
+  import Field from "./lib/Field.svelte";
+  import Section from "./lib/Section.svelte";
 
   let { canWrite } = $props();
   let notes = $state([]);
@@ -415,36 +555,39 @@ buttons only where the permissions and the owner allow
   load();
 </script>
 
-<h2>Notes</h2>
-{#if error}<p class="bad">{error}</p>{/if}
-{#if canWrite}
-  <textarea bind:value={draft} placeholder="A new note" aria-label="A new note"></textarea>
-  <div class="row"><button class="primary" onclick={add} disabled={!draft.trim()}>Add</button></div>
-{/if}
-<ul class="plain">
-  {#each notes as note (note.id)}
-    <li class="card">
-      {#if editing?.id === note.id}
-        <textarea bind:value={editing.body} aria-label="Edit the note"></textarea>
-        <div class="row">
-          <button class="primary" onclick={save}>Save</button>
-          <button onclick={() => (editing = null)}>Cancel</button>
-        </div>
-      {:else}
-        <div>{note.body}</div>
-        <div class="row muted">
-          <span>{note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}</span>
+<Section title="Notes">
+  {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+  {#if canWrite}
+    <Field multiline label="A new note" bind:value={draft} />
+    <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
+  {/if}
+  <ul class="flex flex-col gap-2" aria-label="Notes">
+    {#each notes as note (note.id)}
+      <Card>
+        {#if editing?.id === note.id}
+          <Field multiline label="Edit the note" bind:value={editing.body} />
+          <div class="mt-2 flex flex-wrap gap-2">
+            <Button primary onclick={save}>Save</Button>
+            <Button onclick={() => (editing = null)}>Cancel</Button>
+          </div>
+        {:else}
+          <p class="break-words">{note.body}</p>
+          <p class="mt-1 text-sm text-muted">
+            {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
+          </p>
           {#if note.mine && canWrite}
-            <button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</button>
-            <button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</button>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
+              <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+            </div>
           {/if}
-        </div>
-      {/if}
-    </li>
-  {:else}
-    <li class="muted">No notes yet.</li>
-  {/each}
-</ul>
+        {/if}
+      </Card>
+    {:else}
+      <li class="text-muted">No notes yet.</li>
+    {/each}
+  </ul>
+</Section>
 ```
 
 `ui/src/People.svelte`: a checkbox a role, its
@@ -455,6 +598,8 @@ permissions in its tooltip (D5):
   // The people signed in and their roles, users.read; a role given or
   // taken, users.grant. The matrix says what each role may do
   import { USERS, api } from "./lib/box.js";
+  import Card from "./lib/Card.svelte";
+  import Section from "./lib/Section.svelte";
 
   let { canGrant } = $props();
   let people = $state([]);
@@ -478,30 +623,31 @@ permissions in its tooltip (D5):
   load();
 </script>
 
-<h2>People</h2>
-{#if error}<p class="bad">{error}</p>{/if}
-<ul class="plain">
-  {#each people as person (person.sub)}
-    <li class="card">
-      <div>{person.email}</div>
-      <div class="row">
-        {#each roles as r (r.role)}
-          <label class="chip" title={r.permissions.join(", ") || "nothing"}>
-            <input type="checkbox" checked={person.roles.includes(r.role)} disabled={!canGrant}
-                   onchange={() => toggle(person, r.role)} />
-            {r.role}
-          </label>
-        {/each}
-      </div>
-    </li>
-  {/each}
-</ul>
+<Section title="People">
+  {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+  <ul class="flex flex-col gap-2" aria-label="People">
+    {#each people as person (person.sub)}
+      <Card>
+        <div class="break-all">{person.email}</div>
+        <div class="flex flex-wrap gap-x-4">
+          {#each roles as r (r.role)}
+            <label class="flex min-h-11 items-center gap-2" title={r.permissions.join(", ") || "nothing"}>
+              <input class="size-5 accent-accent" type="checkbox" checked={person.roles.includes(r.role)}
+                     disabled={!canGrant} onchange={() => toggle(person, r.role)} />
+              {r.role}
+            </label>
+          {/each}
+        </div>
+      </Card>
+    {/each}
+  </ul>
+</Section>
 ```
 
 Run the tests: `./test-6.sh`, or the dashboard's alone,
 `cd ui && npm test`.
 
-## 5 Run It
+## 6 Run It
 
 The config for your stack, into `ui/public/`, which
 Vite serves at the root. For the dev stack:
@@ -533,7 +679,7 @@ in turn:
 5.  **As `asha`,** a member: add a note, edit it,
     delete it. Another's note has no buttons
 
-## 6 Build and Release
+## 7 Build and Release
 
 Expect `dist/index.html` and `built in`:
 
@@ -549,9 +695,13 @@ it ([Release the UI](../../ui/release.md)); CI builds
 the UI on every push, so a broken build fails before a
 tag.
 
-## 7 See Also
+## 8 See Also
 
 - [The refinement](5-refinement.md): next
+- [The UI's conduct](../../conduct/ui.md): the rules
+  this dashboard keeps
 - [Svelte](https://svelte.dev/docs/svelte/overview),
-  [Vite](https://vite.dev/guide/) and
-  [Vitest](https://vitest.dev/guide/), read 2026-10-07
+  [Vite](https://vite.dev/guide/),
+  [Vitest](https://vitest.dev/guide/) and [Tailwind's
+  theme](https://tailwindcss.com/docs/theme), read
+  2026-10-07

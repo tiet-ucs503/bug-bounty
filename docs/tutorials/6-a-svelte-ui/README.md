@@ -54,8 +54,9 @@ step. Read them in order.
 3.  **[The tests](3-tests.md).** The rules as seven
     tests. You run them first, and every one fails
 4.  **[The implementation](4-implementation.md).** The
-    Svelte project, the sign-in, and the dashboard's
-    five components
+    Svelte project, the sign-in, Tailwind and the
+    theme, five small parts, and the dashboard's four
+    components
 5.  **[The refinement](5-refinement.md).** Run the
     tests, read them, and change whichever step is
     wrong

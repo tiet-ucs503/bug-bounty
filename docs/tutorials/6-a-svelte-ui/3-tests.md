@@ -129,7 +129,7 @@ test("T6.5 a member: a note to add, and buttons on their own alone", async () =>
   answer({ "GET /users/me": [200, me(["notes.read", "notes.write"], ["member"])], "GET /notes": [200, NOTES] });
   const page = await show();
   expect(page.querySelector("textarea")).not.toBeNull();
-  const cards = [...page.querySelectorAll("li.card")];
+  const cards = [...page.querySelectorAll('ul[aria-label="Notes"] > li')];
   expect(cards.map((c) => c.querySelectorAll("button").length > 0)).toEqual([true, false]);
 });
 
