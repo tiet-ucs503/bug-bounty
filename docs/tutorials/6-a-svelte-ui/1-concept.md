@@ -56,64 +56,25 @@ as tutorials 4 and 5 tried.
 ## 3 The Wireframe
 
 The concept's artefact: the whole page, as someone who
-is both `member` and `admin` sees it. Each part is
-marked with its rule, and with the permission that
-shows it. Take a permission away and its part goes;
-nothing else moves.
+is both `member` and `admin` sees it. In the margin,
+each part is marked with its rule, and with the
+permission that shows it. Take a permission away and
+its part goes; nothing else moves.
 
-``` text
-+----------------------------------------------------+
-| Notes                                              |
-| Signed in as Asha  (member) (admin)   [ Sign out ] |  D6
-|                                                    |
-| Profile                                            |  D6
-| [ Display name  ] [ Affiliation     ] [ Save ]     |
-|                                                    |
-| Notes                                              |  D4  notes.read
-| +------------------------------------------------+ |
-| | A new note                                     | |      notes.write
-| +------------------------------------------------+ |
-| [ Add ]                                            |
-| +------------------------------------------------+ |
-| | Bring the projector on Friday                  | |
-| | yours, 7 Oct, 10:12       [ Edit ] [ Delete ]  | |      one's own alone
-| +------------------------------------------------+ |
-| +------------------------------------------------+ |
-| | The lab is shut on Monday                      | |
-| | another's, 6 Oct, 16:40                        | |
-| +------------------------------------------------+ |
-|                                                    |
-| People                                             |  D5  users.read
-| +------------------------------------------------+ |
-| | bhanu@elsewhere.net                            | |
-| | [x] reader   [ ] member   [ ] admin            | |      users.grant, to change
-| +------------------------------------------------+ |
-+----------------------------------------------------+
-```
+![The dashboard's wireframe: who you are, the profile,
+the notes and the people in one column, each part
+marked with its rule and its
+permission](wireframe-dashboard.svg)
 
 And the three pages with less on them:
 
-``` text
-D1  signed out            D2  an unverified e-mail
-+--------------------+    +------------------------------+
-| Notes              |    | Notes                        |
-| Not signed in      |    | E-mail not verified:         |
-| [ Sign in ]        |    | asha@example.org             |
-+--------------------+    | [ Sign out ]                 |
-                          +------------------------------+
+![Three smaller wireframes: D1 signed out, D2 an
+unverified e-mail, D3 no role](wireframe-states.svg)
 
-D3  no role
-+----------------------------------------------------+
-| Notes                                              |
-| Signed in as asha@example.org         [ Sign out ] |
-| You are signed in, with no role yet: ask an admin  |
-| for one.                                           |
-|                                                    |
-| Profile                                            |
-| [ Display name  ] [ Affiliation     ] [ Save ]     |
-+----------------------------------------------------+
-```
-
+- **How to read them:** lines and words, no colour. A
+  heavy outline is the button a part is for. Grey words
+  are not content: a field's placeholder, or a line the
+  page says quietly. The words are examples
 - **One column, top to bottom:** who you are, your
   profile, the notes, the people. A part you may not
   see is absent, not greyed out
@@ -122,6 +83,8 @@ D3  no role
 - **The roles are tick boxes,** one a role, for every
   person. Without `users.grant` they show and cannot be
   changed
+- **The wireframe fixes what is on the page and in what
+  order,** not its spacing, type or colour
 
 ## 4 Two Choices, and Why
 
