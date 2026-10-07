@@ -1,8 +1,8 @@
 ---
 abstract: |
   Step 4 of tutorial 3: what makes the eight tests
-  pass. The prefix given, four migrations made from the
-  drafts, each with its undoing, the lint, and the
+  pass. The prefix given, three migrations made from
+  the drafts, each with its undoing, the lint, and the
   schema written down.
 date: 2026-10-07
 keywords:
@@ -12,7 +12,7 @@ keywords:
 - dbmate
 kind: tutorial
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/render.py
 - Makefile
 status: draft
@@ -28,7 +28,7 @@ version: v0.1.0
 - [The tests](3-tests.md), saved as `test-3.sh`, run
   once and failing
 
-Make the four migrations in this order: `make db-new`
+Make the three migrations in this order: `make db-new`
 stamps each with the time, and the time is the order.
 Run the tests after any step, if you like: the count of
 passes only grows.
@@ -169,8 +169,10 @@ functions, then the tables:
 ``` sql
 -- The users unit's roles: what each person may do, an access control
 -- matrix, and the role a person starts with
--- (docs/tutorials/2-authorisation/). Other units call users_may alone,
--- the one function published for them (docs/conduct/database.md §3).
+-- (docs/tutorials/2-authorisation/). Three functions are published for
+-- other units (docs/conduct/database.md §3): users_may, for their
+-- accessors; users_permission_add and users_permission_drop, for their
+-- migrations.
 
 -- migrate:up
 SET lock_timeout = '2s';
@@ -190,13 +192,20 @@ CREATE TABLE IF NOT EXISTS users_members (
 );
 CREATE INDEX IF NOT EXISTS users_members_role_idx ON users_members (role);
 
--- The access control matrix: one row for each cell that says yes. A
--- permission is <unit>.<verb>: notes.read, users.grant
+-- The permissions there are, each brought by the unit that asks for
+-- it. A permission is <unit>.<verb>: users.grant, notes.read
+CREATE TABLE IF NOT EXISTS users_permissions (
+  permission text PRIMARY KEY CHECK (permission ~ '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'),
+  about text NOT NULL DEFAULT ''
+);
+
+-- The access control matrix: one row for each cell that says yes
 CREATE TABLE IF NOT EXISTS users_grants (
   role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE,
-  permission text NOT NULL CHECK (permission ~ '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'),
+  permission text NOT NULL REFERENCES users_permissions (permission) ON DELETE CASCADE,
   PRIMARY KEY (role, permission)
 );
+CREATE INDEX IF NOT EXISTS users_grants_permission_idx ON users_grants (permission);
 
 -- Published, for every unit: may this person do this?
 CREATE OR REPLACE FUNCTION users_may(p_sub text, p_permission text) RETURNS boolean
@@ -310,20 +319,43 @@ $$;
 CREATE OR REPLACE TRIGGER users_people_start AFTER INSERT ON users_people
   FOR EACH ROW EXECUTE FUNCTION users_person_start();
 
--- The roles and the matrix the project starts with; no starting roles
+-- Published, for every unit's migration: a permission, and the roles
+-- that start with it. Twice is once
+CREATE OR REPLACE FUNCTION users_permission_add(p_permission text, p_about text, p_roles text[] DEFAULT '{}')
+  RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM unnest(p_roles) r WHERE r NOT IN (SELECT role FROM users_roles)) THEN
+    RAISE EXCEPTION 'no such role' USING ERRCODE = 'no_data_found';
+  END IF;
+  INSERT INTO users_permissions (permission, about) VALUES (p_permission, p_about) ON CONFLICT DO NOTHING;
+  INSERT INTO users_grants (role, permission) SELECT r, p_permission FROM unnest(p_roles) r ON CONFLICT DO NOTHING;
+END
+$$;
+COMMENT ON FUNCTION users_permission_add(text, text, text[]) IS 'published: a unit''s migration adds its permission';
+
+-- Published, for every unit's migration, on its way down: the
+-- permission and every cell of it. Never the users unit's own
+CREATE OR REPLACE FUNCTION users_permission_drop(p_permission text) RETURNS void
+  LANGUAGE plpgsql AS $$
+BEGIN
+  IF p_permission LIKE 'users.%' THEN
+    RAISE EXCEPTION 'the users unit''s own permission' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  DELETE FROM users_permissions WHERE permission = p_permission;
+END
+$$;
+COMMENT ON FUNCTION users_permission_drop(text) IS 'published: a unit''s migration takes its permission away';
+
+-- The roles the project starts with, and the users unit's own
+-- permissions; no starting roles
 INSERT INTO users_roles (role, about) VALUES
-  ('reader', 'reads notes'),
-  ('member', 'reads and writes notes'),
+  ('reader', 'reads what each unit lets it'),
+  ('member', 'reads and writes what each unit lets it'),
   ('admin', 'reads the people and the matrix, grants and revokes roles')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO users_grants (role, permission) VALUES
-  ('reader', 'notes.read'),
-  ('member', 'notes.read'),
-  ('member', 'notes.write'),
-  ('admin', 'users.read'),
-  ('admin', 'users.grant')
-ON CONFLICT DO NOTHING;
+SELECT users_permission_add('users.read', 'reads the people and the matrix', '{admin}'),
+       users_permission_add('users.grant', 'grants and revokes roles', '{admin}');
 
 -- migrate:down
 SET lock_timeout = '2s';
@@ -332,6 +364,10 @@ SET statement_timeout = '30s';
 DROP TRIGGER IF EXISTS users_people_start ON users_people;
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS users_person_start();
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_permission_drop(text);
+-- squawk-ignore ban-drop-function
+DROP FUNCTION IF EXISTS users_permission_add(text, text, text[]);
 -- squawk-ignore ban-drop-function
 DROP FUNCTION IF EXISTS users_revoke(text, text, text);
 -- squawk-ignore ban-drop-function
@@ -348,6 +384,8 @@ DROP FUNCTION IF EXISTS users_may(text, text);
 DROP TABLE IF EXISTS users_starting_roles;
 -- squawk-ignore ban-drop-table
 DROP TABLE IF EXISTS users_grants;
+-- squawk-ignore ban-drop-table
+DROP TABLE IF EXISTS users_permissions;
 -- squawk-ignore ban-drop-table
 DROP TABLE IF EXISTS users_members;
 -- squawk-ignore ban-drop-table
@@ -370,7 +408,7 @@ And write, with **your** address for `you@example.org`:
 -- The project's first admin, by e-mail: a starting role, admin, for
 -- their first sign-in, or admin now if they have signed in already.
 -- Your own address: the repository holds it, so mind who can read the
--- repository (docs/tutorials/3-the-migration/4-implementation.md §4).
+-- repository (docs/tutorials/3-the-migration/4-implementation.md §5).
 
 -- migrate:up
 SET lock_timeout = '2s';
@@ -400,112 +438,7 @@ now.
 Then run the tests with your address:
 `FIRST_ADMIN=<your address> ./test-3.sh`.
 
-## 6 The Notes
-
-py-api's prefix, py-api's file:
-
-``` sh
-make db-new PREFIX=py_api NAME=notes_permissions
-```
-
-Under `-- migrate:up`, `notes-draft.sql` as it is;
-under `-- migrate:down`, its undoing:
-
-``` sql
--- Notes under the matrix and their owners, (u=rw, a=r): everyone with
--- notes.read reads every note; the owner alone changes theirs, and only
--- while they hold notes.write (docs/tutorials/2-authorisation/). Each
--- accessor takes the caller first and checks before it acts. The
--- example's py_api_note_add and py_api_notes_of stay as they are:
--- their signatures are a promise; nothing new calls them.
-
--- migrate:up
-SET lock_timeout = '2s';
-SET statement_timeout = '30s';
-
-ALTER TABLE py_api_notes ADD COLUMN IF NOT EXISTS updated_at timestamptz;
-
--- A new note, the caller its owner: notes.write
-CREATE OR REPLACE FUNCTION py_api_note_new(p_caller text, p_body text) RETURNS bigint
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  RETURN py_api_note_add(p_caller, p_body);
-END
-$$;
-
--- Every note, newest first, a page at a time: notes.read. Not who
--- owns each, only whether the caller does
-CREATE OR REPLACE FUNCTION py_api_notes_all(p_caller text, p_before bigint DEFAULT NULL, p_limit int DEFAULT 50)
-  RETURNS TABLE (id bigint, body text, mine boolean, created_at timestamptz, updated_at timestamptz)
-  LANGUAGE plpgsql STABLE AS $$
-#variable_conflict use_column
-BEGIN
-  IF NOT users_may(p_caller, 'notes.read') THEN
-    RAISE EXCEPTION 'notes.read needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  RETURN QUERY
-    SELECT n.id, n.body, n.owner = p_caller, n.created_at, n.updated_at FROM py_api_notes n
-    WHERE p_before IS NULL OR n.id < p_before ORDER BY n.id DESC LIMIT least(p_limit, 200);
-END
-$$;
-
--- The owner's change to their note: notes.write, and theirs
-CREATE OR REPLACE FUNCTION py_api_note_edit(p_caller text, p_id bigint, p_body text) RETURNS void
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  UPDATE py_api_notes SET body = p_body, updated_at = now() WHERE id = p_id AND owner = p_caller;
-  IF NOT FOUND THEN
-    IF EXISTS (SELECT 1 FROM py_api_notes WHERE id = p_id) THEN
-      RAISE EXCEPTION 'not your note' USING ERRCODE = 'insufficient_privilege';
-    END IF;
-    RAISE EXCEPTION 'no such note' USING ERRCODE = 'no_data_found';
-  END IF;
-END
-$$;
-
--- The owner's removal of their note: notes.write, and theirs
-CREATE OR REPLACE FUNCTION py_api_note_drop(p_caller text, p_id bigint) RETURNS void
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  DELETE FROM py_api_notes WHERE id = p_id AND owner = p_caller;
-  IF NOT FOUND THEN
-    IF EXISTS (SELECT 1 FROM py_api_notes WHERE id = p_id) THEN
-      RAISE EXCEPTION 'not your note' USING ERRCODE = 'insufficient_privilege';
-    END IF;
-    RAISE EXCEPTION 'no such note' USING ERRCODE = 'no_data_found';
-  END IF;
-END
-$$;
-
--- migrate:down
-SET lock_timeout = '2s';
-SET statement_timeout = '30s';
--- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS py_api_note_drop(text, bigint);
--- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS py_api_note_edit(text, bigint, text);
--- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS py_api_notes_all(text, bigint, int);
--- squawk-ignore ban-drop-function
-DROP FUNCTION IF EXISTS py_api_note_new(text, text);
--- squawk-ignore ban-drop-column
-ALTER TABLE py_api_notes DROP COLUMN IF EXISTS updated_at;
-```
-
-Its file sorts after the roles', so it runs after: its
-functions call `users_may`, which must exist first
-(R2).
-
-## 7 Lint, and Apply
+## 6 Lint, and Apply
 
 Squawk reads every migration for what could lock or
 lose data on a live database. Expect `Found 0 issues`:
@@ -514,7 +447,7 @@ lose data on a live database. Expect `Found 0 issues`:
 make db-lint
 ```
 
-Then apply. Expect `Applied:` for each of the four:
+Then apply. Expect `Applied:` for each of the three:
 
 ``` sh
 make db CMD=up
@@ -526,7 +459,7 @@ On the native stack, dbmate itself, as the migrator:
 dbmate --url "${MIGRATOR_URL}" -d migrations/sql --no-dump-schema up
 ```
 
-## 8 Write the Schema, and Commit
+## 7 Write the Schema, and Commit
 
 Expect `Writing:`:
 
@@ -538,13 +471,13 @@ On the native stack,
 `dbmate --url "${MIGRATOR_URL}" -d migrations/sql -s migrations/schema.sql dump`.
 
 Run [the tests](3-tests.md) once more; expect
-`8 of 8 pass`. Then commit the four migrations,
+`8 of 8 pass`. Then commit the three migrations,
 `schema.sql`, `box/project.json` and `test-3.sh`
-together. Delete `users-draft.sql` and
-`notes-draft.sql`: from here on, the migrations are the
-truth, and a change to them is a new migration.
+together. Delete `users-draft.sql`: from here on, the
+migrations are the truth, and a change to them is a new
+migration.
 
-## 9 What Reaches the Box
+## 8 What Reaches the Box
 
 A release tag builds the migrations image and records
 its digest; the manifest's change is handed to the
@@ -555,7 +488,7 @@ migrations once its PostgreSQL is there, the last step
 of its `feature/postgres`; until then, the database is
 your stack's alone.
 
-## 10 See Also
+## 9 See Also
 
 - [The refinement](5-refinement.md): next
 - [Write a

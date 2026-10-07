@@ -11,7 +11,7 @@ keywords:
 - tests
 kind: reference
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 status: draft
 subtitle: Step 3, how we measure it
 title: "3.3 Make It a Migration: the Tests"
@@ -27,18 +27,18 @@ Each rule of [the concept](1-concept.md) §3, held to
   Expect `yes`
 - **T3.2, R3:** applied, how many tables, indexes,
   functions and triggers named `users_`? Expect
-  `6 1 10 1`
-- **T3.3, R4:** what does `users_may`'s comment begin
-  with? Expect `published`
+  `7 2 12 1`
+- **T3.3, R4:** how many functions' comments begin
+  `published:`? Expect `3`
 - **T3.4, R5:** a grant for a role that does not exist?
   Expect `23503`, a foreign key's refusal
 - **T3.5, R2, R6:** tutorial 2's tests, on the
   migrations? Expect `27 of 27 pass`
 - **T3.6, R7:** the first admin signs in for the first
   time: may they grant? Expect `t`
-- **T3.7, R8:** the four rolled back: how many `users_`
-  names are left, and is the notes' `updated_at`?
-  Expect `0 0`
+- **T3.7, R8:** the three rolled back: how many
+  `users_` names are left, and which migration is the
+  newest? Expect `0 20261006120000`, the template's own
 - **T3.8, R8:** applied again: is the schema as it was?
   Expect `same`
 
@@ -51,10 +51,10 @@ and `make db` otherwise. Your first admin's address is
 `FIRST_ADMIN`, `you@example.org` unless you set it.
 
 > [!CAUTION]
-> T3.7 rolls back tutorial 3's four migrations, and
+> T3.7 rolls back tutorial 3's three migrations, and
 > T3.8 applies them again. The rows go with them: every
-> person, role and note on your local stack. It rolls
-> back nothing unless the newest four are tutorial 3's.
+> person and role on your local stack. It rolls back
+> nothing unless the newest three are tutorial 3's.
 
 ``` sh
 #!/usr/bin/env bash
@@ -64,7 +64,7 @@ and `make db` otherwise. Your first admin's address is
 # tutorial 3's migrations: their rows go with them
 set -uo pipefail
 FIRST_ADMIN=${FIRST_ADMIN:-you@example.org}
-MINE="users_create_people users_create_roles users_first_admin py_api_notes_permissions"
+MINE="users_create_people users_create_roles users_first_admin"
 
 # dbmate on your PATH, as on the native stack; else the dev stack's
 db() {
@@ -95,19 +95,19 @@ expect() {  # expect ID WANT GOT: one line a test
 # The users unit's prefix, given to a service
 expect T3.1 yes "$(jq -r '[.services[] | (.prefixes // [.prefix])[]] | if index("users") then "yes" else "no" end' box/project.json)"
 
-# Applied, and everything the unit makes is there: six tables, an index,
-# ten functions, a trigger
+# Applied, and everything the unit makes is there: seven tables, two
+# indexes, twelve functions, a trigger
 db up > /dev/null 2>&1
-expect T3.2 "6 1 10 1" "$(q "SELECT (SELECT count(*) FROM pg_tables WHERE tablename LIKE 'users\_%') || ' ' ||
+expect T3.2 "7 2 12 1" "$(q "SELECT (SELECT count(*) FROM pg_tables WHERE tablename LIKE 'users\_%') || ' ' ||
   (SELECT count(*) FROM pg_indexes WHERE indexname LIKE 'users\_%\_idx') || ' ' ||
   (SELECT count(*) FROM pg_proc WHERE proname LIKE 'users\_%') || ' ' ||
   (SELECT count(*) FROM pg_trigger WHERE tgname LIKE 'users\_%')")"
 
-# users_may is published, and says so
-expect T3.3 published "$(q "SELECT split_part(obj_description('users_may(text, text)'::regprocedure), ':', 1)")"
+# Three functions published, and saying so
+expect T3.3 3 "$(q "SELECT count(*) FROM pg_proc p WHERE p.proname LIKE 'users\_%' AND obj_description(p.oid, 'pg_proc') LIKE 'published:%'")"
 
 # The data keeps its rules: no grant for a role that does not exist
-expect T3.4 23503 "$(ask "INSERT INTO users_grants VALUES ('nobody', 'notes.read')")"
+expect T3.4 23503 "$(ask "INSERT INTO users_grants VALUES ('nobody', 'users.read')")"
 
 # Tutorial 2's tests, on the migrations instead of the drafts
 expect T3.5 "27 of 27 pass" "$(psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -f test-2.sql -c ROLLBACK 2>&1 | grep -o '[0-9]* of [0-9]* pass')"
@@ -116,15 +116,15 @@ expect T3.5 "27 of 27 pass" "$(psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -f te
 expect T3.6 t "$(ask "SELECT users_person_see('t3-first', '${FIRST_ADMIN}', true, 'Google')" \
   "SELECT users_may('t3-first', 'users.grant')")"
 
-# Rolled back, newest first, only if the newest four are tutorial 3's:
-# nothing of theirs is left, and the notes are as the template made them
-newest=$(q "SELECT string_agg(version, ' ' ORDER BY version DESC) FROM (SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 4) v")
+# Rolled back, newest first, only if the newest three are tutorial 3's:
+# nothing of theirs is left, and the newest migration is the template's
+newest=$(q "SELECT string_agg(version, ' ' ORDER BY version DESC) FROM (SELECT version FROM schema_migrations ORDER BY version DESC LIMIT 3) v")
 names=$(for v in ${newest}; do ls migrations/sql/${v}_*.sql 2> /dev/null | sed 's|.*/[0-9]*_||; s|\.sql$||'; done | tac | paste -sd' ')
 before=$(schema)
 if [ "${names}" = "${MINE}" ]; then
-  for _ in 1 2 3 4; do db rollback > /dev/null 2>&1; done
-  expect T3.7 "0 0" "$(q "SELECT (SELECT count(*) FROM pg_class WHERE relname LIKE 'users\_%') + (SELECT count(*) FROM pg_proc WHERE proname LIKE 'users\_%') || ' ' ||
-    (SELECT count(*) FROM information_schema.columns WHERE table_name = 'py_api_notes' AND column_name = 'updated_at')")"
+  for _ in 1 2 3; do db rollback > /dev/null 2>&1; done
+  expect T3.7 "0 20261006120000" "$(q "SELECT (SELECT count(*) FROM pg_class WHERE relname LIKE 'users\_%') + (SELECT count(*) FROM pg_proc WHERE proname LIKE 'users\_%') || ' ' ||
+    (SELECT max(version) FROM schema_migrations)")"
   # Applied again: the schema exactly as it was
   db up > /dev/null 2>&1
   expect T3.8 same "$(diff -q <(schema) <(echo "${before}") > /dev/null && echo same || echo different)"
@@ -141,10 +141,10 @@ echo "${pass} of ${all} pass"
 
 Before any migration exists, with the template's own
 applied. Expect `FAIL` on every line: T3.1 `got no`;
-T3.2 `got 0 0 0 0`; `42883`, an undefined function, for
-T3.3 and T3.6; `42P01`, an undefined table, for T3.4;
-T3.5 `got nothing`; T3.7 naming the one migration there
-is; and T3.8 `got not tried`. At the end,
+T3.2 `got 0 0 0 0`; T3.3 `got 0`; `42883`, an undefined
+function, for T3.6; `42P01`, an undefined table, for
+T3.4; T3.5 `got nothing`; T3.7 naming the one migration
+there is; and T3.8 `got not tried`. At the end,
 `0 of 8 pass`:
 
 ``` sh
