@@ -139,7 +139,65 @@ look alike and must not: T2.19 and T2.20, the
 permission taken away against the one kept; T2.12 and
 T2.13, the last `users.grant` against any other.
 
-## 2 The File
+## 2 The File, as a Story
+
+The tests run in order, and each leaves the database as
+the next expects it. Read in order, they tell one
+story: a project's first days. Each step names the
+accessors it calls and the tests that check it.
+
+1.  **Three people sign in,** by tutorial 1's
+    `users_person_see`: you, asha and bhanu. You are
+    made the first admin by hand. The `example` unit
+    arrives with its two permissions, by
+    `users_permission_add`. The setup; no test
+2.  **Nobody may do anything yet.** `users_may` says
+    bhanu may not read examples, nor may someone who
+    never signed in. T2.1, T2.2
+3.  **You give bhanu a role.** `users_grant` makes him
+    a `reader`: he may read examples, but not write
+    them. You, an admin, may not read them: your role
+    is about people, not examples. `users_list` shows
+    you all three people. T2.3 to T2.6
+4.  **You make yourself a `member` as well,** by
+    `users_grant`, and may now both read examples and
+    grant roles. T2.7
+5.  **Grants that go wrong.** Bhanu tries
+    `users_grant` to make himself `admin`, and is
+    refused. You name someone who never signed in, then
+    a role that does not exist, and are refused each
+    time. You make bhanu a `reader` again, and he holds
+    it once. T2.8 to T2.11
+6.  **You try to step down.** `users_revoke` refuses to
+    take away your own `admin`: nobody else could grant
+    roles. You make asha an admin and unmake her, and
+    that goes through. T2.12, T2.13
+7.  **Bhanu looks around.** `users_list` refuses him;
+    `users_me` shows him his own roles and permissions.
+    T2.14, T2.15
+8.  **The unit grows, then shrinks.** You make asha a
+    `member`. The unit adds `example.share` by
+    `users_permission_add`, and asha may share; added
+    twice, it is there once; added for a role that does
+    not exist, it is refused. The unit takes it away by
+    `users_permission_drop`: asha may no longer share,
+    but may still write. Taken away twice, no refusal;
+    `users.grant` cannot be taken away at all. T2.16 to
+    T2.22
+9.  **Three functions are published** for other units
+    to call: `users_may`, `users_permission_add` and
+    `users_permission_drop`. T2.23
+10. **A badly named permission is refused:** `Example`
+    has no unit and no verb. T2.24
+11. **Newcomers.** A starting rule gives everyone at
+    example.org `reader`. Chitra signs in, by
+    `users_person_see`, and may read examples at once.
+    Anu, at elsewhere.net, matches no rule and gets no
+    role. A rule for everyone is added; anu signs in
+    again, and still gets none: a starting role comes
+    at the first sign-in alone. T2.25 to T2.27
+
+## 3 The File
 
 Save it as `test-2.sql` at your fork's root. One
 helper, `expect`, runs each test in a savepoint of its
@@ -255,7 +313,7 @@ DO $$ BEGIN
 END $$;
 ```
 
-## 3 Run It Now
+## 4 Run It Now
 
 Before any of tutorial 2's code exists, with tutorial
 1's draft alone. Expect `t|t|t` for the three people
@@ -272,7 +330,7 @@ psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sq
 A test that passes now tests nothing: it would pass
 whatever you wrote next.
 
-## 4 See Also
+## 5 See Also
 
 - [The contract](2-contract.md): the step before,
   whose signatures and refusals these tests call
