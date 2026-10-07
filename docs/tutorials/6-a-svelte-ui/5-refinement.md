@@ -22,7 +22,7 @@ version: v0.1.0
 
 ## 1 Run
 
-Expect seven lines starting `ok`, then `7 of 7 pass`:
+Expect ten lines starting `ok`, then `10 of 10 pass`:
 
 ``` sh
 ./test-6.sh
@@ -42,7 +42,8 @@ failure in full: `cd ui && npm test`.
 ## 3 Try the Tests Themselves
 
 Break the dashboard on purpose, so it shows the notes
-to everyone. Expect `FAIL` for T6.3, and `6 of 7 pass`:
+to everyone. Expect `FAIL` for T6.3, and
+`9 of 10 pass`:
 
 ``` sh
 cp ui/src/App.svelte /tmp/App.svelte

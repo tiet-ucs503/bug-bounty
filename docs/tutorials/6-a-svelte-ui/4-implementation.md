@@ -1,9 +1,10 @@
 ---
 abstract: |
-  Step 4 of tutorial 6: what makes the seven tests
+  Step 4 of tutorial 6: what makes the ten tests
   pass. `ui/` made a Svelte project; the starter's
-  sign-in carried over; the dashboard's five
-  components; then run, built and released.
+  sign-in carried over; Tailwind and the theme; six
+  small parts; the dashboard's four components; then
+  run, built and released.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -325,7 +326,7 @@ component holds.
 A button, a field, a card: each appears in more than
 one place, and must look the same in each. [The UI's
 conduct](../../conduct/ui.md), U2, makes such a part a
-component, not a class of your own. Five, in
+component, not a class of your own. Six, in
 `ui/src/lib/`, each a few lines.
 
 `ui/src/lib/Button.svelte`. `primary` is the one main
@@ -390,18 +391,46 @@ zoom in when it is touched:
 ```
 
 `ui/src/lib/Section.svelte`, a part of the page under
-its heading:
+its heading, and named by it, so a test or a screen
+reader finds "Notes" as a region:
 
 ``` svelte
 <script>
-  // A part of the dashboard, under its heading
+  // A part of the dashboard, under its heading, and named by it
   let { title, children } = $props();
 </script>
 
-<section class="mt-8">
+<section class="mt-8" aria-label={title}>
   <h2 class="mb-2 text-lg font-semibold">{title}</h2>
   {@render children()}
 </section>
+```
+
+`ui/src/lib/Loaded.svelte`, what a part shows before
+its own content (D7, T6.8, T6.10). Waiting and failed
+look the same in every part, so they are written once:
+
+``` svelte
+<script>
+  // What a part shows before its own content: that it is waiting, or
+  // that it failed, in words, with a way to try again. Never a blank,
+  // and never the look of an empty part. what: "the notes"
+  import Button from "./Button.svelte";
+
+  let { what, waiting, failed, retry, also, children } = $props();
+</script>
+
+{#if failed}
+  <p class="my-2 text-danger" role="alert">{what[0].toUpperCase() + what.slice(1)} did not load: {failed}</p>
+  <div class="flex flex-wrap gap-2">
+    <Button onclick={retry}>Try again</Button>
+    {@render also?.()}
+  </div>
+{:else if waiting}
+  <p class="my-2 text-muted" aria-busy="true">Loading {what}…</p>
+{:else}
+  {@render children()}
+{/if}
 ```
 
 A list of classes may be an array, as in `Button`:
@@ -415,7 +444,9 @@ the phone's first, then what a wider screen adds, after
 `md:`.
 
 `ui/src/App.svelte`: what `/users/me` answers decides
-what the page shows (D1 to D3):
+what the page shows (D1 to D3). A `403` is an
+unverified e-mail; any other answer, or none, is a
+failure, said and tried again (D7):
 
 ``` svelte
 <script>
@@ -428,14 +459,24 @@ what the page shows (D1 to D3):
   import Profile from "./Profile.svelte";
   import Button from "./lib/Button.svelte";
   import Chip from "./lib/Chip.svelte";
+  import Loaded from "./lib/Loaded.svelte";
 
   let me = $state(null);
   let refused = $state("");
+  let failed = $state("");
 
+  // 200, you; 403, an unverified e-mail; anything else, or no answer
+  // at all, a failure to say and to try again
   async function load() {
-    const r = await api(USERS, "/users/me");
-    if (r.status === 200) me = r.data;
-    else refused = r.status === 403 ? `E-mail not verified: ${r.data.email || "no e-mail"}` : `users: ${r.status}`;
+    failed = "";
+    try {
+      const r = await api(USERS, "/users/me");
+      if (r.status === 200) me = r.data;
+      else if (r.status === 403) refused = `E-mail not verified: ${r.data.email || "no e-mail"}`;
+      else failed = `users: ${r.status}`;
+    } catch {
+      failed = "users: no answer";
+    }
   }
 
   const may = (p) => me?.permissions.includes(p) ?? false;
@@ -451,24 +492,25 @@ what the page shows (D1 to D3):
   {:else if refused}
     <p class="my-2 text-danger">{refused}</p>
     <Button onclick={signOut}>Sign out</Button>
-  {:else if me}
-    <div class="my-2 flex flex-wrap items-center gap-2">
-      <span class="text-muted">Signed in as {me.profile.display_name || me.email}</span>
-      {#each me.roles as role}<Chip>{role}</Chip>{/each}
-      <Button onclick={signOut}>Sign out</Button>
-    </div>
-    {#if me.permissions.length === 0}
-      <p class="my-2 text-muted">You are signed in, with no role yet: ask an admin for one.</p>
-    {/if}
-    <Profile {me} />
-    {#if may("notes.read")}
-      <Notes canWrite={may("notes.write")} />
-    {/if}
-    {#if may("users.read")}
-      <People canGrant={may("users.grant")} />
-    {/if}
   {:else}
-    <p class="my-2 text-muted">…</p>
+    <Loaded what="your account" waiting={!me} {failed} retry={load}>
+      {#snippet also()}<Button onclick={signOut}>Sign out</Button>{/snippet}
+      <div class="my-2 flex flex-wrap items-center gap-2">
+        <span class="text-muted">Signed in as {me.profile.display_name || me.email}</span>
+        {#each me.roles as role}<Chip>{role}</Chip>{/each}
+        <Button onclick={signOut}>Sign out</Button>
+      </div>
+      {#if me.permissions.length === 0}
+        <p class="my-2 text-muted">You are signed in, with no role yet: ask an admin for one.</p>
+      {/if}
+      <Profile {me} />
+      {#if may("notes.read")}
+        <Notes canWrite={may("notes.write")} />
+      {/if}
+      {#if may("users.read")}
+        <People canGrant={may("users.grant")} />
+      {/if}
+    </Loaded>
   {/if}
 </main>
 ```
@@ -512,7 +554,8 @@ profile's columns of tutorial 1; change both together:
 
 `ui/src/Notes.svelte`: every note; the add box and the
 buttons only where the permissions and the owner allow
-(D4):
+(D4). `notes` is `null` until the first answer, which
+is how waiting differs from empty (D7, T6.8, T6.9):
 
 ``` svelte
 <script>
@@ -522,18 +565,26 @@ buttons only where the permissions and the owner allow
   import Button from "./lib/Button.svelte";
   import Card from "./lib/Card.svelte";
   import Field from "./lib/Field.svelte";
+  import Loaded from "./lib/Loaded.svelte";
   import Section from "./lib/Section.svelte";
 
   let { canWrite } = $props();
-  let notes = $state([]);
+  // null until the first answer: waiting is not the same as none
+  let notes = $state(null);
   let draft = $state("");
   let editing = $state(null);
   let error = $state("");
+  let failed = $state("");
 
   async function load() {
-    const r = await api("py-api", "/notes");
-    if (r.status === 200) notes = r.data;
-    else error = r.data.error ?? `py-api: ${r.status}`;
+    failed = "";
+    try {
+      const r = await api("py-api", "/notes");
+      if (r.status === 200) notes = r.data;
+      else failed = r.data.error ?? `py-api: ${r.status}`;
+    } catch {
+      failed = "py-api: no answer";
+    }
   }
 
   async function call(path, opts) {
@@ -556,42 +607,45 @@ buttons only where the permissions and the owner allow
 </script>
 
 <Section title="Notes">
-  {#if error}<p class="my-2 text-danger">{error}</p>{/if}
-  {#if canWrite}
-    <Field multiline label="A new note" bind:value={draft} />
-    <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
-  {/if}
-  <ul class="flex flex-col gap-2" aria-label="Notes">
-    {#each notes as note (note.id)}
-      <Card>
-        {#if editing?.id === note.id}
-          <Field multiline label="Edit the note" bind:value={editing.body} />
-          <div class="mt-2 flex flex-wrap gap-2">
-            <Button primary onclick={save}>Save</Button>
-            <Button onclick={() => (editing = null)}>Cancel</Button>
-          </div>
-        {:else}
-          <p class="break-words">{note.body}</p>
-          <p class="mt-1 text-sm text-muted">
-            {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
-          </p>
-          {#if note.mine && canWrite}
+  <Loaded what="the notes" waiting={notes === null} {failed} retry={load}>
+    {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+    {#if canWrite}
+      <Field multiline label="A new note" bind:value={draft} />
+      <div class="my-2"><Button primary onclick={add} disabled={!draft.trim()}>Add</Button></div>
+    {/if}
+    <ul class="flex flex-col gap-2">
+      {#each notes as note (note.id)}
+        <Card>
+          {#if editing?.id === note.id}
+            <Field multiline label="Edit the note" bind:value={editing.body} />
             <div class="mt-2 flex flex-wrap gap-2">
-              <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
-              <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+              <Button primary onclick={save}>Save</Button>
+              <Button onclick={() => (editing = null)}>Cancel</Button>
             </div>
+          {:else}
+            <p class="break-words">{note.body}</p>
+            <p class="mt-1 text-sm text-muted">
+              {note.mine ? "yours" : "another's"}, {new Date(note.created_at).toLocaleString()}
+            </p>
+            {#if note.mine && canWrite}
+              <div class="mt-2 flex flex-wrap gap-2">
+                <Button onclick={() => (editing = { id: note.id, body: note.body })}>Edit</Button>
+                <Button onclick={() => call(`/notes/${note.id}`, { method: "DELETE" })}>Delete</Button>
+              </div>
+            {/if}
           {/if}
-        {/if}
-      </Card>
-    {:else}
-      <li class="text-muted">No notes yet.</li>
-    {/each}
-  </ul>
+        </Card>
+      {:else}
+        <li class="text-muted">No notes yet.</li>
+      {/each}
+    </ul>
+  </Loaded>
 </Section>
 ```
 
 `ui/src/People.svelte`: a checkbox a role, its
-permissions in its tooltip (D5):
+permissions in its tooltip (D5). The people and the
+roles load together, or the part fails (D7):
 
 ``` svelte
 <script>
@@ -599,17 +653,27 @@ permissions in its tooltip (D5):
   // taken, users.grant. The matrix says what each role may do
   import { USERS, api } from "./lib/box.js";
   import Card from "./lib/Card.svelte";
+  import Loaded from "./lib/Loaded.svelte";
   import Section from "./lib/Section.svelte";
 
   let { canGrant } = $props();
-  let people = $state([]);
+  // null until the first answer: waiting is not the same as none
+  let people = $state(null);
   let roles = $state([]);
   let error = $state("");
+  let failed = $state("");
 
+  // Both or neither: the people are no use without the roles to tick
   async function load() {
-    const [p, r] = await Promise.all([api(USERS, "/users/people"), api(USERS, "/users/roles")]);
-    if (p.status === 200) people = p.data;
-    if (r.status === 200) roles = r.data;
+    failed = "";
+    try {
+      const [p, r] = await Promise.all([api(USERS, "/users/people"), api(USERS, "/users/roles")]);
+      const bad = [p, r].find((a) => a.status !== 200);
+      if (bad) failed = bad.data.error ?? `users: ${bad.status}`;
+      else [people, roles] = [p.data, r.data];
+    } catch {
+      failed = "users: no answer";
+    }
   }
 
   async function toggle(person, role) {
@@ -624,23 +688,25 @@ permissions in its tooltip (D5):
 </script>
 
 <Section title="People">
-  {#if error}<p class="my-2 text-danger">{error}</p>{/if}
-  <ul class="flex flex-col gap-2" aria-label="People">
-    {#each people as person (person.sub)}
-      <Card>
-        <div class="break-all">{person.email}</div>
-        <div class="flex flex-wrap gap-x-4">
-          {#each roles as r (r.role)}
-            <label class="flex min-h-11 items-center gap-2" title={r.permissions.join(", ") || "nothing"}>
-              <input class="size-5 accent-accent" type="checkbox" checked={person.roles.includes(r.role)}
-                     disabled={!canGrant} onchange={() => toggle(person, r.role)} />
-              {r.role}
-            </label>
-          {/each}
-        </div>
-      </Card>
-    {/each}
-  </ul>
+  <Loaded what="the people" waiting={people === null} {failed} retry={load}>
+    {#if error}<p class="my-2 text-danger">{error}</p>{/if}
+    <ul class="flex flex-col gap-2">
+      {#each people as person (person.sub)}
+        <Card>
+          <div class="break-all">{person.email}</div>
+          <div class="flex flex-wrap gap-x-4">
+            {#each roles as r (r.role)}
+              <label class="flex min-h-11 items-center gap-2" title={r.permissions.join(", ") || "nothing"}>
+                <input class="size-5 accent-accent" type="checkbox" checked={person.roles.includes(r.role)}
+                       disabled={!canGrant} onchange={() => toggle(person, r.role)} />
+                {r.role}
+              </label>
+            {/each}
+          </div>
+        </Card>
+      {/each}
+    </ul>
+  </Loaded>
 </Section>
 ```
 
