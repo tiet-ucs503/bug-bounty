@@ -69,8 +69,8 @@ One class does one thing, and its name says what.
 ```
 
 - **No class names of your own.** No `.card`, no
-  `.row`. What repeats becomes a component (U3), not a
-  class
+  `.row`. A part that repeats, a button or a card,
+  becomes a component (U3), not a class
 - **No `<style>` block and no `style=`,** but for a
   value computed at run time, such as a bar's width
 - **No values of your own in brackets,** `p-[13px]` or
@@ -81,7 +81,7 @@ One class does one thing, and its name says what.
   in rendered text
 - **The order of classes:** layout, box, type, colour,
   then the prefixed ones. Tailwind's own Prettier
-  plugin sorts them; use it
+  plugin sorts them, if the project formats by Prettier
 
 Why utilities: a change to one part cannot break
 another, since nothing is shared but the scale. And the
@@ -151,9 +151,19 @@ project's:** a plain look, ink on paper.
 From it, `bg-ground`, `text-ink`, `text-muted`,
 `border-danger` and `rounded-box` exist, and no other
 colour should appear in the markup. The example gives
-the light values alone. Write your own, and a page
-beside [the UI's](../ui/README.md) that shows it: each
-token, its job, and one part drawn with it.
+the light values alone. A first line in the theme,
+`--color-*: initial`, takes Tailwind's own colours
+away, so that none other can.
+
+[Tutorial 6's
+implementation](../tutorials/6-a-svelte-ui/4-implementation.md)
+§3 to §5 is all of this at work: a theme with its dark
+values, five small parts, and a dashboard built of
+them.
+
+Write your own, and a page beside [the
+UI's](../ui/README.md) that shows it: each token, its
+job, and one part drawn with it.
 
 ## 5 U5 Every State Drawn Before It Is Built
 
@@ -217,23 +227,7 @@ learns of every visit, and a way for the page to break.
   merge request: what it is for, and what was tried
   without it
 
-## 9 Not Yet
-
-[Tutorial 6](../tutorials/6-a-svelte-ui/README.md) was
-written before this page, and departs from it in three
-places:
-
-- **U2, U4:** it styles by one stylesheet with classes
-  of its own, `.card` and `.row`, and colours named
-  there
-- **U3:** one of its tests finds the notes by
-  `li.card`, a class
-- **U1:** its wireframe is not drawn at a phone's width
-
-Until it is brought into line, this page wins for new
-work.
-
-## 10 See Also
+## 9 See Also
 
 - [The UI](../ui/README.md): what the box asks of any
   UI
