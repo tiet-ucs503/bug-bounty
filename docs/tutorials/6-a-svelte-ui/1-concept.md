@@ -55,21 +55,25 @@ as tutorials 4 and 5 tried.
 
 ## 3 The Wireframe
 
-The concept's artefact: the whole page, as someone who
-is both `member` and `admin` sees it. In the margin,
-each part is marked with its rule, and with the
-permission that shows it. Take a permission away and
-its part goes; nothing else moves.
+The concept's artefact: the whole page on a phone, 360
+px wide, as someone who is both `member` and `admin`
+sees it. A phone first ([the UI's
+conduct](../../conduct/ui.md), U1): a wider screen adds
+to this, and the margin says where. In the margin, each
+part is marked with its rule, and with the permission
+that shows it. Take a permission away and its part
+goes; nothing else moves.
 
-![The dashboard's wireframe: who you are, the profile,
-the notes and the people in one column, each part
-marked with its rule and its
+![The dashboard's wireframe on a phone: who you are,
+the profile, the notes and the people in one column,
+each part marked with its rule and its
 permission](wireframe-dashboard.svg)
 
 And the three pages with less on them:
 
-![Three smaller wireframes: D1 signed out, D2 an
-unverified e-mail, D3 no role](wireframe-states.svg)
+![Three smaller wireframes, on a phone: D1 signed out,
+D2 an unverified e-mail, D3 no
+role](wireframe-states.svg)
 
 - **How to read them:** lines and words, no colour. A
   heavy outline is the button a part is for. Grey words
@@ -77,7 +81,11 @@ unverified e-mail, D3 no role](wireframe-states.svg)
   page says quietly. The words are examples
 - **One column, top to bottom:** who you are, your
   profile, the notes, the people. A part you may not
-  see is absent, not greyed out
+  see is absent, not greyed out. From 768 px wide, the
+  profile's two fields and its button share a row;
+  nothing else changes
+- **Every button and tick is 44 px tall,** a finger's
+  width
 - **A note says `yours` or `another's`,** never a name
   (§5)
 - **The roles are tick boxes,** one a role, for every

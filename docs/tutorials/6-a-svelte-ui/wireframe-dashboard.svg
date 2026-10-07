@@ -1,89 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 756" width="760" height="756" role="img" aria-labelledby="t d">
-  <title id="t">The dashboard's wireframe</title>
-  <desc id="d">One column in a frame: a header with the display name, two roles and a sign-out button; the profile, two fields and Save; the notes, a box to add one and two notes, the buttons Edit and Delete on your own alone; the people, each an e-mail and three ticks, one a role. In the margin, each part is marked with its rule, D4 to D6, and the permission that shows it.</desc>
-  <rect width="760" height="756" fill="#fff"/>
-  <rect x="20" y="20" width="480" height="716" rx="6" fill="none" stroke="#000" stroke-width="2"/>
-  <text x="44" y="62" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#000" font-weight="bold">Notes</text>
-  <text x="44" y="100" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">Signed in as Asha</text>
-  <rect x="176.8" y="84" width="63.2" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
-  <text x="208.4" y="99.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">member</text>
-  <rect x="246.0" y="84" width="56.0" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
-  <text x="274.0" y="99.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">admin</text>
-  <rect x="388" y="81" width="88" height="28" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="432.0" y="100.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Sign out</text>
-  <text x="44" y="150" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Profile</text>
-  <rect x="44" y="164" width="150" height="30" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="54" y="184.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Display name</text>
-  <rect x="204" y="164" width="180" height="30" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="214" y="184.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Affiliation</text>
-  <rect x="420" y="165" width="56" height="28" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
-  <text x="448.0" y="184.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Save</text>
-  <text x="44" y="238" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Notes</text>
-  <rect x="44" y="252" width="432" height="58" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="54" y="274" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">A new note</text>
-  <rect x="44" y="320" width="56" height="28" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
-  <text x="72.0" y="339.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Add</text>
-  <rect x="44" y="362" width="432" height="66" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="56" y="386" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">A note of your own, as you wrote it</text>
-  <text x="56" y="412" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#777">yours, 7 Oct, 10:12</text>
-  <rect x="394" y="394" width="72" height="28" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="430.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Delete</text>
-  <rect x="330" y="394" width="56" height="28" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="358.0" y="413.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Edit</text>
-  <rect x="44" y="438" width="432" height="58" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="56" y="462" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">A note of someone else</text>
-  <text x="56" y="484" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#777">another's, 6 Oct, 16:40</text>
-  <text x="44" y="546" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">People</text>
-  <rect x="44" y="560" width="432" height="68" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="56" y="584" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">bhanu@elsewhere.net</text>
-  <rect x="56" y="600" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <polyline points="59,607 62,611 67,603" fill="none" stroke="#000" stroke-width="2"/>
-  <text x="76" y="612" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">reader</text>
-  <rect x="143.0" y="600" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="163.0" y="612" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">member</text>
-  <rect x="230.0" y="600" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="250.0" y="612" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">admin</text>
-  <rect x="44" y="638" width="432" height="68" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="56" y="662" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">asha@example.org</text>
-  <rect x="56" y="678" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <text x="76" y="690" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">reader</text>
-  <rect x="143.0" y="678" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <polyline points="146.0,685 149.0,689 154.0,681" fill="none" stroke="#000" stroke-width="2"/>
-  <text x="163.0" y="690" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">member</text>
-  <rect x="230.0" y="678" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
-  <polyline points="233.0,685 236.0,689 241.0,681" fill="none" stroke="#000" stroke-width="2"/>
-  <text x="250.0" y="690" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">admin</text>
-  <line x1="520" y1="44" x2="520" y2="110" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="44" x2="520" y2="44" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="110" x2="520" y2="110" stroke="#000" stroke-width="1"/>
-  <line x1="520" y1="71" x2="530" y2="71" stroke="#000" stroke-width="1"/>
-  <text x="536" y="76" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D6  Who you are</text>
-  <text x="536" y="93" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">your display name, your roles</text>
-  <line x1="520" y1="132" x2="520" y2="196" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="132" x2="520" y2="132" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="196" x2="520" y2="196" stroke="#000" stroke-width="1"/>
-  <line x1="520" y1="158" x2="530" y2="158" stroke="#000" stroke-width="1"/>
-  <text x="536" y="163" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D6  The profile</text>
-  <text x="536" y="180" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">saved as typed</text>
-  <line x1="520" y1="220" x2="520" y2="496" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="220" x2="520" y2="220" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="496" x2="520" y2="496" stroke="#000" stroke-width="1"/>
-  <line x1="520" y1="233" x2="530" y2="233" stroke="#000" stroke-width="1"/>
-  <text x="536" y="238" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D4  The notes</text>
-  <text x="536" y="256" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.read</text>
-  <line x1="520" y1="528" x2="520" y2="706" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="528" x2="520" y2="528" stroke="#000" stroke-width="1"/>
-  <line x1="514" y1="706" x2="520" y2="706" stroke="#000" stroke-width="1"/>
-  <line x1="520" y1="541" x2="530" y2="541" stroke="#000" stroke-width="1"/>
-  <text x="536" y="546" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D5  The people</text>
-  <text x="536" y="564" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">users.read</text>
-  <line x1="520" y1="279" x2="530" y2="279" stroke="#000" stroke-width="1"/>
-  <text x="536" y="284" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.write</text>
-  <text x="536" y="300" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the box, and Add</text>
-  <line x1="520" y1="393" x2="530" y2="393" stroke="#000" stroke-width="1"/>
-  <text x="536" y="398" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.write</text>
-  <text x="536" y="414" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the buttons, on one's own alone</text>
-  <line x1="520" y1="601" x2="530" y2="601" stroke="#000" stroke-width="1"/>
-  <text x="536" y="606" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">users.grant</text>
-  <text x="536" y="622" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">to change a tick; else fixed</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 1066" width="660" height="1066" role="img" aria-labelledby="t d">
+  <title id="t">The dashboard's wireframe, on a phone</title>
+  <desc id="d">One column in a frame 360 px wide: the title, the display name with two roles, and a sign-out button; the profile, two fields and Save, each the full width; the notes, a box to add one and two notes, the buttons Edit and Delete under your own alone; the people, each an e-mail and three ticks, one a role. In the margin, each part is marked with its rule, D4 to D6, and the permission that shows it; the profile becomes one row from 768 px wide.</desc>
+  <rect width="660" height="1066" fill="#fff"/>
+  <rect x="20" y="20" width="360" height="1010" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="36" y="62" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#000" font-weight="bold">Notes</text>
+  <text x="36" y="92" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">Signed in as Asha</text>
+  <rect x="168.8" y="76" width="56.0" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
+  <text x="196.8" y="91.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">admin</text>
+  <rect x="230.8" y="76" width="63.2" height="22" rx="11" fill="none" stroke="#000" stroke-width="1"/>
+  <text x="262.40000000000003" y="91.5" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" text-anchor="middle">member</text>
+  <rect x="36" y="106" width="92" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="82.0" y="133.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Sign out</text>
+  <text x="36" y="196" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Profile</text>
+  <rect x="36" y="210" width="328" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="46" y="237.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Display name</text>
+  <rect x="36" y="262" width="328" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="46" y="289.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Affiliation</text>
+  <rect x="36" y="314" width="328" height="44" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+  <text x="200.0" y="341.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Save</text>
+  <text x="36" y="402" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Notes</text>
+  <rect x="36" y="416" width="328" height="96" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="46" y="440" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">A new note</text>
+  <rect x="36" y="520" width="64" height="44" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+  <text x="68.0" y="547.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Add</text>
+  <rect x="36" y="574" width="328" height="118" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="48" y="600" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">A note of your own, as you wrote it</text>
+  <text x="48" y="622" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#777">yours, 7 Oct, 10:12</text>
+  <rect x="48" y="636" width="60" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="78.0" y="663.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Edit</text>
+  <rect x="116" y="636" width="76" height="44" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="154.0" y="663.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Delete</text>
+  <rect x="36" y="700" width="328" height="62" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="48" y="726" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">A note of someone else</text>
+  <text x="48" y="748" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#777">another's, 6 Oct, 16:40</text>
+  <text x="36" y="806" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">People</text>
+  <rect x="36" y="820" width="328" height="88" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="48" y="846" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">bhanu@elsewhere.net</text>
+  <rect x="48" y="872" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <polyline points="51,879 54,883 59,875" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="68" y="884" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">reader</text>
+  <rect x="135.0" y="872" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="155.0" y="884" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">member</text>
+  <rect x="222.0" y="872" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="242.0" y="884" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">admin</text>
+  <rect x="36" y="916" width="328" height="88" rx="6" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="48" y="942" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">asha@example.org</text>
+  <rect x="48" y="968" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="68" y="980" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">reader</text>
+  <rect x="135.0" y="968" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <polyline points="138.0,975 141.0,979 146.0,971" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="155.0" y="980" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">member</text>
+  <rect x="222.0" y="968" width="14" height="14" rx="2" fill="none" stroke="#000" stroke-width="1.5"/>
+  <polyline points="225.0,975 228.0,979 233.0,971" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="242.0" y="980" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">admin</text>
+  <line x1="400" y1="40" x2="400" y2="156" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="40" x2="400" y2="40" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="156" x2="400" y2="156" stroke="#000" stroke-width="1"/>
+  <line x1="400" y1="57" x2="410" y2="57" stroke="#000" stroke-width="1"/>
+  <text x="416" y="62" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D6  Who you are</text>
+  <text x="416" y="79" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">your display name, your roles</text>
+  <line x1="400" y1="176" x2="400" y2="362" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="176" x2="400" y2="176" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="362" x2="400" y2="362" stroke="#000" stroke-width="1"/>
+  <line x1="400" y1="191" x2="410" y2="191" stroke="#000" stroke-width="1"/>
+  <text x="416" y="196" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D6  The profile</text>
+  <text x="416" y="213" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">saved as typed</text>
+  <line x1="400" y1="382" x2="400" y2="766" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="382" x2="400" y2="382" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="766" x2="400" y2="766" stroke="#000" stroke-width="1"/>
+  <line x1="400" y1="397" x2="410" y2="397" stroke="#000" stroke-width="1"/>
+  <text x="416" y="402" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D4  The notes</text>
+  <text x="416" y="420" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.read</text>
+  <line x1="400" y1="786" x2="400" y2="1008" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="786" x2="400" y2="786" stroke="#000" stroke-width="1"/>
+  <line x1="394" y1="1008" x2="400" y2="1008" stroke="#000" stroke-width="1"/>
+  <line x1="400" y1="801" x2="410" y2="801" stroke="#000" stroke-width="1"/>
+  <text x="416" y="806" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D5  The people</text>
+  <text x="416" y="824" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">users.read</text>
+  <line x1="400" y1="263" x2="410" y2="263" stroke="#000" stroke-width="1"/>
+  <text x="416" y="268" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">from 768 px wide: one row</text>
+  <line x1="400" y1="461" x2="410" y2="461" stroke="#000" stroke-width="1"/>
+  <text x="416" y="466" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.write</text>
+  <text x="416" y="482" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the box, and Add</text>
+  <line x1="400" y1="649" x2="410" y2="649" stroke="#000" stroke-width="1"/>
+  <text x="416" y="654" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">notes.write</text>
+  <text x="416" y="670" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the buttons, on one's own alone</text>
+  <line x1="400" y1="869" x2="410" y2="869" stroke="#000" stroke-width="1"/>
+  <text x="416" y="874" font-family="DejaVu Sans Mono, Menlo, Consolas, monospace" font-size="13" fill="#000">users.grant</text>
+  <text x="416" y="890" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">to change a tick; else fixed</text>
+  <text x="20" y="1052" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#777">360 px</text>
+  <line x1="66" y1="1048" x2="380" y2="1048" stroke="#777" stroke-width="1"/>
+  <line x1="380" y1="1043" x2="380" y2="1053" stroke="#777" stroke-width="1"/>
+  <line x1="66" y1="1043" x2="66" y2="1053" stroke="#777" stroke-width="1"/>
 </svg>
