@@ -241,15 +241,17 @@ END
 $$;
 
 -- Three people signed in, by tutorial 1; you the first admin, by hand,
--- once there is a table to hold it. An example unit, standing in for
--- the units to come, adds its permissions as their migrations will
+-- once there is a table to hold it and a role to hold. An example unit,
+-- standing in for the units to come, adds its permissions as their
+-- migrations will. Whatever is not there yet is passed over, so the
+-- tests run, and say so one by one
 SELECT users_person_see('you', 'you@example.org', true, 'Google'), users_person_see('asha', 'asha@example.org', true, 'Google'),
        users_person_see('bhanu', 'bhanu@elsewhere.net', true, 'Google');
 DO $$ BEGIN
   INSERT INTO users_members (sub, role) VALUES ('you', 'admin') ON CONFLICT DO NOTHING;
   PERFORM users_permission_add('example.read', 'reads examples', '{reader,member}'),
           users_permission_add('example.write', 'writes examples', '{member}');
-EXCEPTION WHEN undefined_table OR undefined_function THEN NULL;
+EXCEPTION WHEN undefined_table OR undefined_function OR foreign_key_violation OR no_data_found THEN NULL;
 END $$;
 
 -- R1: nothing unless a role says so
