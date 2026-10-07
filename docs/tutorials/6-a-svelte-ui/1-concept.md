@@ -1,12 +1,14 @@
 ---
 abstract: |
   Step 1 of tutorial 6: what the dashboard is for. The
-  goal, six rules, and what they will not do.
+  goal, six rules, the page drawn as a wireframe, and
+  what the rules will not do.
 date: 2026-10-07
 keywords:
 - tutorial
 - ui
 - concept
+- wireframe
 kind: explanation
 sources:
 - services/py-api/main.py
@@ -51,7 +53,40 @@ decides regardless.** A button hidden is a courtesy.
 Whoever calls the API by hand meets the same refusals
 as tutorials 4 and 5 tried.
 
-## 3 Two Choices, and Why
+## 3 The Wireframe
+
+The concept's artefact: the whole page, as someone who
+is both `member` and `admin` sees it. In the margin,
+each part is marked with its rule, and with the
+permission that shows it. Take a permission away and
+its part goes; nothing else moves.
+
+![The dashboard's wireframe: who you are, the profile,
+the notes and the people in one column, each part
+marked with its rule and its
+permission](wireframe-dashboard.svg)
+
+And the three pages with less on them:
+
+![Three smaller wireframes: D1 signed out, D2 an
+unverified e-mail, D3 no role](wireframe-states.svg)
+
+- **How to read them:** lines and words, no colour. A
+  heavy outline is the button a part is for. Grey words
+  are not content: a field's placeholder, or a line the
+  page says quietly. The words are examples
+- **One column, top to bottom:** who you are, your
+  profile, the notes, the people. A part you may not
+  see is absent, not greyed out
+- **A note says `yours` or `another's`,** never a name
+  (§5)
+- **The roles are tick boxes,** one a role, for every
+  person. Without `users.grant` they show and cannot be
+  changed
+- **The wireframe fixes what is on the page and in what
+  order,** not its spacing, type or colour
+
+## 4 Two Choices, and Why
 
 - **Svelte, built by Vite.** Small, compiled, no
   framework in the browser to speak of. The starter's
@@ -62,7 +97,7 @@ as tutorials 4 and 5 tried.
   writes it from the repository's variables, so one
   build serves any zone
 
-## 4 What It Will Not Do
+## 5 What It Will Not Do
 
 - **Uploads.** Tutorial 7
 - **Show whose a note is.** N3 of tutorial 5: whether,
@@ -70,7 +105,7 @@ as tutorials 4 and 5 tried.
 - **Work without JavaScript.** It signs in by PKCE,
   which needs it
 
-## 5 See Also
+## 6 See Also
 
 - [The contract](2-contract.md): next, then [the
   tests](3-tests.md)

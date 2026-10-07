@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 2: the SQL that makes the 27 tests
+  Step 4 of tutorial 2: the SQL that makes the 29 tests
   pass, a piece at a time, each piece justified by the
   rules it keeps and the tests it answers. The matrix
   and its accessors at the end of `users-draft.sql`,
@@ -134,7 +134,8 @@ $$;
 ## 6 The People and the Matrix
 
 Both need `users.read`, and both ask before they read
-(R6, T2.6, T2.14). `#variable_conflict use_column` lets
+(R6, T2.6, T2.14, T2.29); the matrix answers a role a
+row (R2, T2.28). `#variable_conflict use_column` lets
 the column `sub` mean the table's, not the function's
 output of the same name:
 

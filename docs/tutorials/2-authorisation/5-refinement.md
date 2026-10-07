@@ -42,7 +42,7 @@ version: v0.1.0
 
 Expect `|`, the users unit bringing its own two
 permissions; `t|t|t`, the three people recorded; then
-27 lines starting `ok`, then `27 of 27 pass`:
+29 lines starting `ok`, then `29 of 29 pass`:
 
 ``` sh
 psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f test-2.sql -c ROLLBACK
@@ -96,7 +96,7 @@ purpose, in a copy, and checking that some test fails.
 Here, take the guard out of `users_permission_drop`, so
 a unit's migration may take away `users.grant`, and
 lock the project out. Expect `FAIL` for T2.22, and
-`26 of 27 pass`:
+`28 of 29 pass`:
 
 ``` sh
 sed '/IF p_permission LIKE/,/END IF;/d' users-draft.sql > broken.sql
@@ -152,7 +152,7 @@ concept](1-concept.md), "any other can", which T2.12
 had left untested. The tests after it moved up by one.
 
 The same broken `users_revoke` now fails T2.13, and
-passes 26 of 27.
+passes 28 of 29.
 
 ## 7 What Can Go Wrong
 

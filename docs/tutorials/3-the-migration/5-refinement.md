@@ -46,7 +46,7 @@ What a test got says where to look:
   `Applied:` line, or its error, is in `make db CMD=up`
 - **`42883` or `42P01`:** a function or a table is not
   there: the migration that makes it has not run
-- **T3.5 short of 27:** a migration differs from its
+- **T3.5 short of 29:** a migration differs from its
   draft. Run `test-2.sql` alone on the migrations, and
   read [tutorial 2's
   refinement](../2-authorisation/5-refinement.md) §3

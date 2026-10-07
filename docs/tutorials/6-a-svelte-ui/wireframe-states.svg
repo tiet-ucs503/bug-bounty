@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 496" width="680" height="496" role="img" aria-labelledby="t d">
+  <title id="t">The three pages with less on them</title>
+  <desc id="d">D1, signed out: the title, the words Not signed in, and a Sign in button. D2, an unverified e-mail: the title, the words E-mail not verified with the address, and a Sign out button. D3, no role: the header without roles, a line asking to find an admin, and the profile; no notes and no people.</desc>
+  <rect width="680" height="496" fill="#fff"/>
+  <text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D1  Signed out</text>
+  <rect x="20" y="42" width="230" height="150" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="44" y="84" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#000" font-weight="bold">Notes</text>
+  <text x="44" y="116" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">Not signed in</text>
+  <rect x="44" y="136" width="76" height="28" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+  <text x="82.0" y="155.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Sign in</text>
+  <text x="280" y="30" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D2  An unverified e-mail</text>
+  <rect x="280" y="42" width="310" height="150" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="304" y="84" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#000" font-weight="bold">Notes</text>
+  <text x="304" y="116" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000">E-mail not verified: asha@example.org</text>
+  <rect x="304" y="136" width="84" height="28" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="346.0" y="155.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Sign out</text>
+  <text x="20" y="232" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#000" font-weight="bold">D3  No role</text>
+  <rect x="20" y="244" width="480" height="232" rx="6" fill="none" stroke="#000" stroke-width="2"/>
+  <text x="44" y="286" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#000" font-weight="bold">Notes</text>
+  <text x="44" y="324" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">Signed in as asha@example.org</text>
+  <rect x="388" y="305" width="88" height="28" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="432.0" y="324.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" text-anchor="middle">Sign out</text>
+  <text x="44" y="356" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777">You are signed in, with no role yet: ask an admin for one.</text>
+  <text x="44" y="404" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#000" font-weight="bold">Profile</text>
+  <rect x="44" y="418" width="150" height="30" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="54" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Display name</text>
+  <rect x="204" y="418" width="180" height="30" rx="4" fill="none" stroke="#000" stroke-width="1.5"/>
+  <text x="214" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#777" font-style="italic">Affiliation</text>
+  <rect x="420" y="419" width="56" height="28" rx="4" fill="none" stroke="#000" stroke-width="2.5"/>
+  <text x="448.0" y="438.0" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#000" font-weight="bold" text-anchor="middle">Save</text>
+  <text x="516" y="352" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">the profile,</text>
+  <text x="516" y="368" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#000">and nothing else</text>
+</svg>

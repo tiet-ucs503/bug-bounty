@@ -82,6 +82,8 @@ not yet checked; **planned** --- not yet written.
   Podman](onboarding/podman.md)
 - `draft` [The manifest, key by
   key](onboarding/manifest.md)
+- `draft` [The Makefile, target by
+  target](onboarding/makefile.md)
 
 ### Tutorials: From a Sign-in to Uploads
 
