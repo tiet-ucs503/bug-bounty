@@ -89,9 +89,9 @@ underneath them as long as the contract holds.
 
 So a contract is changed with care:
 
-- **Add beside, never change in place.** Tutorial 2's
-  new accessors sit beside the template's
-  `py_api_note_add`, whose signature is a promise
+- **Add beside, never change in place.** Tutorial 7's
+  `py_api_notes_page` sits beside tutorial 5's
+  `py_api_notes_all`, whose signature is a promise
   already made
 - **One source of truth.** Once the contract exists, it
   outranks the concept wherever both speak; the concept
@@ -139,7 +139,7 @@ ends with nothing to change in any of them.
 Small enough to finish in a few days, and to review in
 one sitting. A turn that touches the concept, the
 contract and three layers of code is several turns.
-Tutorial 6 is one feature whose implementation is four
+Tutorial 7 is one feature whose implementation is four
 parts: the store, the database, the service, the UI,
 each finished and tried before the next.
 

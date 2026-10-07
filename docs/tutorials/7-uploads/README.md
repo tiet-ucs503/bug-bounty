@@ -23,7 +23,7 @@ sources:
 - box/render.py
 status: draft
 subtitle: Files on notes, in the static bucket
-title: 6 Uploads
+title: 7 Uploads
 version: v0.1.0
 ---
 
@@ -41,7 +41,7 @@ page](../README.md) §5.
   deletes what no note needs
 - **Attachments in the dashboard:** a file selector,
   then drag and drop, each checked before it is sent
-- **`test-6.sh`, `test-6.sql` and
+- **`test-7.sh`, `test-7.sql` and
   `ui/test/attach.test.js`:** eighteen tests, written
   before the code
 
@@ -71,15 +71,15 @@ step, step 4 in four parts. Read them in order.
 5.  **[The refinement](5-refinement.md).** Run the
     tests, read them, and change whichever step is
     wrong. One refinement made while this tutorial was
-    written, shown whole: to tutorial 5's tests
+    written, shown whole: to tutorial 6's tests
 
 ## 3 Before You Start
 
 - [What you need](../README.md) §2, installed and
   checked
-- [5 A Svelte UI](../5-a-svelte-ui/README.md): the
+- [6 A Svelte UI](../6-a-svelte-ui/README.md): the
   notes, in py-api and in the dashboard, and
-  `test-5.sh` passing
+  `test-6.sh` passing
 - A local stack whose render has the mock store:
   `make dev`, or the native stack's `start`, after this
   template's v0.1.0

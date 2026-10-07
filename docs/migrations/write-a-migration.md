@@ -15,7 +15,7 @@ keywords:
 - postgres
 kind: how-to
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - migrations/.squawk.toml
 - box/render.py
 - Makefile
@@ -45,6 +45,11 @@ version: v0.1.0
 - **The discipline:** [The database's
   conduct](../conduct/database.md), names under a
   prefix and accessors in the database
+- **A table to change.** The template's one migration,
+  `py_api_begin`, makes nothing. The examples here
+  change `py_api_notes`, which [tutorial
+  5](../tutorials/5-notes/README.md) makes; read them
+  as the shape of a change to a table of your own
 
 ## 2 Write One
 
@@ -169,32 +174,32 @@ the code that needs it.
 
 ## 8 Change a Live Table Without Locking It
 
-  --------------------------------------------------------
-  To                 Do
-  ------------------ -------------------------------------
-  Add a column       Nullable, or with a constant default:
-                     no rewrite of the table
+  -------------------------------------------------------
+  To                Do
+  ----------------- -------------------------------------
+  Add a column      Nullable, or with a constant default:
+                    no rewrite of the table
 
-  Make a column      `CHECK (col IS NOT NULL) NOT VALID`
-  required           in one migration;
-                     `VALIDATE CONSTRAINT` in the next
+  Make a column     `CHECK (col IS NOT NULL) NOT VALID`
+  required          in one migration;
+                    `VALIDATE CONSTRAINT` in the next
 
-  Limit a value      A `CHECK ... NOT VALID`, then
-                     `VALIDATE`, as above
+  Limit a value     A `CHECK ... NOT VALID`, then
+                    `VALIDATE`, as above
 
-  Index a column     `CREATE INDEX CONCURRENTLY`, alone in
-                     its file, `transaction:false`
+  Index a column    `CREATE INDEX CONCURRENTLY`, alone in
+                    its file, `transaction:false`
 
-  Rename a column    Add the new, write both, backfill,
-                     read the new, then drop the old: one
-                     release each
+  Rename a column   Add the new, write both, backfill,
+                    read the new, then drop the old: one
+                    release each
 
-  Drop a column      Once no released code reads it
+  Drop a column     Once no released code reads it
 
-  Change an accessor A new function beside the old; the
-                     old dropped once no released code
-                     calls it
-  --------------------------------------------------------
+  Change an         A new function beside the old; the
+  accessor          old dropped once no released code
+                    calls it
+  -------------------------------------------------------
 
 `VALIDATE` reads every row, but blocks only other
 schema changes, not reads or writes; give its migration
@@ -285,6 +290,8 @@ PostgreSQL's version or later.
   and its image
 - [The database's conduct](../conduct/database.md):
   prefixes and accessors
+- [Bring an existing unit under
+  authorisation](bring-under-authorisation.md)
 - [dbmate](https://github.com/amacneil/dbmate) and
   [Squawk's rules](https://squawkhq.com/docs/rules),
   read 2026-10-06

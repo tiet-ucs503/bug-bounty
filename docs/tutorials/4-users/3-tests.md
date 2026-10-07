@@ -38,8 +38,10 @@ expect no starting role but the first admin's.
   `403`
 - **T4.7, U5:** you list them: is `t4-asha` there?
   Expect `200 true`
-- **T4.8, U5:** you give `t4-asha` `reader`: what may
-  she do? Expect `200 notes.read`
+- **T4.8, U5:** you give `t4-asha` `reader`: what roles
+  does she hold? Expect `200 reader`. Not what she may
+  do: `reader` holds nothing until a unit brings its
+  permissions, as tutorial 5's notes do
 - **T4.9, U5:** a role for someone never seen? Expect
   `404 no such person`, the database's own message, not
   nginx's page
@@ -109,7 +111,7 @@ expect T4.5 "200 admin" "$(call GET /me "${Y}" '' '.roles | join(",")')"
 expect T4.6 403 "$(call GET /people "${A}")"
 expect T4.7 "200 true" "$(call GET /people "${Y}" '' 'any(.[]; .sub == "t4-asha")')"
 call PUT /people/t4-asha/roles/reader "${Y}" > /dev/null
-expect T4.8 "200 notes.read" "$(call GET /me "${A}" '' '.permissions | join(",")')"
+expect T4.8 "200 reader" "$(call GET /me "${A}" '' '.roles | join(",")')"
 expect T4.9 "404 no such person" "$(call PUT /people/nobody/roles/reader "${Y}" '' '.error')"
 expect T4.10 403 "$(call DELETE /people/you/roles/admin "${A}")"
 # U4: your own profile

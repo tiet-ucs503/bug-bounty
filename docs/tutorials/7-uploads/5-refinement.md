@@ -1,10 +1,10 @@
 ---
 abstract: |
-  Step 5 of tutorial 6: run the tests, read what they
+  Step 5 of tutorial 7: run the tests, read what they
   say, and change whichever step is wrong. How to read
   a result, how to try the tests by breaking the
   collector on purpose, and a refinement of tutorial
-  5's tests made while this tutorial was written.
+  6's tests made while this tutorial was written.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -17,7 +17,7 @@ sources:
 - ui/src/Notes.svelte
 status: draft
 subtitle: Step 5, run, read, refine
-title: "6.5 Uploads: the Refinement"
+title: "7.5 Uploads: the Refinement"
 version: v0.1.0
 ---
 
@@ -29,12 +29,12 @@ the two checks of the stack, eighteen lines starting
 `ok`, then `18 of 18 pass`:
 
 ``` sh
-./test-6.sh
+./test-7.sh
 ```
 
 Its exit status is 0 when all pass, and 3 when any
 fails or the stack is not as the box's. Run `test-4.sh`
-and `test-5.sh` too: uploads change what `GET /notes`
+and `test-6.sh` too: uploads change what `GET /notes`
 answers, and a turn that breaks an earlier tutorial's
 tests is not done.
 
@@ -43,15 +43,15 @@ tests is not done.
 - **The script stops at the store:** the stack's render
   is older than the mock store, or the store is down:
   [the store](4-the-store.md) §7
-- **T6.1 to T6.8 with `42883` or `42P01`:** the
-  migrations of [the database](4-the-database.md) have
+- **T7.1 to T7.8 with `42883` or `42P01`:** the
+  migration of [the database](4-the-database.md) has
   not run
-- **T6.9 to T6.14 with `404`:** nginx knows no
+- **T7.9 to T7.14 with `404`:** nginx knows no
   `/objects` route: the manifest, or nginx not rendered
   again
-- **T6.9 with `502`:** the bucket refused the write:
+- **T7.9 with `502`:** the bucket refused the write:
   `STORE_URL`, as the service sees it
-- **T6.15 with `200`:** nothing was collected:
+- **T7.15 with `200`:** nothing was collected:
   `dev/dev.env` was not read, so the grace is six
   hours. Restart after writing it
 - **`FAIL ui`:** `ui/test/attach.test.js` or
@@ -62,7 +62,7 @@ tests is not done.
 Break the collector on purpose: take the grace out of
 `py_api_objects_to_collect`, in a transaction rolled
 back, so an object no note needs is collected at once.
-Expect `FAIL` for T6.6 alone, `0 1`, and `7 of 8 pass`:
+Expect `FAIL` for T7.6 alone, `0 1`, and `7 of 8 pass`:
 
 ``` sh
 psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -c "CREATE OR REPLACE FUNCTION py_api_objects_to_collect(p_grace interval, p_limit int) RETURNS SETOF text
@@ -71,7 +71,7 @@ psql "${MIGRATOR_URL}" -X -q -t -A -c BEGIN -c "CREATE OR REPLACE FUNCTION py_ap
   WHERE NOT EXISTS (SELECT 1 FROM py_api_note_objects l WHERE l.key = o.key)
   ORDER BY o.created_at LIMIT p_limit
   FOR UPDATE SKIP LOCKED
-\$\$" -f test-6.sql -c ROLLBACK
+\$\$" -f test-7.sql -c ROLLBACK
 ```
 
 The rollback takes the broken function with it.
@@ -88,17 +88,17 @@ The rollback takes the broken function with it.
 - **The box's owner cannot give what §5 of the contract
   asks:** the concept
 
-## 5 A Refinement of Tutorial 5's Tests
+## 5 A Refinement of Tutorial 6's Tests
 
-Run after this tutorial, tutorial 5's tests failed:
-T5.10 and T5.11, a reader's and a member's notes. The
+Run after this tutorial, tutorial 6's tests failed:
+T6.4 and T6.5, a reader's and a member's notes. The
 dashboard's notes now show each note's objects, and the
-notes in tutorial 5's tests had none to show, not even
+notes in tutorial 6's tests had none to show, not even
 an empty list, so the component failed to draw.
 
 The code was right: [the contract](2-contract.md) §2
 adds `objects` to every note `GET /notes` answers,
-beside what it had. Tutorial 5's tests had faked notes
+beside what it had. Tutorial 6's tests had faked notes
 in the old shape. So the tests were refined, not the
 code: each fake note gained `objects: []`, as
 `GET /notes` answers it now. The contract grew by

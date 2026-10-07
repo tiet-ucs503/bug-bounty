@@ -15,7 +15,7 @@ keywords:
 - cycle
 kind: how-to
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 status: draft
 subtitle: Step 5, run, read, refine
 title: "3.5 Make It a Migration: the Refinement"
@@ -26,7 +26,7 @@ version: v0.1.0
 
 Expect eight lines starting `ok`, then `8 of 8 pass`.
 The run applies whatever is pending, rolls tutorial 3's
-four back, and applies them again:
+three back, and applies them again:
 
 ``` sh
 ./test-3.sh
@@ -41,7 +41,7 @@ What a test got says where to look:
 
 - **T3.1 `got no`:** `box/project.json` does not give
   `users` to a service yet
-- **T3.2 with fewer than `6 1 10 1`:** a migration is
+- **T3.2 with fewer than `7 2 12 1`:** a migration is
   missing a piece of its draft, or did not apply. Its
   `Applied:` line, or its error, is in `make db CMD=up`
 - **`42883` or `42P01`:** a function or a table is not
@@ -50,11 +50,11 @@ What a test got says where to look:
   draft. Run `test-2.sql` alone on the migrations, and
   read [tutorial 2's
   refinement](../2-authorisation/5-refinement.md) §3
-- **T3.7 with a name in it:** the newest four
+- **T3.7 with a name in it:** the newest three
   migrations are not tutorial 3's, so nothing was
-  rolled back. Later migrations, such as tutorial 6's,
+  rolled back. Later migrations, such as tutorial 7's,
   sit on top of them
-- **T3.7 above `0 0`:** a down leaves something behind.
+- **T3.7 above `0`:** a down leaves something behind.
   The count says how many
 
 **Read the first failure first.** A migration that did
@@ -65,11 +65,11 @@ not apply fails every test after it.
 Break a migration on purpose, in a copy, and check that
 a test fails. Here, take the trigger's function out of
 the roles' down, so a rollback leaves it behind. Roll
-the four back first, so the broken down is the one that
-runs. Expect `FAIL` for T3.7, and `7 of 8 pass`:
+the three back first, so the broken down is the one
+that runs. Expect `FAIL` for T3.7, and `7 of 8 pass`:
 
 ``` sh
-for i in 1 2 3 4; do make db CMD=rollback; done
+for i in 1 2 3; do make db CMD=rollback; done
 cp migrations/sql/*_users_create_roles.sql /tmp/roles.sql
 sed -i '/DROP FUNCTION IF EXISTS users_person_start();/d' migrations/sql/*_users_create_roles.sql
 ./test-3.sh
@@ -78,14 +78,14 @@ sed -i '/DROP FUNCTION IF EXISTS users_person_start();/d' migrations/sql/*_users
 Then put it back, and clean up after the broken down:
 
 ``` sh
-for i in 1 2 3 4; do make db CMD=rollback; done
+for i in 1 2 3; do make db CMD=rollback; done
 cp /tmp/roles.sql migrations/sql/*_users_create_roles.sql
 psql "${MIGRATOR_URL}" -c "DROP FUNCTION IF EXISTS users_person_start()"
 make db CMD=up
 ```
 
 On the native stack, `dbmate` as in [the
-implementation](4-implementation.md) §7, for `make db`.
+implementation](4-implementation.md) §6, for `make db`.
 
 ## 4 What to Refine
 
@@ -124,10 +124,10 @@ one that is wrong.
   `not <14-digit version>_<prefix>_<what>.sql`.**
   `users` is not among a service's `prefixes` yet; or
   the file was named by hand
-- **`function users_may(text, text) does not exist`,
-  applying the notes.** Its file sorts before the
-  roles'. Rename it with a later time; nothing has run
-  anywhere else yet
+- **`function users_permission_add(...) does not exist`,
+  applying a later unit's migration.** Its file sorts
+  before the roles'. Rename it with a later time;
+  nothing has run anywhere else yet
 - **`permission denied for table schema_migrations`, as
   the services' login.** As meant: only the migrator
   writes dbmate's ledger

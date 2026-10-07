@@ -3,8 +3,9 @@ abstract: |
   Step 4 of tutorial 2: the SQL that makes the 27 tests
   pass, a piece at a time, each piece justified by the
   rules it keeps and the tests it answers. The matrix
-  and its accessors at the end of `users-draft.sql`;
-  the notes' accessors in `notes-draft.sql`.
+  and its accessors at the end of `users-draft.sql`,
+  with the two functions a unit's migration calls to
+  bring its permissions and take them away.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -13,7 +14,7 @@ keywords:
 - db
 kind: tutorial
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- tools/native-dev.sh
 status: draft
 subtitle: Step 4, the code
 title: "2.4 What Each May Do: the Implementation"
@@ -62,19 +63,32 @@ CREATE INDEX IF NOT EXISTS users_members_role_idx ON users_members (role);
 
 ## 3 The Matrix, a Table
 
-Then the matrix. One row for each cell that says yes,
-so a cell that says no cannot be written (R1); the
-`CHECK` holds every permission to `<unit>.<verb>` (R9,
-T2.24):
+First the permissions there are, its columns. A unit
+brings each of its own (R7); the `CHECK` holds every
+one to `<unit>.<verb>` (R9, T2.24):
 
 ``` sql
--- The access control matrix: one row for each cell that says yes. A
--- permission is <unit>.<verb>: notes.read, users.grant
+-- The permissions there are, each brought by the unit that asks for
+-- it. A permission is <unit>.<verb>: users.grant, notes.read
+CREATE TABLE IF NOT EXISTS users_permissions (
+  permission text PRIMARY KEY CHECK (permission ~ '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'),
+  about text NOT NULL DEFAULT ''
+);
+```
+
+Then the matrix. One row for each cell that says yes,
+so a cell that says no cannot be written (R1). Both
+keys are foreign, so a permission taken away takes its
+cells with it (T2.19):
+
+``` sql
+-- The access control matrix: one row for each cell that says yes
 CREATE TABLE IF NOT EXISTS users_grants (
   role text NOT NULL REFERENCES users_roles (role) ON DELETE CASCADE,
-  permission text NOT NULL CHECK (permission ~ '^[a-z][a-z0-9-]*\.[a-z][a-z0-9-]*$'),
+  permission text NOT NULL REFERENCES users_permissions (permission) ON DELETE CASCADE,
   PRIMARY KEY (role, permission)
 );
+CREATE INDEX IF NOT EXISTS users_grants_permission_idx ON users_grants (permission);
 ```
 
 ## 4 The One Question
@@ -83,8 +97,8 @@ CREATE TABLE IF NOT EXISTS users_grants (
 of this person's roles hold this permission? `EXISTS`
 over a join, so no role means no (R1, T2.1, T2.2), and
 any role is enough (R3, T2.7). Its comment marks it
-**published**, the users unit's one function that other
-units may call:
+**published**, one of the three functions of the users
+unit that other units may call (R8, T2.23):
 
 ``` sql
 -- Published, for every unit: may this person do this?
@@ -260,125 +274,76 @@ CREATE OR REPLACE TRIGGER users_people_start AFTER INSERT ON users_people
 Which rules to write is [the concept](1-concept.md)'s
 §5, which also has a query to try them on.
 
-## 10 What the Project Starts With
+## 10 A Unit's Permissions
 
-Three roles, and §3 of [the concept](1-concept.md), row
-by row (R2, T2.3 to T2.5). No starting roles: until you
-add one, everyone signs in with none, and an admin
+The other two published functions, for a unit's
+migrations. Adding checks every role first, so a role
+that does not exist is `P0002`, not a foreign key's
+error (T2.18); both inserts do nothing on a conflict,
+so twice is once (T2.17). It takes no caller: a
+migration runs for the project, not for a person (R7):
+
+``` sql
+-- Published, for every unit's migration: a permission, and the roles
+-- that start with it. Twice is once
+CREATE OR REPLACE FUNCTION users_permission_add(p_permission text, p_about text, p_roles text[] DEFAULT '{}')
+  RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM unnest(p_roles) r WHERE r NOT IN (SELECT role FROM users_roles)) THEN
+    RAISE EXCEPTION 'no such role' USING ERRCODE = 'no_data_found';
+  END IF;
+  INSERT INTO users_permissions (permission, about) VALUES (p_permission, p_about) ON CONFLICT DO NOTHING;
+  INSERT INTO users_grants (role, permission) SELECT r, p_permission FROM unnest(p_roles) r ON CONFLICT DO NOTHING;
+END
+$$;
+COMMENT ON FUNCTION users_permission_add(text, text, text[]) IS 'published: a unit''s migration adds its permission';
+```
+
+Taking away deletes the permission; §3's cascade takes
+its cells, and nothing else (T2.19, T2.20). Deleting
+what is not there deletes nothing, so twice is once
+(T2.21). The users unit's own are refused, or a unit's
+migration could lock the project out, which R5 forbids
+(T2.22):
+
+``` sql
+-- Published, for every unit's migration, on its way down: the
+-- permission and every cell of it. Never the users unit's own
+CREATE OR REPLACE FUNCTION users_permission_drop(p_permission text) RETURNS void
+  LANGUAGE plpgsql AS $$
+BEGIN
+  IF p_permission LIKE 'users.%' THEN
+    RAISE EXCEPTION 'the users unit''s own permission' USING ERRCODE = 'insufficient_privilege';
+  END IF;
+  DELETE FROM users_permissions WHERE permission = p_permission;
+END
+$$;
+COMMENT ON FUNCTION users_permission_drop(text) IS 'published: a unit''s migration takes its permission away';
+```
+
+## 11 What the Project Starts With
+
+Three roles, and the users unit's own two permissions,
+brought the way any unit brings its own (R2, T2.3 to
+T2.5). `reader` and `member` hold nothing until a unit
+gives them something; the tests' `example` unit does,
+and tutorial 5's notes will. No starting roles: until
+you add one, everyone signs in with none, and an admin
 gives roles:
 
 ``` sql
--- The roles and the matrix the project starts with; no starting roles
+-- The roles the project starts with, and the users unit's own
+-- permissions; no starting roles
 INSERT INTO users_roles (role, about) VALUES
-  ('reader', 'reads notes'),
-  ('member', 'reads and writes notes'),
+  ('reader', 'reads what each unit lets it'),
+  ('member', 'reads and writes what each unit lets it'),
   ('admin', 'reads the people and the matrix, grants and revokes roles')
 ON CONFLICT DO NOTHING;
 ```
 
 ``` sql
-INSERT INTO users_grants (role, permission) VALUES
-  ('reader', 'notes.read'),
-  ('member', 'notes.read'),
-  ('member', 'notes.write'),
-  ('admin', 'users.read'),
-  ('admin', 'users.grant')
-ON CONFLICT DO NOTHING;
-```
-
-## 11 The Notes
-
-Save the notes' part as `notes-draft.sql`. Its names
-carry `py_api_`, py-api's prefix: the notes are
-py-api's, and ask the users unit only through
-`users_may`.
-
-When a note was last changed, for the dashboard:
-
-``` sql
-ALTER TABLE py_api_notes ADD COLUMN IF NOT EXISTS updated_at timestamptz;
-```
-
-A new note: `notes.write`, and the caller owns it (R7,
-T2.16, T2.17). It calls the template's own
-`py_api_note_add`, kept as it is:
-
-``` sql
--- A new note, the caller its owner: notes.write
-CREATE OR REPLACE FUNCTION py_api_note_new(p_caller text, p_body text) RETURNS bigint
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  RETURN py_api_note_add(p_caller, p_body);
-END
-$$;
-```
-
-Every note, a page at a time: `notes.read`. It answers
-`mine`, a comparison, so the owner never leaves the
-database (R8, T2.22, T2.23):
-
-``` sql
--- Every note, newest first, a page at a time: notes.read. Not who
--- owns each, only whether the caller does
-CREATE OR REPLACE FUNCTION py_api_notes_all(p_caller text, p_before bigint DEFAULT NULL, p_limit int DEFAULT 50)
-  RETURNS TABLE (id bigint, body text, mine boolean, created_at timestamptz, updated_at timestamptz)
-  LANGUAGE plpgsql STABLE AS $$
-#variable_conflict use_column
-BEGIN
-  IF NOT users_may(p_caller, 'notes.read') THEN
-    RAISE EXCEPTION 'notes.read needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  RETURN QUERY
-    SELECT n.id, n.body, n.owner = p_caller, n.created_at, n.updated_at FROM py_api_notes n
-    WHERE p_before IS NULL OR n.id < p_before ORDER BY n.id DESC LIMIT least(p_limit, 200);
-END
-$$;
-```
-
-Edit and delete: `notes.write`, and the owner, in the
-`WHERE` (R7, T2.18 to T2.20). When nothing matched, the
-accessor asks why, so another's note and no note answer
-differently (T2.19, T2.21):
-
-``` sql
--- The owner's change to their note: notes.write, and theirs
-CREATE OR REPLACE FUNCTION py_api_note_edit(p_caller text, p_id bigint, p_body text) RETURNS void
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  UPDATE py_api_notes SET body = p_body, updated_at = now() WHERE id = p_id AND owner = p_caller;
-  IF NOT FOUND THEN
-    IF EXISTS (SELECT 1 FROM py_api_notes WHERE id = p_id) THEN
-      RAISE EXCEPTION 'not your note' USING ERRCODE = 'insufficient_privilege';
-    END IF;
-    RAISE EXCEPTION 'no such note' USING ERRCODE = 'no_data_found';
-  END IF;
-END
-$$;
-```
-
-``` sql
--- The owner's removal of their note: notes.write, and theirs
-CREATE OR REPLACE FUNCTION py_api_note_drop(p_caller text, p_id bigint) RETURNS void
-  LANGUAGE plpgsql AS $$
-BEGIN
-  IF NOT users_may(p_caller, 'notes.write') THEN
-    RAISE EXCEPTION 'notes.write needed' USING ERRCODE = 'insufficient_privilege';
-  END IF;
-  DELETE FROM py_api_notes WHERE id = p_id AND owner = p_caller;
-  IF NOT FOUND THEN
-    IF EXISTS (SELECT 1 FROM py_api_notes WHERE id = p_id) THEN
-      RAISE EXCEPTION 'not your note' USING ERRCODE = 'insufficient_privilege';
-    END IF;
-    RAISE EXCEPTION 'no such note' USING ERRCODE = 'no_data_found';
-  END IF;
-END
-$$;
+SELECT users_permission_add('users.read', 'reads the people and the matrix', '{admin}'),
+       users_permission_add('users.grant', 'grants and revokes roles', '{admin}');
 ```
 
 ## 12 See Also

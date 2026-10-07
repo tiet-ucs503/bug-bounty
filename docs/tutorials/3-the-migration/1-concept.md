@@ -12,7 +12,7 @@ keywords:
 - concept
 kind: explanation
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/render.py
 status: draft
 subtitle: Step 1, what and why
@@ -58,16 +58,17 @@ one checks:
 - **R2 One migration a step of the path, in its
   order.** The people first, as tutorial 1 made them;
   then the roles, which refer to the people; then the
-  first admin, a starting role; then the notes, whose
-  functions call `users_may`. Authentication and
+  first admin, a starting role. Authentication and
   authorisation stay in files of their own, as in their
   tutorials
 - **R3 Complete.** Everything the drafts made, and
   nothing else: every table, index, function and
   trigger. Nothing it makes is left without a way to
   use it
-- **R4 `users_may` is published,** and says so: the one
-  function another unit may call
+- **R4 Three functions are published,** and say so:
+  `users_may`, `users_permission_add` and
+  `users_permission_drop`, the only ones another unit
+  may call
 - **R5 The data keeps its own rules.** Keys and checks
   hold whoever writes, so no caller has to be careful
 - **R6 The migrations are the drafts.** Tutorial 2's

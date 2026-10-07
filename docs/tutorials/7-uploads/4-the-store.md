@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 4 of tutorial 6, part 1. The static bucket's
+  Step 4 of tutorial 7, part 1. The static bucket's
   `objects/` on your machine: a mock of S3 that takes
   an unsigned write, checks its checksum as S3 does,
   and serves the object back through the stack's nginx
@@ -20,7 +20,7 @@ sources:
 - box/render.py
 status: draft
 subtitle: S3's part, mocked, and what it refuses
-title: "6.4 Uploads: the Store"
+title: "7.4 Uploads: the Store"
 version: v0.1.0
 ---
 

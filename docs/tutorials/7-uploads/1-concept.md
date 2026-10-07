@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 1 of tutorial 6: where uploads live, who reads
+  Step 1 of tutorial 7: where uploads live, who reads
   and writes them, how they are named, counted and
   collected, and why they are py-api's. The goal, seven
   rules, the limits, and what it will not do.
@@ -15,7 +15,7 @@ sources:
 - box/render.py
 status: draft
 subtitle: Step 1, what and why
-title: "6.1 Uploads: the Concept"
+title: "7.1 Uploads: the Concept"
 version: v0.1.0
 ---
 

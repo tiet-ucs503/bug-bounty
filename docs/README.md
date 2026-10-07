@@ -127,23 +127,30 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   JavaScript](tutorials/4-users/4-implementation-javascript.md),
   [the refinement](tutorials/4-users/5-refinement.md)
 - `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
-  A Svelte UI](tutorials/5-a-svelte-ui/README.md): [the
-  concept](tutorials/5-a-svelte-ui/1-concept.md), [the
-  contract](tutorials/5-a-svelte-ui/2-contract.md),
-  [the tests](tutorials/5-a-svelte-ui/3-tests.md), [the
-  implementation](tutorials/5-a-svelte-ui/4-implementation.md),
-  [the
-  refinement](tutorials/5-a-svelte-ui/5-refinement.md)
+  Notes](tutorials/5-notes/README.md): [the
+  concept](tutorials/5-notes/1-concept.md), [the
+  contract](tutorials/5-notes/2-contract.md), [the
+  tests](tutorials/5-notes/3-tests.md), [the
+  implementation](tutorials/5-notes/4-implementation.md),
+  [the refinement](tutorials/5-notes/5-refinement.md)
 - `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
-  Uploads](tutorials/6-uploads/README.md): [the
-  concept](tutorials/6-uploads/1-concept.md), [the
-  contract](tutorials/6-uploads/2-contract.md), [the
-  tests](tutorials/6-uploads/3-tests.md), [the
-  store](tutorials/6-uploads/4-the-store.md), [the
-  database](tutorials/6-uploads/4-the-database.md),
-  [the service](tutorials/6-uploads/4-the-service.md),
-  [the UI](tutorials/6-uploads/4-the-ui.md), [the
-  refinement](tutorials/6-uploads/5-refinement.md)
+  A Svelte UI](tutorials/6-a-svelte-ui/README.md): [the
+  concept](tutorials/6-a-svelte-ui/1-concept.md), [the
+  contract](tutorials/6-a-svelte-ui/2-contract.md),
+  [the tests](tutorials/6-a-svelte-ui/3-tests.md), [the
+  implementation](tutorials/6-a-svelte-ui/4-implementation.md),
+  [the
+  refinement](tutorials/6-a-svelte-ui/5-refinement.md)
+- `draft` `[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [7
+  Uploads](tutorials/7-uploads/README.md): [the
+  concept](tutorials/7-uploads/1-concept.md), [the
+  contract](tutorials/7-uploads/2-contract.md), [the
+  tests](tutorials/7-uploads/3-tests.md), [the
+  store](tutorials/7-uploads/4-the-store.md), [the
+  database](tutorials/7-uploads/4-the-database.md),
+  [the service](tutorials/7-uploads/4-the-service.md),
+  [the UI](tutorials/7-uploads/4-the-ui.md), [the
+  refinement](tutorials/7-uploads/5-refinement.md)
 
 ### js-api
 
@@ -166,6 +173,8 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 - `draft` [The database](migrations/README.md)
 - `draft` [Write a
   migration](migrations/write-a-migration.md)
+- `draft` [Bring an existing unit under
+  authorisation](migrations/bring-under-authorisation.md)
 
 ### UI
 

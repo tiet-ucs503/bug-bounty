@@ -142,7 +142,7 @@ test:
 
 # 5173, a callback and an origin in the manifest; the native stack's
 # own, UI_PORT from tools/native-dev.sh ports. The starter, ui/ as it
-# is; or, once ui/ has a package.json (docs/tutorials/5-a-svelte-ui/),
+# is; or, once ui/ has a package.json (docs/tutorials/6-a-svelte-ui/),
 # its dev server, the config in ui/public/
 UI_PORT ?= 5173
 ui:

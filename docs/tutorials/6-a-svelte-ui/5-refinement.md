@@ -1,6 +1,6 @@
 ---
 abstract: |
-  Step 5 of tutorial 5: run the tests, read what they
+  Step 5 of tutorial 6: run the tests, read what they
   say, and change whichever step is wrong. How to read
   a result, how to try the tests by breaking the
   dashboard on purpose, and what can go wrong.
@@ -16,17 +16,16 @@ sources:
 - services/py-api/main.py
 status: draft
 subtitle: Step 5, run, read, refine
-title: "5.5 A Svelte UI: the Refinement"
+title: "6.5 A Svelte UI: the Refinement"
 version: v0.1.0
 ---
 
 ## 1 Run
 
-Expect thirteen lines starting `ok`, then
-`13 of 13 pass`:
+Expect seven lines starting `ok`, then `7 of 7 pass`:
 
 ``` sh
-./test-5.sh
+./test-6.sh
 ```
 
 Its exit status is 0 when all pass, and 3 when any
@@ -35,14 +34,6 @@ failure in full: `cd ui && npm test`.
 
 ## 2 Read the Result
 
-- **T5.1 to T5.6 with `404`:** nginx knows no `/notes`:
-  the manifest, or nginx not rendered again
-- **T5.1 with `403`:** `t5-asha` is no member: the
-  grant failed. Run `test-4.sh`; `USERS` may name the
-  wrong service
-- **T5.5 with `200`:** an edit went through that should
-  not: the owner is missing from the accessor's
-  `WHERE`, tutorial 2's T2.19
 - **`FAIL ui`:** `ui/`'s tests did not run: no
   `ui/package.json`, or `npm install` not run
 - **A dashboard test fails:** `cd ui && npm test` names
@@ -51,19 +42,18 @@ failure in full: `cd ui && npm test`.
 ## 3 Try the Tests Themselves
 
 Break the dashboard on purpose, so it shows the notes
-to everyone. Expect `FAIL` for T5.9, and
-`12 of 13 pass`:
+to everyone. Expect `FAIL` for T6.3, and `6 of 7 pass`:
 
 ``` sh
 cp ui/src/App.svelte /tmp/App.svelte
 sed -i 's/{#if may("notes.read")}/{#if true}/' ui/src/App.svelte
-./test-5.sh
+./test-6.sh
 cp /tmp/App.svelte ui/src/App.svelte
 ```
 
-Only T5.9 catches it: the others give the notes'
+Only T6.3 catches it: the others give the notes'
 permission anyway, or none of the other sections. That
-is the reason for T5.9's question, "and nothing else".
+is the reason for T6.3's question, "and nothing else".
 
 ## 4 What to Refine
 
@@ -72,6 +62,8 @@ is the reason for T5.9's question, "and nothing else".
 - **A page shows what the person may not do, and the
   service refuses it:** the dashboard; the database is
   right
+- **A note is answered wrongly:** not here; tutorial
+  5's tests say where
 - **The dashboard needs an answer the contract lacks:**
   the contract, then the tests, then the code
 
@@ -80,7 +72,7 @@ is the reason for T5.9's question, "and nothing else".
 - **A blank page, and
   `Failed to fetch dynamically imported module` for
   `config.js`.** No `ui/public/config.js`: the
-  implementation's §6
+  implementation's §5
 - **Every call fails with a CORS error.** The page's
   origin is not admitted: `localhost:5173` is the
   manifest's `ui.dev_callback_urls`; the native stack
@@ -97,6 +89,6 @@ is the reason for T5.9's question, "and nothing else".
 
 ## 6 See Also
 
-- [6 Uploads](../6-uploads/README.md): next
+- [7 Uploads](../7-uploads/README.md): next
 - [The cycle](../../conduct/the-cycle/README.md) §3:
   what to refine, in general

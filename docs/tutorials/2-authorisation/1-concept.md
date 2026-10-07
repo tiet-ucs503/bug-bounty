@@ -3,7 +3,8 @@ abstract: |
   Step 1 of tutorial 2: what each person may do, before
   any code. Three sizes of rule and the one this
   builds; the access control matrix, the artefact that
-  holds the concept; nine rules read from it, which the
+  holds the concept, and how a unit adds its own
+  columns to it; ten rules read from it, which the
   tests take up; and what it will not do.
 date: 2026-10-07
 keywords:
@@ -13,7 +14,7 @@ keywords:
 - concept
 kind: explanation
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- tools/native-dev.sh
 status: draft
 subtitle: Step 1, the concept
 title: "2.1 What Each May Do: the Concept"
@@ -67,24 +68,39 @@ per object, or a role per pair of people.
 The concept's artefact. Rows are roles; columns are
 permissions; a cell says yes or nothing. A permission
 is `<unit>.<verb>`, named for the unit that asks for
-it:
+it. The users unit asks for two, and the matrix starts
+with them alone:
+
+  -----------------------------------------
+  Role       `users.read`   `users.grant`
+  ---------- -------------- ---------------
+  `reader`                  
+
+  `member`                  
+
+  `admin`    yes            yes
+  -----------------------------------------
+
+**The roles are the project's; the permissions are the
+units'.** `reader` and `member` hold nothing yet: no
+unit has asked for anything to read or write. Each unit
+that comes later brings its own columns, and says which
+roles start with them. When tutorial 5's notes arrive,
+the matrix grows by two:
 
   ------------------------------------------------------------------------
-  Role       `notes.read`   `notes.write`   `users.read`   `users.grant`
+  Role       `users.read`   `users.grant`   `notes.read`   `notes.write`
   ---------- -------------- --------------- -------------- ---------------
-  `reader`   yes                                           
+  `reader`                                  yes            
 
-  `member`   yes            yes                            
+  `member`                                  yes            yes
 
-  `admin`                                   yes            yes
+  `admin`    yes            yes                            
   ------------------------------------------------------------------------
 
-And the notes, read as a Unix mode, **(u=rw, a=r)**:
-**u**, the owner, reads and writes; **a**, all, read.
-"All" is everyone the matrix gives `notes.read`;
-"writes" needs the owner **and** `notes.write`. The
-matrix says who may use notes at all; the owner's
-column says whose note it is.
+The users unit owns the matrix. A unit never writes its
+tables; it asks the users unit, through two published
+functions, to add a column or take it away.
 
 ## 4 The Rules
 
@@ -95,12 +111,13 @@ tests](3-tests.md) can say which each one checks:
   no. Someone who signed in holds no role until one is
   given, and may do nothing; someone who never signed
   in holds none at all
-- **R2 Each role, its row.** `reader` reads notes;
-  `member` reads and writes them; `admin` reads the
-  people and the matrix, and grants. **`admin` does not
-  read notes:** running the people and reading their
-  notes are different trusts. An admin who should read
-  notes holds `member` too
+- **R2 Each role, its row.** `admin` reads the people
+  and the matrix, and grants; `reader` and `member`
+  hold what each unit gives them, reading and writing.
+  **`admin` holds only the users unit's permissions:**
+  running the people and reading their work are
+  different trusts. An admin who should read holds
+  `member` too
 - **R3 Roles add up.** A person may hold several, and
   may do what any of them may
 - **R4 Only `users.grant` gives or takes a role,** and
@@ -115,9 +132,18 @@ tests](3-tests.md) can say which each one checks:
   acts. A service that forgets to check cannot skip it,
   and a second service, in another language, gets the
   same rules for nothing
-- **R7 Notes are (u=rw, a=r),** as §3
-- **R8 Whether, never whose.** A reader learns whether
-  a note is their own, never whose it is
+- **R7 A unit brings its permissions.** Its migration
+  adds each one, with the roles that start with it, and
+  takes it away again on the way down, cells and all.
+  Twice is once, either way. A role that does not exist
+  is refused, and so is taking away any of the users
+  unit's own. These two take no caller: a migration
+  runs for the project, not for a person, so R6's
+  caller has no place in them
+- **R8 Three doors, all published.** Every unit may
+  call `users_may`, to ask, and its migrations
+  `users_permission_add` and `users_permission_drop`,
+  to bring and take; nothing else of the users unit
 - **R9 A permission is `<unit>.<verb>`,** lower case,
   one dot, so its unit is in its name
 - **R10 A starting role, by e-mail, once.** At a
@@ -192,6 +218,9 @@ FROM unnest(ARRAY['asha@example.org', 'Chitra@Example.org', 'bhanu@elsewhere.net
   over attributes. Read 2026-10-06
 - **Decide who signs in, or keep their record.** That
   is tutorial 1's
+- **Decide whose a thing is.** Ownership belongs to the
+  unit that holds the thing: tutorial 5's notes ask
+  `users_may`, then compare the owner themselves
 
 ## 7 See Also
 

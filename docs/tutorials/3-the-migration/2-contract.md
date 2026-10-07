@@ -12,7 +12,7 @@ keywords:
 - contract
 kind: reference
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/project.json
 status: draft
 subtitle: Step 2, what others may rely on
@@ -24,14 +24,17 @@ version: v0.1.0
 
 - **Tutorial 4,** `/users` in a service: it calls the
   users unit's functions, and needs its prefix
-- **Tutorial 6,** uploads: its migrations come after
-  these, and ask `users_may`
+- **Tutorials 5 and 7,** the notes and uploads: their
+  migrations come after these, bring their permissions
+  by `users_permission_add`, and their accessors ask
+  `users_may`
 - **The box's owner,** who reads every migration before
   the box runs it
 
 ## 2 The Files, in Order
 
-Four files in `migrations/sql/`, each named
+Three files in `migrations/sql/`, after the template's
+own `py_api_begin`, each named
 `<version>_<prefix>_<what>.sql`. `make db-new` stamps
 the version with the time, so files made in this order
 run in this order:
@@ -39,7 +42,6 @@ run in this order:
 1.  `<version>_users_create_people.sql`
 2.  `<version>_users_create_roles.sql`
 3.  `<version>_users_first_admin.sql`
-4.  `<version>_py_api_notes_permissions.sql`
 
 Each holds `-- migrate:up` and `-- migrate:down`, and
 both begin with the two `SET` lines `make db-new`
@@ -83,9 +85,10 @@ Tutorial 1's functions:
 Tutorial 2's, as [its
 contract](../2-authorisation/2-contract.md) §2 gives
 them: `users_may`, `users_me`, `users_list`,
-`users_matrix`, `users_grant` and `users_revoke`.
-`users_may` alone is published, and its comment says
-so.
+`users_matrix`, `users_grant`, `users_revoke`,
+`users_permission_add` and `users_permission_drop`.
+Three are published, and their comments say so:
+`users_may`, and the two a unit's migration calls.
 
 The starting role is no function a service calls: a
 trigger on `users_people` gives it, when
@@ -95,10 +98,12 @@ trigger on `users_people` gives it, when
 
 - Each down drops exactly what its up made, in the
   reverse order
-- All four rolled back, the schema is the template's
+- All three rolled back, the schema is the template's
   again
-- **The rows go too:** every person, role and note the
-  four made
+- **The rows go too:** every person and role the three
+  made, and every permission a later unit brought. Roll
+  back the later units first, as dbmate does, newest
+  first
 
 ## 6 The First Admin
 

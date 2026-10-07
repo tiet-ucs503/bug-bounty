@@ -208,7 +208,7 @@ bucket's `objects/` is the other half, written by your
 services at run time, never by a release: here the mock
 store holds it, and nginx serves it at
 `static.localhost:8080/objects/` ([the
-store](../tutorials/6-uploads/4-the-store.md)).
+store](../tutorials/7-uploads/4-the-store.md)).
 
 ## 8 After a Change
 

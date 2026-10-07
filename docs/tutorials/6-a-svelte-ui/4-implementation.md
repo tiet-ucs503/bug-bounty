@@ -1,10 +1,9 @@
 ---
 abstract: |
-  Step 4 of tutorial 5: what makes the thirteen tests
-  pass. py-api's notes routes; `ui/` made a Svelte
-  project; the starter's sign-in carried over; the
-  dashboard's five components; then run, built and
-  released.
+  Step 4 of tutorial 6: what makes the seven tests
+  pass. `ui/` made a Svelte project; the starter's
+  sign-in carried over; the dashboard's five
+  components; then run, built and released.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -19,177 +18,18 @@ sources:
 - Makefile
 status: draft
 subtitle: Step 4, the code
-title: "5.4 A Svelte UI: the Implementation"
+title: "6.4 A Svelte UI: the Implementation"
 version: v0.1.0
 ---
 
 ## 1 Before You Start
 
-- [The contract](2-contract.md): its notes routes added
-  to py-api's in `box/project.json` (§3 there)
-- [The tests](3-tests.md), saved as `test-5.sh` and
+- [The contract](2-contract.md): what the dashboard
+  relies on
+- [The tests](3-tests.md), saved as `test-6.sh` and
   `ui/test/dashboard.test.js`, run once and failing
 
-## 2 The Notes Routes, in py-api
-
-Tutorial 2's accessors, called by py-api. If you took
-Python in tutorial 4, py-api has its database already:
-the psycopg lines, the imports and the block below are
-there, and only `pydantic`'s import and the routes are
-new. If you took JavaScript, add them all now, starting
-with the three psycopg lines of [the Python
-page](../4-users/4-implementation-python.md) §2 in
-`services/py-api/requirements.txt`.
-
-In `services/py-api/main.py`, these imports beside the
-starter's:
-
-``` python
-from contextlib import asynccontextmanager
-
-import psycopg
-from fastapi import FastAPI, Header, Request
-from psycopg.rows import dict_row
-from psycopg_pool import ConnectionPool, PoolTimeout
-from pydantic import BaseModel, Field
-```
-
-The database, as tutorial 4 gives py-api, before the
-line that makes `app`; and `app` made with its
-`lifespan`, so the pool opens with the service:
-
-``` python
-# The project's database, as its app login. Opened without waiting, so
-# the service starts, and answers /health, whether or not it is up
-pool = ConnectionPool(os.environ.get("DATABASE_URL", ""), min_size=1, max_size=4, open=False,
-                      kwargs={"row_factory": dict_row, "autocommit": True})
-
-
-def query(sql: str, args: tuple = ()) -> list[dict]:
-    """One statement, its rows; the tests replace it"""
-    with pool.connection(timeout=5) as conn:
-        return conn.execute(sql, args).fetchall()
-
-
-# The database's refusals, by SQLSTATE, as HTTP
-STATUS = {"42501": 403, "P0002": 404, "23001": 409, "23514": 400, "22001": 400}
-NOSTORE = {"Cache-Control": "no-store"}
-
-
-def answer(data, status: int = 200) -> JSONResponse:
-    return JSONResponse(data, status, headers=NOSTORE)
-
-
-def signed_out() -> JSONResponse:
-    return JSONResponse({"error": "sign in first"}, 401, headers={**NOSTORE, "WWW-Authenticate": 'Bearer realm="py-api"'})
-
-
-def run(sql: str, args: tuple) -> JSONResponse | list[dict]:
-    """The accessor's rows, times as ISO 8601; or its refusal as an
-    answer"""
-    try:
-        out = query(sql, args)
-    except psycopg.Error as e:
-        if e.sqlstate in STATUS:
-            return answer({"error": e.diag.message_primary or str(e)}, STATUS[e.sqlstate])
-        raise
-    except PoolTimeout:
-        return answer({"error": "the database is not answering"}, 503)
-    for r in out:
-        for k, v in r.items():
-            if hasattr(v, "isoformat"):
-                r[k] = v.isoformat()
-    return out
-
-
-@asynccontextmanager
-async def lifespan(_app):
-    if pool.conninfo:
-        pool.open(wait=False)
-    yield
-    pool.close()
-```
-
-``` python
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
-```
-
-And the routes, at the end. pydantic's `Field` holds a
-note's body to 1 to 10,000 characters, and answers
-`422` outside that before the database is asked (N4):
-
-``` python
-class Note(BaseModel):
-    body: str = Field(min_length=1, max_length=10000)
-
-
-# Sync routes: FastAPI runs each in its thread pool, so the token check
-# and the database may block
-@app.get("/notes")
-def notes(before: int | None = None, authorization: str | None = Header(default=None)):
-    who = caller(authorization)
-    if who is None:
-        return signed_out()
-    r = run("SELECT * FROM py_api_notes_all(%s, %s)", (who["sub"], before))
-    return r if isinstance(r, JSONResponse) else answer(r)
-
-
-@app.post("/notes")
-def note_new(note: Note, authorization: str | None = Header(default=None)):
-    who = caller(authorization)
-    if who is None:
-        return signed_out()
-    r = run("SELECT py_api_note_new(%s, %s) AS id", (who["sub"], note.body))
-    return r if isinstance(r, JSONResponse) else answer({"id": r[0]["id"]}, 201)
-
-
-@app.put("/notes/{id}")
-def note_edit(id: int, note: Note, authorization: str | None = Header(default=None)):
-    who = caller(authorization)
-    if who is None:
-        return signed_out()
-    r = run("SELECT py_api_note_edit(%s, %s, %s)", (who["sub"], id, note.body))
-    return r if isinstance(r, JSONResponse) else answer({"id": id})
-
-
-@app.delete("/notes/{id}")
-def note_drop(id: int, authorization: str | None = Header(default=None)):
-    who = caller(authorization)
-    if who is None:
-        return signed_out()
-    r = run("SELECT py_api_note_drop(%s, %s)", (who["sub"], id))
-    return r if isinstance(r, JSONResponse) else answer({"id": id})
-```
-
-Run py-api's tests, `make test`, then restart the
-stack: `make dev`, or the native `stop` and `start`.
-
-**Document the routes.** In `docs/py-api/api.md`, after
-the starter's three in §2, the entries from [the
-contract](2-contract.md) §2, in the page's own form:
-
-``` markdown
-GET /notes
-: `notes.read`. `?before=<id>` pages back. `200` and a
-  list of `{id, body, mine, created_at, updated_at}`,
-  newest first, 50 at most. `403` without it
-
-POST /notes
-: `notes.write`. `{body}`, 1 to 10,000 characters.
-  `201` and `{id}`. `403` without it; `422` for a body
-  out of bounds
-
-PUT /notes/{id}
-: `notes.write`, and the note your own. `{body}`, as
-  for `POST`. `200` and `{id}`. `403`, `not your note`
-  or without it; `404` for no such note; `422`
-
-DELETE /notes/{id}
-: As `PUT /notes/{id}`, without a body. `200` and
-  `{id}`
-```
-
-## 3 Make ui/ a Svelte Project
+## 2 Make ui/ a Svelte Project
 
 The starter's `ui/` is two files and no build. A Svelte
 UI is built, by Vite, into `ui/dist/`; the template's
@@ -233,7 +73,7 @@ tests alone: Svelte's browser build, in jsdom:
 
 ``` javascript
 // The UI's build: Svelte by Vite, into ui/dist/, which a release syncs
-// to www (docs/tutorials/5-a-svelte-ui/). public/ is copied as it is;
+// to www (docs/tutorials/6-a-svelte-ui/). public/ is copied as it is;
 // its config.js is read at run time, never bundled
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
@@ -271,13 +111,13 @@ Then install. Expect `added` and a `package-lock.json`:
 cd ui && npm install --no-audit --no-fund && cd ..
 ```
 
-## 4 The Sign-in, Carried Over
+## 3 The Sign-in, Carried Over
 
 The starter's `app.js`, as a module the components
 share: the same PKCE sign-in, the same `api()` that
 waits out a `429` and backs off a `503`. Three
 additions: `USERS`, the service that serves `/users`;
-`raw`, to send a file as itself (tutorial 6); and
+`raw`, to send a file as itself (tutorial 7); and
 `staticBase`, the static bucket's address.
 `ui/src/lib/box.js`:
 
@@ -298,7 +138,7 @@ const apiBase = (service) => (config.apiUrl ? config.apiUrl(service) : `https://
 // The service that holds /users: py-api, or js-api if you took
 // JavaScript in tutorial 4
 export const USERS = "py-api";
-// The static bucket's objects/, public reads (docs/tutorials/6-uploads/)
+// The static bucket's objects/, public reads (docs/tutorials/7-uploads/)
 export const staticBase = config.staticUrl ?? `https://static.${config.zone}`;
 
 const redirectUri = `${location.origin}/`;
@@ -442,7 +282,7 @@ li.card { border: 1px solid var(--line); border-radius: .5rem; padding: .75rem; 
 .chip { font-size: .85rem; border: 1px solid var(--line); border-radius: 1rem; padding: 0 .5rem; }
 ```
 
-## 5 The Dashboard
+## 4 The Dashboard
 
 `ui/src/App.svelte`: what `/users/me` answers decides
 what the page shows (D1 to D3):
@@ -658,10 +498,10 @@ permissions in its tooltip (D5):
 </ul>
 ```
 
-Run the tests: `./test-5.sh`, or the dashboard's alone,
+Run the tests: `./test-6.sh`, or the dashboard's alone,
 `cd ui && npm test`.
 
-## 6 Run It
+## 5 Run It
 
 The config for your stack, into `ui/public/`, which
 Vite serves at the root. For the dev stack:
@@ -693,7 +533,7 @@ in turn:
 5.  **As `asha`,** a member: add a note, edit it,
     delete it. Another's note has no buttons
 
-## 7 Build and Release
+## 6 Build and Release
 
 Expect `dist/index.html` and `built in`:
 
@@ -709,7 +549,7 @@ it ([Release the UI](../../ui/release.md)); CI builds
 the UI on every push, so a broken build fails before a
 tag.
 
-## 8 See Also
+## 7 See Also
 
 - [The refinement](5-refinement.md): next
 - [Svelte](https://svelte.dev/docs/svelte/overview),

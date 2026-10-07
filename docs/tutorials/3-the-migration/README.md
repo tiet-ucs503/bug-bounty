@@ -1,10 +1,10 @@
 ---
 abstract: |
   Tutorials 1 and 2's drafts become migrations, the
-  form the box runs. Four files: the people, the roles,
-  the first admin, the notes. Built in the project's
-  five steps, a page each. This page is the way in:
-  what you build, and how the steps get you there.
+  form the box runs. Three files: the people, the
+  roles, the first admin. Built in the project's five
+  steps, a page each. This page is the way in: what you
+  build, and how the steps get you there.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -14,7 +14,7 @@ keywords:
 - cycle
 kind: tutorial
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/render.py
 - Makefile
 status: draft
@@ -29,10 +29,9 @@ page](../README.md) §5.
 
 ## 1 What You Build
 
-- **Four migrations** in `migrations/sql/`: the users
+- **Three migrations** in `migrations/sql/`: the users
   unit's people, from tutorial 1; its roles, from
-  tutorial 2; your project's first admin; and the
-  notes, from tutorial 2
+  tutorial 2; and your project's first admin
 - **`box/project.json`,** giving the `users` prefix to
   the service that will serve `/users`
 - **`migrations/schema.sql`,** the schema they make,
@@ -54,14 +53,14 @@ step. Read them in order.
 1.  **[The concept](1-concept.md).** What makes a
     migration fit to run on the box, as eight rules
 2.  **[The contract](2-contract.md).** What tutorials 4
-    to 6 may rely on: the files, their order, every
-    function the users unit offers, and the one it
+    to 7 may rely on: the files, their order, every
+    function the users unit offers, and the three it
     publishes
 3.  **[The tests](3-tests.md).** The rules as eight
     tests in one script. You run it first, and every
     test fails
 4.  **[The implementation](4-implementation.md).** The
-    prefix, the four migrations, the lint, and the
+    prefix, the three migrations, the lint, and the
     schema written down
 5.  **[The refinement](5-refinement.md).** Run the
     tests, read them, and change whichever step is
@@ -72,8 +71,8 @@ step. Read them in order.
 
 - [What you need](../README.md) §2, installed and
   checked
-- `users-draft.sql` and `notes-draft.sql`, from
-  tutorials [1](../1-authentication.md) and
+- `users-draft.sql`, from tutorials
+  [1](../1-authentication.md) and
   [2](../2-authorisation/README.md), and `test-2.sql`
 - A local stack, up, with the template's own migration
   applied, as `make dev` and

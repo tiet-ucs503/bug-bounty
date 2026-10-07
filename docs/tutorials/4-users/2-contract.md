@@ -23,7 +23,7 @@ version: v0.1.0
 
 ## 1 Who Relies on It
 
-- **Tutorial 5's UI,** which signs in, calls
+- **Tutorial 6's UI,** which signs in, calls
   `/users/me`, shows the profile, and lets an admin
   give roles
 - **Anything else with a token,** such as the box's

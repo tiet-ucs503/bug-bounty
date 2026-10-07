@@ -1,10 +1,11 @@
 ---
 abstract: |
-  Six tutorials, in order, that take a fork of the
+  Seven tutorials, in order, that take a fork of the
   template from a sign-in to a notes dashboard with
   uploads: who is signed in, what each person may do,
   the database that holds both, `/users` in py-api or
-  js-api, a Svelte UI, and files in the static bucket.
+  js-api, notes under the matrix, a Svelte UI, and
+  files in the static bucket.
   What you build, what you need, and the conventions
   every page shares.
 date: 2026-10-06
@@ -62,8 +63,8 @@ flowchart LR
 1.  [Who is signed in](1-authentication.md): a record
     of each person, and a profile, in the database
 2.  [What each may do](2-authorisation/README.md): the
-    access control matrix, and notes as (u=rw, a=r), in
-    [the project's five
+    access control matrix, which each later unit joins,
+    in [the project's five
     steps](../conduct/the-cycle/README.md): concept,
     contract, tests, implementation, refinement
 3.  [Make it a migration](3-the-migration/README.md):
@@ -71,10 +72,13 @@ flowchart LR
 4.  [/users](4-users/README.md): the door, the profile
     and the roles, as routes of py-api in Python, or of
     js-api in JavaScript
-5.  [A Svelte UI](5-a-svelte-ui/README.md): the
+5.  [Notes](5-notes/README.md): a unit of py-api's own
+    on the users unit: a migration that brings its
+    permissions, its routes, and a page of its own
+6.  [A Svelte UI](6-a-svelte-ui/README.md): the
     dashboard: who you are, your profile, the notes,
     the people
-6.  [Uploads](6-uploads/README.md): files on notes, in
+7.  [Uploads](7-uploads/README.md): files on notes, in
     the static bucket, collected when no note needs
     them
 
@@ -102,7 +106,7 @@ more, and each links back to this section.
   - [the native stack](../onboarding/shared-box.md),
     without containers or root: hosts at
     `*.localhost:<your NGINX_PORT>`
-- **A browser,** for tutorials 5 and 6
+- **A browser,** for tutorials 6 and 7
 - **Reading SQL,** and Python or JavaScript
 
 ### 2.1 Install Them
@@ -157,12 +161,12 @@ macOS's recipe is written but not yet tried.
 - **`curl` and `jq` 1.6 or later:** every page
 - **Python 3.12 or later:** the render behind
   `make check` and `make dev`, tutorial 4's
-  `make test`, and the test image tutorial 6 draws
+  `make test`, and the test image tutorial 7 draws
 - **`psql` and `pg_dump`, PostgreSQL 17 or later:**
   tutorials 1, 2, 3 and 6. `pg_dump` refuses a server
   newer than itself, and the stack's is 17. Debian and
   Ubuntu get them from PostgreSQL's own repository
-- **`openssl` and `base64`:** tutorial 6, a file's
+- **`openssl` and `base64`:** tutorial 7, a file's
   SHA-256 as S3 wants it
 - **Node 24 or later, with `npm`:** tutorial 3, for
   Squawk by `npx`; 4, 5 and 6. Debian and Ubuntu get it
@@ -193,7 +197,7 @@ Security notes on these tools are §6.
 
 ## 3 Conventions
 
-Each page's commands use these settings; tutorial 6
+Each page's commands use these settings; tutorial 7
 alone needs the last two. Set them once in each shell,
 for your stack.
 
@@ -292,10 +296,13 @@ changed since its run goes back to `NO`.
   4 /users                  `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
+  5 Notes                   `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
+  6 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
+                            `[NO:DOCKER]`
+
+  7 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
@@ -303,12 +310,15 @@ changed since its run goes back to `NO`.
 
 - **The native stack,** without root, in a fork of the
   template. Tutorials 1 and 2, every step; tutorial 2's
-  tests 2026-10-07, before and after its code, and with
-  its code broken on purpose. Tutorials 3 to 6, as
-  reworked 2026-10-07: every test script before the
-  code, after it, and with the code broken on purpose;
-  tutorial 4's against both languages. Not yet every
-  other step of their pages as written, so `NO`
+  tests again 2026-10-07, after the notes left it:
+  before and after its code, and with its code broken
+  on purpose. Tutorials 3 to 7 the same day, after the
+  notes became tutorial 5: the test scripts of 3, 5 and
+  6 before the code, after it, and with the code broken
+  on purpose; 4's and 7's passing in a fork that took
+  every tutorial, on py-api. Before the move, tutorial
+  4's against js-api too. Not yet every other step of
+  their pages as written, so `NO`
 - **The dev stack under rootless Podman,** the same
   fork, 2026-10-06, in part: every image built, the
   door, the notes, an upload read back through nginx,
@@ -316,7 +326,7 @@ changed since its run goes back to `NO`.
   since `/users` moved into py-api and js-api, so `NO`
 - **Docker:** not yet
 - **The dashboard,** by its own tests in jsdom, from
-  tutorials 5 and 6; and, before the rework, in a
+  tutorials 6 and 7; and, before the rework, in a
   headless Chromium: the sign-in, a role granted, notes
   added and edited, files chosen and dropped
 - **Every code block** on the pages is the file that
@@ -342,8 +352,8 @@ The box does not yet take a project. Its half is being
 built: the points where nginx and Compose include a
 project's pieces, the repositories, buckets and sign-in
 client each project gets, the right to pull its images,
-and the grants tutorial 6 needs on the static bucket
-(§5 of [its contract](6-uploads/2-contract.md)). And
+and the grants tutorial 7 needs on the static bucket
+(§5 of [its contract](7-uploads/2-contract.md)). And
 the box's own database is MariaDB until it moves to
 PostgreSQL, which these pages assume.
 
@@ -422,7 +432,7 @@ you should know about.
 ## 7 See Also
 
 - [The database's conduct](../conduct/database.md):
-  prefixes, accessors, and the one function a unit
+  prefixes, accessors, and the functions a unit
   publishes
 - [Write a
   migration](../migrations/write-a-migration.md)

@@ -13,7 +13,7 @@ keywords:
 kind: explanation
 sources:
 - migrations/Dockerfile
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- migrations/sql/20261006120000_py_api_begin.sql
 - box/render.py
 status: draft
 subtitle: One database, two logins, one image of
@@ -123,6 +123,8 @@ on it, is the last step of the box's `feature/postgres`
 ## 6 See Also
 
 - [Write a migration](write-a-migration.md)
+- [Bring an existing unit under
+  authorisation](bring-under-authorisation.md)
 - [The database's conduct](../conduct/database.md)
 - [How a release reaches the
   box](../onboarding/ci-cd.md)

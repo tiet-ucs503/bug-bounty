@@ -16,7 +16,7 @@ keywords:
 - cycle
 kind: how-to
 sources:
-- migrations/sql/20261006120000_py_api_create_notes.sql
+- tools/native-dev.sh
 status: draft
 subtitle: Step 5, run, read, refine
 title: "2.5 What Each May Do: the Refinement"
@@ -29,8 +29,7 @@ version: v0.1.0
   template's migration applied. Tutorials 1 and 2 are
   drafts, not migrations, until tutorial 3
 - **The files,** at your fork's root, in this order:
-  `users-draft.sql`, then `notes-draft.sql`, whose
-  functions call `users_may`, then `test-2.sql`
+  `users-draft.sql`, then `test-2.sql`
 - **One transaction, rolled back.** The drafts and the
   tests run inside `BEGIN` and `ROLLBACK`, so every run
   starts from the same database and leaves it as it
@@ -41,11 +40,12 @@ version: v0.1.0
 
 ## 2 Run
 
-Expect `t|t|t`, then 27 lines starting `ok`, then
-`27 of 27 pass`:
+Expect `|`, the users unit bringing its own two
+permissions; `t|t|t`, the three people recorded; then
+27 lines starting `ok`, then `27 of 27 pass`:
 
 ``` sh
-psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f notes-draft.sql -f test-2.sql -c ROLLBACK
+psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f test-2.sql -c ROLLBACK
 ```
 
 Its exit status is 0 when all pass, and 3 when any
@@ -93,13 +93,14 @@ account. A fix to the first often clears the rest.
 A test suite can be wrong too: it can pass code that
 breaks a rule. Find out by breaking the code on
 purpose, in a copy, and checking that some test fails.
-Here, take out the owner from the notes' `WHERE`, so
-anyone with `notes.write` may change any note. Expect
-`FAIL` for T2.19, T2.20 and T2.22, and `24 of 27 pass`:
+Here, take the guard out of `users_permission_drop`, so
+a unit's migration may take away `users.grant`, and
+lock the project out. Expect `FAIL` for T2.22, and
+`26 of 27 pass`:
 
 ``` sh
-sed 's/WHERE id = p_id AND owner = p_caller;/WHERE id = p_id;/' notes-draft.sql > broken.sql
-psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f users-draft.sql -f broken.sql -f test-2.sql -c ROLLBACK
+sed '/IF p_permission LIKE/,/END IF;/d' users-draft.sql > broken.sql
+psql "${MIGRATOR_URL}" -X -q -t -A -v ON_ERROR_STOP=1 -c BEGIN -f broken.sql -f test-2.sql -c ROLLBACK
 rm broken.sql
 ```
 
@@ -155,16 +156,16 @@ passes 26 of 27.
 
 ## 7 What Can Go Wrong
 
-- **`function users_may(text, text) does not exist`,
-  and `psql` stops.** `notes-draft.sql` ran before
-  `users-draft.sql`. A function in `LANGUAGE sql` is
-  checked when it is made; give the files in order
+- **`P0002` from a unit's migration.** It names a role
+  the project does not have, in `users_permission_add`:
+  `SELECT role FROM users_roles`
 - **Every check fails for someone you granted.** The
   role has no row in `users_grants` for that
   permission:
   `SELECT * FROM users_grants WHERE role = 'member'`
 - **A permission's name is refused by a `CHECK`.** It
-  must be `<unit>.<verb>`, lower case, one dot
+  must be `<unit>.<verb>`, lower case, one dot, and the
+  unit's own name
 - **You want "everyone but bhanu".** A matrix cannot
   say no ([the concept](1-concept.md) §6). Take bhanu's
   role, or give the others a role he lacks

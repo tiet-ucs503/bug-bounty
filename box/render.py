@@ -660,7 +660,7 @@ def dev_compose(p: dict) -> str:
       COGNITO_PROBE_CLIENT_ID: dev-probe
       COGNITO_USERINFO_URL: http://mock-auth:9000/oauth2/userInfo
       # The static bucket: written at S3's path-style address, read
-      # through static.<zone> (docs/tutorials/6-uploads/)
+      # through static.<zone> (docs/tutorials/7-uploads/)
       STORE_URL: http://mock-store:9100/static.localhost
       STATIC_URL: http://static.localhost:{DEV_PORT}{db_env}
     expose:

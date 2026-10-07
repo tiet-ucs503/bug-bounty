@@ -69,15 +69,16 @@ whenever the contract is silent.
 - **1 Who is signed in:** the people's record, as the
   sign-in gives it, and the profile the project keeps
 - **2 What each may do:** the access control matrix,
-  roles by permissions, a cell yes or nothing; and
-  notes as (u=rw, a=r)
-- **3 Make it a migration:** the four migrations, in
+  roles by permissions, a cell yes or nothing
+- **3 Make it a migration:** the three migrations, in
   their order
 - **4 /users:** the six routes, each with the
   permission it needs
-- **5 A Svelte UI:** what the dashboard shows, by what
+- **5 Notes:** a file's mode, (u=rw, a=r), and the two
+  columns it adds to the matrix
+- **6 A Svelte UI:** what the dashboard shows, by what
   `/users/me` answers
-- **6 Uploads:** the key,
+- **7 Uploads:** the key,
   `objects/<owner's tag>/<the bytes' SHA-256>`, and an
   object's life, drawn
 
