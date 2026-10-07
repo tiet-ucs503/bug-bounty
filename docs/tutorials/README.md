@@ -204,12 +204,12 @@ for your stack.
 For the dev stack:
 
 ``` sh
-H=localhost:8080
-MOCK_URL=http://localhost:9000
-MIGRATOR_URL='postgres://example_migrator:dev-only@localhost:5432/example?sslmode=disable'
-DATABASE_URL='postgres://example:dev-only@localhost:5432/example?sslmode=disable'
-STORE_URL=http://localhost:9100/static.localhost
-STATIC_URL=http://static.localhost:8080
+export H=localhost:8080
+export MOCK_URL=http://localhost:9000
+export MIGRATOR_URL='postgres://example_migrator:dev-only@localhost:5432/example?sslmode=disable'
+export DATABASE_URL='postgres://example:dev-only@localhost:5432/example?sslmode=disable'
+export STORE_URL=http://localhost:9100/static.localhost
+export STATIC_URL=http://static.localhost:8080
 ```
 
 For the native stack, `H` and `MOCK_URL` come from your
@@ -219,9 +219,13 @@ own ports, and `env.sh` sets the other four itself:
 
 ``` sh
 . dev/out/native/env.sh
-H=localhost:${NGINX_PORT}
-MOCK_URL=http://localhost:${MOCK_PORT}
+export H=localhost:${NGINX_PORT}
+export MOCK_URL=http://localhost:${MOCK_PORT}
 ```
+
+Each is exported, since the tutorials' test scripts run
+as programs of their own, and read them from the
+environment.
 
 `example` is the template's project name; yours, once
 you rename it in `box/project.json`.
@@ -290,45 +294,53 @@ changed since its run goes back to `NO`.
   2 What each may do        `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  3 Make it a migration     `[NO:NATIVE]` `[NO:PODMAN]`
+  3 Make it a migration     `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  4 /users                  `[NO:NATIVE]` `[NO:PODMAN]`
+  4 /users                  `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 Notes                   `[NO:NATIVE]` `[NO:PODMAN]`
+  5 Notes                   `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 A Svelte UI             `[NO:NATIVE]` `[NO:PODMAN]`
+  6 A Svelte UI             `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
 
-  7 Uploads                 `[NO:NATIVE]` `[NO:PODMAN]`
+  7 Uploads                 `[OK:NATIVE]` `[NO:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
 ### 5.2 Where They Ran
 
-- **The native stack,** without root, in a fork of the
-  template. Tutorials 1 and 2, every step; tutorial 2's
-  tests again 2026-10-07, after the notes left it:
-  before and after its code, and with its code broken
-  on purpose. Tutorials 3 to 7 the same day, after the
-  notes became tutorial 5: the test scripts of 3, 5 and
-  6 before the code, after it, and with the code broken
-  on purpose; 4's and 7's passing in a fork that took
-  every tutorial, on py-api. Before the move, tutorial
-  4's against js-api too. Not yet every other step of
-  their pages as written, so `NO`
+- **The native stack,** without root, in a fresh fork
+  of the template, 2026-10-07: tutorials 1 to 7, in
+  order, every step of every page. Each command block
+  was cut from its page by a script and run as it
+  stands; each file was written from its page's block;
+  each answer was read against the page's `Expect`.
+  Every tutorial's tests ran before its code, after it,
+  and with the code or the migration broken as its
+  refinement says. Tutorial 4 in both languages, the
+  JavaScript page on a branch of the same fork
+- **The browser's steps,** tutorial 6's §6 and tutorial
+  7's §9, in a headless Chromium driven by a script, at
+  a phone's width: the sign-in through the mock, a role
+  ticked, a profile saved, notes added, edited and
+  deleted, files chosen and dropped, one taken off and
+  collected. The dashboard was looked at in both
+  themes
+- **What differed from the pages:** the tools were
+  installed into a scratch folder, not the home
+  directory, by the shared-box page's commands with
+  that one path changed; and tutorial 7's UI steps 2 to
+  5 were applied as its whole component, of §7, after
+  step 1 was tried alone
 - **The dev stack under rootless Podman,** the same
   fork, 2026-10-06, in part: every image built, the
   door, the notes, an upload read back through nginx,
   the collector. Not every step of every page, and not
   since `/users` moved into py-api and js-api, so `NO`
 - **Docker:** not yet
-- **The dashboard,** by its own tests in jsdom, from
-  tutorials 6 and 7; and, before the rework, in a
-  headless Chromium: the sign-in, a role granted, notes
-  added and edited, files chosen and dropped
 - **Every code block** on the pages is the file that
   ran, checked by a script, character for character
 

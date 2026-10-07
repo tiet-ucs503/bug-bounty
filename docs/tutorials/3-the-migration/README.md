@@ -23,7 +23,7 @@ title: 3 Make It a Migration
 version: v0.1.0
 ---
 
-`[NO:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
 these mean, and what they do not: [the tutorials'
 page](../README.md) §5.
 
