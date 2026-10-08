@@ -78,7 +78,8 @@ const REFERENCE = {
 };
 
 // Scalar's page: one file, by version and by its SHA-384, from jsDelivr;
-// its settings are data, with telemetry and Scalar's own fonts off. The
+// its settings are data: no telemetry, none of Scalar's fonts, and none
+// of its own tools, the AI, the MCP and the sharing among them. The
 // policy admits that script, the styles it injects, and calls to this
 // host alone; nothing may frame the page
 const SCALAR = `<!doctype html>
@@ -91,7 +92,8 @@ const SCALAR = `<!doctype html>
 </head>
 <body>
   <script id="api-reference" type="application/json" data-url="/openapi.json"
-    data-configuration='{"telemetry": false, "withDefaultFonts": false}'></script>
+    data-configuration='{"telemetry": false, "withDefaultFonts": false, "showDeveloperTools": "never",
+      "agent": {"disabled": true}, "mcp": {"disabled": true}, "hideClientButton": true}'></script>
   <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.73.1/dist/browser/standalone.js"
     integrity="sha384-kYDGzV91Jnn3TbHINV3nt54riK2uMJDfN5Al8dAkz4FssELTBWbD8rgw32sTKfOi"
     crossorigin="anonymous"></script>

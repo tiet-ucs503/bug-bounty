@@ -24,6 +24,10 @@ the UI's origin carries `Access-Control-Allow-Origin`.
 
 ## 2 The Routes
 
+The same, made from the code and tried from a page:
+`https://js-api.<zone>/scalar-ui` ([the API's
+conduct](../conduct/api.md)).
+
 GET /health
 : Anyone. `200` and
   `{"status": "ok", "service": "js-api"}`. The box's
@@ -37,6 +41,14 @@ POST /echo
   `{"service": "js-api", "caller": "<sub>", "groups": [...], "body": ...}`,
   with `Cache-Control: no-store`. `401` without a valid
   token; `413` over 1 MiB
+
+GET /openapi.json
+: Anyone. `200` and the service's OpenAPI document,
+  made from its routes
+
+GET /scalar-ui
+: Anyone. `200` and Scalar's page of that document, to
+  read the routes and try them
 
 Your fork adds routes as [the
 tutorials](../tutorials/README.md) go: `/users` in

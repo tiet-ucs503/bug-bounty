@@ -38,10 +38,12 @@ In the order a newcomer reads them.
 5.  [Naming](naming.md): the owner, the thing, the verb
 6.  [The database's conduct](database.md): prefixes,
     accessors, and what a service may do
-7.  [The UI's conduct](ui.md): mobile first, Tailwind,
+7.  [The API's conduct](api.md): a reference made from
+    the routes, shown by Scalar
+8.  [The UI's conduct](ui.md): mobile first, Tailwind,
     Svelte, and a visual language of your own
-8.  [Writing](writing.md): voice, person and tense
-9.  **How these pages are written:** this page, §2 to
+9.  [Writing](writing.md): voice, person and tense
+10. **How these pages are written:** this page, §2 to
     §6, and [the template](template.md) to copy
 
 ## 2 Who We Write For
