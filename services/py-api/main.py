@@ -3,9 +3,11 @@
 Stateless: the routes below show the shape every service keeps, and
 are replaced by yours.
 
-    GET  /health   the box's and the probes' check; keep it
-    GET  /hello    anyone
-    POST /echo     a signed-in caller: the body back, with who sent it
+    GET  /health        the box's and the probes' check; keep it
+    GET  /hello         anyone
+    POST /echo          a signed-in caller: the body back, with who sent it
+    GET  /openapi.json  the reference, made from the routes; keep it
+    GET  /scalar-ui     the reference as a page, by Scalar; keep it
 
 In front of this process, the box's nginx (rendered from
 box/project.json, docs/onboarding/README.md):
@@ -32,7 +34,8 @@ import urllib.request
 
 import jwt
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 
 SERVICE = os.environ.get("SERVICE", "py-api")
@@ -88,26 +91,92 @@ def caller(header: str | None) -> dict | None:
     return {"sub": claims["sub"], "groups": claims.get("cognito:groups", [])}
 
 
-# No /docs, /redoc or /openapi.json: nginx's allow-list would refuse
-# them in any case
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+# The API's reference (docs/conduct/api.md): the OpenAPI document at
+# /openapi.json, made from the routes below and never written by hand,
+# and Scalar's page of it at /scalar-ui. FastAPI's own /docs and /redoc
+# stay off
+app = FastAPI(title=SERVICE, version="0.1.0", docs_url=None, redoc_url=None, openapi_url="/openapi.json")
+
+# A route that needs a token says so with openapi_extra=SIGNED_IN, or
+# by taking the Authorization header as a parameter
+SIGNED_IN = {"security": [{"bearer": []}]}
+
+
+def reference() -> dict:
+    """FastAPI's document of the routes, with the token as a scheme the
+    page can fill: an Authorization parameter becomes that scheme"""
+    if app.openapi_schema:
+        return app.openapi_schema
+    doc = get_openapi(title=app.title, version=app.version, routes=app.routes)
+    doc.setdefault("components", {})["securitySchemes"] = {
+        "bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT",
+                   "description": "An access token from the box's pool, for your UI's client or the probes'"}
+    }
+    for path in doc["paths"].values():
+        for op in path.values():
+            given = op.get("parameters", [])
+            kept = [p for p in given if (p["in"], p["name"].lower()) != ("header", "authorization")]
+            if len(kept) < len(given):
+                op.update(SIGNED_IN)
+                op["parameters"] = kept
+    app.openapi_schema = doc
+    return doc
+
+
+app.openapi = reference
+
+# Scalar's page: one file, by version and by its SHA-384, from jsDelivr;
+# its settings are data, with telemetry and Scalar's own fonts off. The
+# policy admits that script, the styles it injects, and calls to this
+# host alone; nothing may frame the page
+SCALAR = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>%s: the API</title>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <script id="api-reference" type="application/json" data-url="/openapi.json"
+    data-configuration='{"telemetry": false, "withDefaultFonts": false}'></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.73.1/dist/browser/standalone.js"
+    integrity="sha384-kYDGzV91Jnn3TbHINV3nt54riK2uMJDfN5Al8dAkz4FssELTBWbD8rgw32sTKfOi"
+    crossorigin="anonymous"></script>
+</body>
+</html>
+""" % SERVICE
+SCALAR_POLICY = "; ".join([
+    "default-src 'none'", "script-src https://cdn.jsdelivr.net", "style-src 'unsafe-inline'",
+    "img-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self'",
+    "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
+])
+
+
+@app.get("/scalar-ui", include_in_schema=False)
+def scalar_ui():
+    return HTMLResponse(SCALAR, headers={"Content-Security-Policy": SCALAR_POLICY, "Referrer-Policy": "no-referrer"})
 
 
 @app.get("/health")
 def health():
+    """Anyone. The box's and the probes' check: that this service answers, and which it is"""
     return {"status": "ok", "service": SERVICE}
 
 
 @app.get("/hello")
 def hello():
+    """Anyone. A greeting, naming the service"""
     return {"message": f"hello from {SERVICE}"}
 
 
 # The token check may fetch the keys, so it runs in the thread pool;
 # the body is read on the loop first. 1 MiB, as nginx's
 # client_max_body_size for the host
-@app.post("/echo")
+@app.post("/echo", openapi_extra=SIGNED_IN)
 async def echo(request: Request):
+    """Signed in. The JSON body back, with who sent it. `400` for a body that is not JSON; `401` without a
+    token; `413` over 1 MiB"""
     nostore = {"Cache-Control": "no-store"}
     body = await request.body()
     if len(body) > MAX_BODY:
