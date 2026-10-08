@@ -250,7 +250,10 @@ Read every line it prints; do not explain one away.
   back to `draft` until it is checked again
 - The map in [the home page](../README.md) lists every
   page and its status; a new page is added to the map
-  in the same commit
+  in the same commit. An entry is a quote of its own, a
+  blank line before and after: its status and badges on
+  the first line, ended by a backslash, and its link on
+  the next
 - **A new service** is a new top-level folder, named as
   the manifest names it, with the same three pages as
   `js-api/`: what it is, its routes, how to develop it
@@ -278,7 +281,7 @@ Read every line it prints; do not explain one away.
   second line becomes a row of its own. Write a
   multiline table, with a blank line between rows and a
   dashed line above and below, as in §3 and §4; or a
-  list, as the map is
+  list
 
 - **A multiline table's cells come out mangled,
   backticks escaped.** A code name longer than its

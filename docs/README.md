@@ -57,157 +57,228 @@ not yet checked; **planned** --- not yet written.
 
 ### Start Here
 
-- `draft` This page
-- `draft` [Glossary](glossary.md)
+> `draft`\
+> This page
+
+> `draft`\
+> [Glossary](glossary.md)
 
 ### Onboarding: the Project and the Box
 
-- `draft` [Onboarding: every page, and how the project
-  meets the box](onboarding/README.md)
-- `draft` [From a fork to a live
-  project](onboarding/first-rollout.md)
-- `draft` [How a release reaches the
-  box](onboarding/ci-cd.md)
-- `draft` [A release by
-  hand](onboarding/release-by-hand.md)
-- `draft` [Publish the pages to GitHub
-  Pages](onboarding/github-pages.md)
-- `draft` [Hand a change to the box's
-  owner](onboarding/hand-over.md)
-- `draft` [Probe your
-  hosts](onboarding/run-the-probes.md)
-- `draft` [A local stack that mirrors the
-  box](onboarding/local-dev.md)
-- `draft` [Develop on a shared box without
-  root](onboarding/shared-box.md)
-- `draft` [Run the stack with rootless
-  Podman](onboarding/podman.md)
-- `draft` [The manifest, key by
-  key](onboarding/manifest.md)
-- `draft` [The Makefile, target by
-  target](onboarding/makefile.md)
+> `draft`\
+> [Onboarding: every page, and how the project meets
+> the box](onboarding/README.md)
+
+> `draft`\
+> [From a fork to a live
+> project](onboarding/first-rollout.md)
+
+> `draft`\
+> [How a release reaches the box](onboarding/ci-cd.md)
+
+> `draft`\
+> [A release by hand](onboarding/release-by-hand.md)
+
+> `draft`\
+> [Publish the pages to GitHub
+> Pages](onboarding/github-pages.md)
+
+> `draft`\
+> [Hand a change to the box's
+> owner](onboarding/hand-over.md)
+
+> `draft`\
+> [Probe your hosts](onboarding/run-the-probes.md)
+
+> `draft`\
+> [A local stack that mirrors the
+> box](onboarding/local-dev.md)
+
+> `draft`\
+> [Develop on a shared box without
+> root](onboarding/shared-box.md)
+
+> `draft`\
+> [Run the stack with rootless
+> Podman](onboarding/podman.md)
+
+> `draft`\
+> [The manifest, key by key](onboarding/manifest.md)
+
+> `draft`\
+> [The Makefile, target by
+> target](onboarding/makefile.md)
 
 ### Tutorials: From a Sign-in to Uploads
 
 Each tutorial's badges, beside its status, say where it
 ran ([the tutorials' page](tutorials/README.md) §5).
 
-- `draft` [The path, and its
-  conventions](tutorials/README.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [1
-  Who is signed in:
-  authentication](tutorials/1-authentication.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [2
-  What each may do:
-  authorisation](tutorials/2-authorisation/README.md):
-  [the
-  concept](tutorials/2-authorisation/1-concept.md),
-  [the
-  contract](tutorials/2-authorisation/2-contract.md),
-  [the tests](tutorials/2-authorisation/3-tests.md),
-  [the
-  implementation](tutorials/2-authorisation/4-implementation.md),
-  [the
-  refinement](tutorials/2-authorisation/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [3
-  Make it a
-  migration](tutorials/3-the-migration/README.md): [the
-  concept](tutorials/3-the-migration/1-concept.md),
-  [the
-  contract](tutorials/3-the-migration/2-contract.md),
-  [the tests](tutorials/3-the-migration/3-tests.md),
-  [the
-  implementation](tutorials/3-the-migration/4-implementation.md),
-  [the
-  refinement](tutorials/3-the-migration/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [4
-  /users](tutorials/4-users/README.md): [the
-  concept](tutorials/4-users/1-concept.md), [the
-  contract](tutorials/4-users/2-contract.md), [the
-  tests](tutorials/4-users/3-tests.md), [the
-  implementation in
-  Python](tutorials/4-users/4-implementation-python.md),
-  [in
-  JavaScript](tutorials/4-users/4-implementation-javascript.md),
-  [the refinement](tutorials/4-users/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [5
-  Notes](tutorials/5-notes/README.md): [the
-  concept](tutorials/5-notes/1-concept.md), [the
-  contract](tutorials/5-notes/2-contract.md), [the
-  tests](tutorials/5-notes/3-tests.md), [the
-  implementation](tutorials/5-notes/4-implementation.md),
-  [the refinement](tutorials/5-notes/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [6
-  A Svelte UI](tutorials/6-a-svelte-ui/README.md): [the
-  concept](tutorials/6-a-svelte-ui/1-concept.md), [the
-  contract](tutorials/6-a-svelte-ui/2-contract.md),
-  [the tests](tutorials/6-a-svelte-ui/3-tests.md), [the
-  implementation](tutorials/6-a-svelte-ui/4-implementation.md),
-  [the
-  refinement](tutorials/6-a-svelte-ui/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [7
-  Uploads](tutorials/7-uploads/README.md): [the
-  concept](tutorials/7-uploads/1-concept.md), [the
-  contract](tutorials/7-uploads/2-contract.md), [the
-  tests](tutorials/7-uploads/3-tests.md), [the
-  store](tutorials/7-uploads/4-the-store.md), [the
-  database](tutorials/7-uploads/4-the-database.md),
-  [the service](tutorials/7-uploads/4-the-service.md),
-  [the UI](tutorials/7-uploads/4-the-ui.md), [the
-  refinement](tutorials/7-uploads/5-refinement.md)
+> `draft`\
+> [The path, and its conventions](tutorials/README.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [1 Who is signed in:
+> authentication](tutorials/1-authentication.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [2 What each may do:
+> authorisation](tutorials/2-authorisation/README.md):
+> [the
+> concept](tutorials/2-authorisation/1-concept.md),
+> [the
+> contract](tutorials/2-authorisation/2-contract.md),
+> [the tests](tutorials/2-authorisation/3-tests.md),
+> [the
+> implementation](tutorials/2-authorisation/4-implementation.md),
+> [the
+> refinement](tutorials/2-authorisation/5-refinement.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [3 Make it a
+> migration](tutorials/3-the-migration/README.md): [the
+> concept](tutorials/3-the-migration/1-concept.md),
+> [the
+> contract](tutorials/3-the-migration/2-contract.md),
+> [the tests](tutorials/3-the-migration/3-tests.md),
+> [the
+> implementation](tutorials/3-the-migration/4-implementation.md),
+> [the
+> refinement](tutorials/3-the-migration/5-refinement.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [4 /users](tutorials/4-users/README.md): [the
+> concept](tutorials/4-users/1-concept.md), [the
+> contract](tutorials/4-users/2-contract.md), [the
+> tests](tutorials/4-users/3-tests.md), [the
+> implementation in
+> Python](tutorials/4-users/4-implementation-python.md),
+> [in
+> JavaScript](tutorials/4-users/4-implementation-javascript.md),
+> [the refinement](tutorials/4-users/5-refinement.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [5 Notes](tutorials/5-notes/README.md): [the
+> concept](tutorials/5-notes/1-concept.md), [the
+> contract](tutorials/5-notes/2-contract.md), [the
+> tests](tutorials/5-notes/3-tests.md), [the
+> implementation](tutorials/5-notes/4-implementation.md),
+> [the refinement](tutorials/5-notes/5-refinement.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [6 A Svelte UI](tutorials/6-a-svelte-ui/README.md):
+> [the concept](tutorials/6-a-svelte-ui/1-concept.md),
+> [the
+> contract](tutorials/6-a-svelte-ui/2-contract.md),
+> [the tests](tutorials/6-a-svelte-ui/3-tests.md), [the
+> implementation](tutorials/6-a-svelte-ui/4-implementation.md),
+> [the
+> refinement](tutorials/6-a-svelte-ui/5-refinement.md)
+
+> `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]`\
+> [7 Uploads](tutorials/7-uploads/README.md): [the
+> concept](tutorials/7-uploads/1-concept.md), [the
+> contract](tutorials/7-uploads/2-contract.md), [the
+> tests](tutorials/7-uploads/3-tests.md), [the
+> store](tutorials/7-uploads/4-the-store.md), [the
+> database](tutorials/7-uploads/4-the-database.md),
+> [the service](tutorials/7-uploads/4-the-service.md),
+> [the UI](tutorials/7-uploads/4-the-ui.md), [the
+> refinement](tutorials/7-uploads/5-refinement.md)
 
 ### js-api
 
-- `draft` [What js-api is, and who may call
-  it](js-api/README.md)
-- `draft` [js-api's routes](js-api/api.md)
-- `draft` [Develop and change
-  js-api](js-api/develop.md)
+> `draft`\
+> [What js-api is, and who may call
+> it](js-api/README.md)
+
+> `draft`\
+> [js-api's routes](js-api/api.md)
+
+> `draft`\
+> [Develop and change js-api](js-api/develop.md)
 
 ### py-api
 
-- `draft` [What py-api is, and who may call
-  it](py-api/README.md)
-- `draft` [py-api's routes](py-api/api.md)
-- `draft` [Develop and change
-  py-api](py-api/develop.md)
+> `draft`\
+> [What py-api is, and who may call
+> it](py-api/README.md)
+
+> `draft`\
+> [py-api's routes](py-api/api.md)
+
+> `draft`\
+> [Develop and change py-api](py-api/develop.md)
 
 ### Migrations: the Database
 
-- `draft` [The database](migrations/README.md)
-- `draft` [Write a
-  migration](migrations/write-a-migration.md)
-- `draft` [Bring an existing unit under
-  authorisation](migrations/bring-under-authorisation.md)
+> `draft`\
+> [The database](migrations/README.md)
+
+> `draft`\
+> [Write a migration](migrations/write-a-migration.md)
+
+> `draft`\
+> [Bring an existing unit under
+> authorisation](migrations/bring-under-authorisation.md)
 
 ### UI
 
-- `draft` [The UI](ui/README.md)
-- `draft` [Develop the UI](ui/develop.md)
-- `draft` [Release the UI](ui/release.md)
+> `draft`\
+> [The UI](ui/README.md)
+
+> `draft`\
+> [Develop the UI](ui/develop.md)
+
+> `draft`\
+> [Release the UI](ui/release.md)
 
 ### Conduct
 
-- `draft` [The project's conduct: how we work, and how
-  we write it down](conduct/README.md)
-- `draft` [The philosophy: one thing, done
-  well](conduct/philosophy.md)
-- `draft` [The page template](conduct/template.md)
-- `draft` [The database's conduct](conduct/database.md)
-- `draft` [The API's conduct](conduct/api.md)
-- `draft` [The UI's conduct](conduct/ui.md)
-- `draft` [The concept: before the first line of
-  code](conduct/the-cycle/concept.md)
-- `draft` [The tests: the questions a concept
-  raises](conduct/the-cycle/tests.md)
-- `draft` [The cycle: five steps, in
-  turns](conduct/the-cycle/README.md)
-- `draft` [From an issue to a
-  merge](conduct/workflow.md)
-- `draft` [Git and git-flow](conduct/git.md)
-- `draft` [Naming](conduct/naming.md)
-- `draft` [Writing: voice, person and
-  tense](conduct/writing.md)
+> `draft`\
+> [The project's conduct: how we work, and how we write
+> it down](conduct/README.md)
+
+> `draft`\
+> [The philosophy: one thing, done
+> well](conduct/philosophy.md)
+
+> `draft`\
+> [The page template](conduct/template.md)
+
+> `draft`\
+> [The database's conduct](conduct/database.md)
+
+> `draft`\
+> [The API's conduct](conduct/api.md)
+
+> `draft`\
+> [The UI's conduct](conduct/ui.md)
+
+> `draft`\
+> [The concept: before the first line of
+> code](conduct/the-cycle/concept.md)
+
+> `draft`\
+> [The tests: the questions a concept
+> raises](conduct/the-cycle/tests.md)
+
+> `draft`\
+> [The cycle: five steps, in
+> turns](conduct/the-cycle/README.md)
+
+> `draft`\
+> [From an issue to a merge](conduct/workflow.md)
+
+> `draft`\
+> [Git and git-flow](conduct/git.md)
+
+> `draft`\
+> [Naming](conduct/naming.md)
+
+> `draft`\
+> [Writing: voice, person and
+> tense](conduct/writing.md)
 
 ## 4 Reading the Pages
 
