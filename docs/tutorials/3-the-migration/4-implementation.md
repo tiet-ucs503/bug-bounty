@@ -447,7 +447,9 @@ lose data on a live database. Expect `Found 0 issues`:
 make db-lint
 ```
 
-Then apply. Expect `Applied:` for each of the three:
+Then apply. Expect `Applied:` for each of the three
+not yet applied: none, if you have run the tests, which
+apply what they find:
 
 ``` sh
 make db CMD=up

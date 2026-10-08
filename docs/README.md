@@ -94,10 +94,10 @@ ran ([the tutorials' page](tutorials/README.md) §5).
 
 - `draft` [The path, and its
   conventions](tutorials/README.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [1
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [1
   Who is signed in:
   authentication](tutorials/1-authentication.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [2
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [2
   What each may do:
   authorisation](tutorials/2-authorisation/README.md):
   [the
@@ -109,7 +109,7 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   implementation](tutorials/2-authorisation/4-implementation.md),
   [the
   refinement](tutorials/2-authorisation/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [3
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [3
   Make it a
   migration](tutorials/3-the-migration/README.md): [the
   concept](tutorials/3-the-migration/1-concept.md),
@@ -120,7 +120,7 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   implementation](tutorials/3-the-migration/4-implementation.md),
   [the
   refinement](tutorials/3-the-migration/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [4
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [4
   /users](tutorials/4-users/README.md): [the
   concept](tutorials/4-users/1-concept.md), [the
   contract](tutorials/4-users/2-contract.md), [the
@@ -130,14 +130,14 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   [in
   JavaScript](tutorials/4-users/4-implementation-javascript.md),
   [the refinement](tutorials/4-users/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [5
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [5
   Notes](tutorials/5-notes/README.md): [the
   concept](tutorials/5-notes/1-concept.md), [the
   contract](tutorials/5-notes/2-contract.md), [the
   tests](tutorials/5-notes/3-tests.md), [the
   implementation](tutorials/5-notes/4-implementation.md),
   [the refinement](tutorials/5-notes/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [6
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [6
   A Svelte UI](tutorials/6-a-svelte-ui/README.md): [the
   concept](tutorials/6-a-svelte-ui/1-concept.md), [the
   contract](tutorials/6-a-svelte-ui/2-contract.md),
@@ -145,7 +145,7 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   implementation](tutorials/6-a-svelte-ui/4-implementation.md),
   [the
   refinement](tutorials/6-a-svelte-ui/5-refinement.md)
-- `draft` `[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` [7
+- `draft` `[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` [7
   Uploads](tutorials/7-uploads/README.md): [the
   concept](tutorials/7-uploads/1-concept.md), [the
   contract](tutorials/7-uploads/2-contract.md), [the

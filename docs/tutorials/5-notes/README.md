@@ -24,7 +24,7 @@ title: 5 Notes
 version: v0.1.0
 ---
 
-`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+`[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` --- what
 these mean, and what they do not: [the tutorials'
 page](../README.md) §5.
 
