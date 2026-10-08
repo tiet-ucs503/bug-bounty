@@ -212,6 +212,14 @@ export STORE_URL=http://localhost:9100/static.localhost
 export STATIC_URL=http://static.localhost:8080
 ```
 
+Under [Podman](../onboarding/podman.md), one more, so
+that each page's `make dev` and `make db` run as
+written:
+
+``` sh
+export COMPOSE=podman-compose
+```
+
 For the native stack, `H` and `MOCK_URL` come from your
 own ports, and `env.sh` sets the other four itself:
 `MIGRATOR_URL`, `DATABASE_URL`, `STORE_URL` and
@@ -288,25 +296,25 @@ changed since its run goes back to `NO`.
   -----------------------------------------------------
   Tutorial                  Badges
   ------------------------- ---------------------------
-  1 Who is signed in        `[OK:NATIVE]` `[NO:PODMAN]`
+  1 Who is signed in        `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  2 What each may do        `[OK:NATIVE]` `[NO:PODMAN]`
+  2 What each may do        `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  3 Make it a migration     `[OK:NATIVE]` `[NO:PODMAN]`
+  3 Make it a migration     `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  4 /users                  `[OK:NATIVE]` `[NO:PODMAN]`
+  4 /users                  `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  5 Notes                   `[OK:NATIVE]` `[NO:PODMAN]`
+  5 Notes                   `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  6 A Svelte UI             `[OK:NATIVE]` `[NO:PODMAN]`
+  6 A Svelte UI             `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
 
-  7 Uploads                 `[OK:NATIVE]` `[NO:PODMAN]`
+  7 Uploads                 `[OK:NATIVE]` `[OK:PODMAN]`
                             `[NO:DOCKER]`
   -----------------------------------------------------
 
@@ -338,11 +346,24 @@ changed since its run goes back to `NO`.
   that one path changed; and tutorial 7's UI steps 2 to
   5 were applied as its whole component, of §7, after
   step 1 was tried alone
-- **The dev stack under rootless Podman,** the same
-  fork, 2026-10-06, in part: every image built, the
-  door, the notes, an upload read back through nginx,
-  the collector. Not every step of every page, and not
-  since `/users` moved into py-api and js-api, so `NO`
+- **The dev stack under rootless Podman,** 2026-10-08,
+  in a fresh fork: Podman 6.1.3 and podman-compose
+  1.6.0 from Arch's packages, with the machine's own
+  tools and no others. Tutorials 1 to 7, in order,
+  every step of every page, in the same way: each
+  block cut from its page, the dev stack's block where
+  a page gives one for each stack, `make db` for the
+  migrations and `make dev` after each change. Tutorial
+  4 in both languages; the browser's steps and each
+  service's reference as above
+- **What the Podman run changed:** `make dev` built a
+  changed service and left its old container running,
+  so tutorial 4's routes answered `404`. The render now
+  labels each service with what it is made from
+  ([Podman's page](../onboarding/podman.md) §7); the
+  run went on from there. And tutorial 3's §6 expected
+  three `Applied:` lines where its tests had already
+  applied them: the page's words, mended
 - **Docker:** not yet
 - **Every code block** on the pages is the file that
   ran, checked by a script, character for character

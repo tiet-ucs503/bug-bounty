@@ -212,20 +212,15 @@ store](../tutorials/7-uploads/4-the-store.md)).
 
 ## 8 After a Change
 
-- **A service's code:** rebuild that service alone. Its
-  name in the stack is your project's `name` and the
-  service's, `example-js-api` for the template
+- **A service's code, or the manifest:** `make dev`
+  again. It renders afresh, builds what changed, and
+  makes again only the containers whose files changed:
+  a service for its folder, nginx for its servers, and
+  whatever starts after either. The rest keep running,
+  the mock among them, so your tokens stay good
 
   ``` sh
-  docker compose -f dev/out/compose.yml up --build -d example-js-api
-  ```
-
-- **The manifest:** `make dev` again. It renders afresh
-  and restarts what changed; restart nginx so it reads
-  the new servers:
-
-  ``` sh
-  docker compose -f dev/out/compose.yml restart nginx
+  make dev
   ```
 
 - **The UI:** reload the page; `make ui` serves `ui/`
@@ -235,7 +230,8 @@ store](../tutorials/7-uploads/4-the-store.md)).
 - **A setting of your own** for every service, such as
   a shorter interval to try something: `KEY=value`
   lines in `dev/dev.env`, which git ignores, then
-  `make dev`. The native stack reads the same file at
+  `make dev`, which restarts every service for it. The
+  native stack reads the same file at
   `start`. The value runs to the line's end, spaces and
   all; no quotes
 
@@ -319,9 +315,9 @@ neither `*.localhost` nor the UI client's callbacks.
 - **Port 8080, 9000 or 5432 in use.** Stop what holds
   it, or run [without containers](shared-box.md), on
   ports of your own
-- **Under Podman, every service shows `(starting)`.**
-  Its health checks never run without systemd; harmless
-  ([rootless Podman](podman.md), §7)
+- **Under Podman, every service shows `(starting)`
+  for good.** Its health checks never run without
+  systemd; harmless ([rootless Podman](podman.md), §7)
 
 ## 15 See Also
 
