@@ -23,8 +23,8 @@ version: v0.1.0
 
 ## 1 Run
 
-Expect fourteen lines starting `ok`, then
-`14 of 14 pass`; for js-api, `SERVICE=js-api` first:
+Expect fifteen lines starting `ok`, then
+`15 of 15 pass`; for js-api, `SERVICE=js-api` first:
 
 ``` sh
 ./test-4.sh
@@ -67,7 +67,7 @@ Break the service on purpose and check that a test
 fails. Here, in py-api, take `42501` out of `STATUS`,
 so a refusal for want of a permission is no longer
 `403`. Restart, and expect `FAIL` for T4.6 and T4.10,
-and `12 of 14 pass`:
+and `13 of 15 pass`:
 
 ``` sh
 cp services/py-api/main.py /tmp/main.py

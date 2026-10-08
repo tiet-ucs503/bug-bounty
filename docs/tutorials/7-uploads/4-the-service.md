@@ -159,8 +159,11 @@ def keep(who: str, body: bytes, ctype: str) -> JSONResponse:
     return answer({"key": key, "url": f"{STATIC_URL}/{key}", "size": len(body), "type": ctype}, 201)
 
 
-@app.post("/objects/new")
+@app.post("/objects/new", openapi_extra=SIGNED_IN)
 async def object_new(request: Request):
+    """`objects.write`. The body is the file, its type in `Content-Type`: PNG, JPEG, GIF, WebP, PDF or plain
+    text, 1 MiB at most. `201` and `{key, url, size, type}`; the same bytes again, the same key. `400` for no
+    body; `403` without it; `413` over 1 MiB; `415` for another type; `502` if the bucket refuses"""
     body = await request.body()
     if len(body) > MAX_BODY:
         return answer({"error": "body too large"}, 413)
@@ -177,6 +180,8 @@ async def object_new(request: Request):
 
 @app.get("/objects/mine")
 def objects_mine(authorization: str | None = Header(default=None)):
+    """Signed in. `200` and a list of the caller's `{key, size, type, created_at, refs, url}`, newest first,
+    500 at most"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -192,6 +197,8 @@ class Objects(BaseModel):
 
 @app.put("/notes/{id}/objects")
 def note_objects(id: int, objects: Objects, authorization: str | None = Header(default=None)):
+    """`notes.write`, and the note your own. `{keys}`, the note's whole list, 20 at most. `200` and
+    `{id, keys}`. `403`; `404` for no such note, or an object not yours or not stored; `422` for more than 20"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -279,7 +286,11 @@ PUT /notes/{id}/objects
 ```
 
 And in the entry for `GET /notes`, at its end: "Each
-note also has `objects`, a list of `{key, type}`".
+note also has `objects`, a list of `{key, type}`". The
+same words at the end of that route's description in
+`main.py`, so the reference at `/scalar-ui` says so
+too; `object_new` reads its own header, so it is marked
+`openapi_extra=SIGNED_IN` by hand.
 
 ## 4 Its Tests
 

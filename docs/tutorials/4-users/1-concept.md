@@ -1,7 +1,7 @@
 ---
 abstract: |
   Step 1 of tutorial 4: what `/users` is for. The goal,
-  eight rules, and what it will not do.
+  nine rules, and what it will not do.
 date: 2026-10-07
 keywords:
 - tutorial
@@ -71,6 +71,11 @@ the `users` prefix beside its own.
   tests holds both
 - **U8 Never cached.** Every answer is the caller's
   own: `Cache-Control: no-store`
+- **U9 The routes describe themselves.** Each says, in
+  the code, who may call it and what it answers and
+  refuses; the service's reference is made from that,
+  and shown by Scalar ([the API's
+  conduct](../../conduct/api.md))
 
 ## 4 What It Will Not Do
 

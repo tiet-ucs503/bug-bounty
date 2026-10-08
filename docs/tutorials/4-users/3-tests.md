@@ -1,7 +1,7 @@
 ---
 abstract: |
-  Step 3 of tutorial 4: the concept's eight rules as
-  fourteen tests in one script, calling `/users`
+  Step 3 of tutorial 4: the concept's nine rules as
+  fifteen tests in one script, calling `/users`
   through nginx. The same script tests either language.
   Run it now, and every test fails.
 date: 2026-10-07
@@ -55,6 +55,9 @@ expect no starting role but the first admin's.
   the first reaches the service, the second does not
 - **T4.14, U8:** the `Cache-Control` of `/users/me`?
   Expect `no-store`
+- **T4.15, U9:** the service's reference, through
+  nginx: how many `/users` routes does it name, and how
+  many of them ask for a token? Expect `6 6`
 
 The service's own tests cover what this cannot reach
 from outside: a token issued to another client, and the
@@ -69,7 +72,7 @@ gives `t4-asha` `reader` and takes it back at the end.
 
 ``` sh
 #!/usr/bin/env bash
-# Tutorial 4's tests, T4.1 to T4.14: /users through nginx, as the UI
+# Tutorial 4's tests, T4.1 to T4.15: /users through nginx, as the UI
 # will call it. Run from your fork's root, with H and MOCK_URL set, and
 # SERVICE the one that serves /users: py-api, or js-api. It signs in
 # t4-asha and t4-esha by the mock, and takes back the role it gives
@@ -121,6 +124,8 @@ expect T4.12 400 "$(call PUT /me/profile "${A}" "{\"display_name\": \"$(printf '
 expect T4.13 "401 404" "$(call GET /me "") $(call GET /secret "${Y}")"
 # U8: never cached
 expect T4.14 no-store "$(curl -s -o /dev/null -D - -H "Authorization: Bearer ${A}" "${U}/me" | tr -d '\r' | sed -n 's/^cache-control: //Ip')"
+# U9: the reference, made from the routes, names each and its token
+expect T4.15 "6 6" "$(curl -s "${U%/users}/openapi.json" | jq -r '[.paths | to_entries[] | select(.key | startswith("/users")) | .value[]] | "\(length) \(map(select(.security)) | length)"' 2> /dev/null)"
 
 call DELETE /people/t4-asha/roles/reader "${Y}" > /dev/null
 echo "${pass} of ${all} pass"
@@ -131,8 +136,8 @@ echo "${pass} of ${all} pass"
 
 Before any of tutorial 4's code, nginx knows no
 `/users` route, and answers `404` to every one. Expect
-`FAIL` on every line, most with `got 404`, and
-`0 of 14 pass`:
+`FAIL` on every line, most with `got 404`, T4.15 with
+`got 0 0`, and `0 of 15 pass`:
 
 ``` sh
 ./test-4.sh
