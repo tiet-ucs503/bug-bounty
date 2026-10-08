@@ -194,6 +194,7 @@ ran ([the tutorials' page](tutorials/README.md) §5).
   well](conduct/philosophy.md)
 - `draft` [The page template](conduct/template.md)
 - `draft` [The database's conduct](conduct/database.md)
+- `draft` [The API's conduct](conduct/api.md)
 - `draft` [The UI's conduct](conduct/ui.md)
 - `draft` [The concept: before the first line of
   code](conduct/the-cycle/concept.md)

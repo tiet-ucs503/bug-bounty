@@ -30,6 +30,16 @@
           "method": "POST",
           "path": "/echo",
           "signed_in": true
+        },
+        {
+          "method": "GET",
+          "path": "/openapi.json",
+          "signed_in": false
+        },
+        {
+          "method": "GET",
+          "path": "/scalar-ui",
+          "signed_in": false
         }
       ]
     },
@@ -54,6 +64,16 @@
           "method": "POST",
           "path": "/echo",
           "signed_in": true
+        },
+        {
+          "method": "GET",
+          "path": "/openapi.json",
+          "signed_in": false
+        },
+        {
+          "method": "GET",
+          "path": "/scalar-ui",
+          "signed_in": false
         }
       ]
     }

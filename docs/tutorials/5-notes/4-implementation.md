@@ -274,7 +274,10 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan
 And the routes, at the end. pydantic's `Field` holds a
 note's body to 1 to 10,000 characters, and answers
 `422` outside that before the database is asked (N5,
-T5.18):
+T5.18). Each route's first lines are its description:
+who may call it, what it answers and refuses. The
+service's reference is made from them ([the API's
+conduct](../../conduct/api.md)):
 
 ``` python
 class Note(BaseModel):
@@ -285,6 +288,8 @@ class Note(BaseModel):
 # and the database may block
 @app.get("/notes")
 def notes(before: int | None = None, authorization: str | None = Header(default=None)):
+    """`notes.read`. `?before=<id>` pages back. `200` and a list of `{id, body, mine, created_at, updated_at}`,
+    newest first, 50 at most. `403` without it"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -294,6 +299,8 @@ def notes(before: int | None = None, authorization: str | None = Header(default=
 
 @app.post("/notes")
 def note_new(note: Note, authorization: str | None = Header(default=None)):
+    """`notes.write`. `{body}`, 1 to 10,000 characters. `201` and `{id}`. `403` without it; `422` for a body
+    out of bounds"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -303,6 +310,8 @@ def note_new(note: Note, authorization: str | None = Header(default=None)):
 
 @app.put("/notes/{id}")
 def note_edit(id: int, note: Note, authorization: str | None = Header(default=None)):
+    """`notes.write`, and the note your own. `{body}`, as for `POST`. `200` and `{id}`. `403`, `not your note`
+    or without it; `404` for no such note; `422`"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -312,12 +321,19 @@ def note_edit(id: int, note: Note, authorization: str | None = Header(default=No
 
 @app.delete("/notes/{id}")
 def note_drop(id: int, authorization: str | None = Header(default=None)):
+    """`notes.write`, and the note your own. `200` and `{id}`. `403`, `not your note` or without it; `404` for
+    no such note"""
     who = caller(authorization)
     if who is None:
         return signed_out()
     r = run("SELECT py_api_note_drop(%s, %s)", (who["sub"], id))
     return r if isinstance(r, JSONResponse) else answer({"id": id})
 ```
+
+**The manifest, before the tests.** Add §5's four
+routes to `box/project.json` now. The starter's own
+test holds the routes and the manifest to each other,
+and fails while one has what the other lacks.
 
 **Its own tests.** The routes, with the database
 replaced by the accessors' answers, so no database is
@@ -365,9 +381,11 @@ passes them and nothing else.
 
 ## 6 Document Them
 
-In `docs/py-api/api.md`, after the routes already in
-§2, the entries from [the contract](2-contract.md) §4,
-in the page's own form:
+The routes are in the service's reference already, at
+`/scalar-ui`, from their descriptions. In
+`docs/py-api/api.md`, after the routes already in §2,
+the same entries, from [the contract](2-contract.md)
+§4, in the page's own form:
 
 ``` markdown
 GET /notes

@@ -4,8 +4,8 @@ abstract: |
   a phone first, styled by Tailwind's utilities, built
   in Svelte, in a visual language the project defines
   for itself. And four more: every state drawn, usable
-  by everyone, a courtesy over the database, and
-  nothing fetched from elsewhere.
+  by everyone, a courtesy over the database, and what
+  it loads preferably its own.
 date: 2026-10-07
 keywords:
 - conduct
@@ -211,15 +211,31 @@ whoever calls the API by hand meets the same refusal
   the starter keeps it, and nowhere longer-lived. No
   secret is ever in the UI: its files are public
 
-## 8 U8 Nothing from Elsewhere
+## 8 U8 Preferably Self-Delivered
 
-**At run time, the page asks only its own origin and
-the project's services.** No font, script, style or
-image from another site: each is a third party who
-learns of every visit, and a way for the page to break.
+**What the page loads comes from its own origin, where
+that is reasonable.** A font, a script or a style from
+another site is a third party who learns of every
+visit, and a way for the page to break. So prefer your
+own files; and where a well-used package is better
+taken from where it is published, that is the
+maintainer's call, made with care.
+
+When something is delivered by another:
+
+- **By its exact version,** never `latest` or a range
+- **With its hash,** `integrity="sha384-..."`, so the
+  browser refuses a file that is not the one you read
+- **Named in the merge request:** what it is, who
+  delivers it, and why not from the UI's own files
+- **Never what holds a person's data.** A script from
+  elsewhere runs with the page's rights: it can read
+  the token. Pin it, or do not take it
+
+And as before:
 
 - **Fonts and icons are files of the UI,** or the
-  system's
+  system's, unless the above is done for them
 - **`config.js` is read at run time,** never bundled,
   so one build serves any zone ([Release the
   UI](../ui/release.md))

@@ -313,8 +313,9 @@ changed since its run goes back to `NO`.
 ### 5.2 Where They Ran
 
 - **The native stack,** without root, in a fresh fork
-  of the template, 2026-10-07: tutorials 1 to 7, in
-  order, every step of every page. Each command block
+  of the template, 2026-10-07, and again 2026-10-08
+  once each service had its reference: tutorials 1 to
+  7, in order, every step of every page. Each command block
   was cut from its page by a script and run as it
   stands; each file was written from its page's block;
   each answer was read against the page's `Expect`.
@@ -328,7 +329,9 @@ changed since its run goes back to `NO`.
   ticked, a profile saved, notes added, edited and
   deleted, files chosen and dropped, one taken off and
   collected. The dashboard was looked at in both
-  themes
+  themes; and each service's reference, Scalar's page,
+  through nginx: every route listed, a request sent
+  from it with a token from the mock, its policy kept
 - **What differed from the pages:** the tools were
   installed into a scratch folder, not the home
   directory, by the shared-box page's commands with

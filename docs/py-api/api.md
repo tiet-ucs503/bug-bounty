@@ -24,6 +24,18 @@ the UI's origin carries `Access-Control-Allow-Origin`.
 
 ## 2 The Routes
 
+The same, made from the code and tried from a page:
+`https://py-api.<zone>/scalar-ui` ([the API's
+conduct](../conduct/api.md)).
+
+> [!WARNING]
+> Each entry below repeats a route's description in the
+> code, and is written by hand. `make check` warns when
+> the manifest names a route with no entry here, or an
+> entry names a route the manifest does not. It does
+> not compare the words: when you change a route,
+> change its entry in the same commit.
+
 GET /health
 : Anyone. `200` and
   `{"status": "ok", "service": "py-api"}`. The box's
@@ -37,6 +49,14 @@ POST /echo
   `{"service": "py-api", "caller": "<sub>", "groups": [...], "body": ...}`,
   with `Cache-Control: no-store`. `401` without a valid
   token; `413` over 1 MiB
+
+GET /openapi.json
+: Anyone. `200` and the service's OpenAPI document,
+  made from its routes
+
+GET /scalar-ui
+: Anyone. `200` and Scalar's page of that document, to
+  read the routes and try them
 
 Your fork adds routes as [the
 tutorials](../tutorials/README.md) go: `/users` in

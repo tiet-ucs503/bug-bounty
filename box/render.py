@@ -124,6 +124,11 @@ def check(m: dict) -> dict:
             routes.append({"method": meth, "path": path, "signed_in": bool(r.get("signed_in", True))})
         if ("GET", "/health") not in keys or any(r["path"] == "/health" and r["signed_in"] for r in routes):
             raise Bad(f"{sn}: needs GET /health, signed_in false: the box and the probes check it")
+        # The API's reference (docs/conduct/api.md): made from the routes,
+        # and Scalar's page of it, for anyone
+        for path in ("/openapi.json", "/scalar-ui"):
+            if ("GET", path) not in keys or any(r["path"] == path and r["signed_in"] for r in routes):
+                raise Bad(f"{sn}: needs GET {path}, signed_in false: the API's reference, docs/conduct/api.md")
         # The database prefixes the service owns: its own, prefix, or
         # several, prefixes, its own first. A second is a part of the
         # service with tables of its own, as /users in
