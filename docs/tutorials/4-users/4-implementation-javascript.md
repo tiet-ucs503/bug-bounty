@@ -588,7 +588,7 @@ test("the starter's routes keep their own answers", async () => {
 
 The last test holds the plugin to its own routes:
 `/health` answers as the starter's, without `no-store`.
-Expect `pass 11` for js-api, the starter's four tests
+Expect `pass 13` for js-api, the starter's six tests
 and these seven:
 
 ``` sh
