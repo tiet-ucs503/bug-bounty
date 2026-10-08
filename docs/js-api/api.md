@@ -28,6 +28,14 @@ The same, made from the code and tried from a page:
 `https://js-api.<zone>/scalar-ui` ([the API's
 conduct](../conduct/api.md)).
 
+> [!WARNING]
+> Each entry below repeats a route's description in the
+> code, and is written by hand. `make check` warns when
+> the manifest names a route with no entry here, or an
+> entry names a route the manifest does not. It does
+> not compare the words: when you change a route,
+> change its entry in the same commit.
+
 GET /health
 : Anyone. `200` and
   `{"status": "ok", "service": "js-api"}`. The box's

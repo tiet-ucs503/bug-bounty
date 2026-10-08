@@ -108,12 +108,14 @@ install-deps-macos:
 	@echo '  export PATH="$$(brew --prefix)/opt/make/libexec/gnubin:$$(brew --prefix)/opt/libpq/bin:$$(brew --prefix)/opt/node@24/bin:$$(brew --prefix)/opt/python@3.12/libexec/bin:$$PATH"'
 	@[ "$(STACK)" != podman ] || echo "install-deps: then, once: podman machine init && podman machine start"
 
-# The manifest and the migrations' prefixes (render --check), each
+# The manifest and the migrations' prefixes (render --check), a warning
+# where a service's API page and the manifest name different routes, each
 # service folder named in it and each in it a folder, the build the
 # box's own in every image's folder, and each Node lockfile matching its
 # package.json
 check:
 	@python3 box/render.py --check
+	@python3 tools/check-api-pages.py
 	@m=$$(jq -r '.services[].name' box/project.json | sort | paste -sd' '); f=$$(echo $(SERVICES) | tr ' ' '\n' | sort | paste -sd' '); \
 	  [ "$$m" = "$$f" ] && echo "services/ and box/project.json agree: $$m" \
 	  || { echo "box/project.json names $$m; services/ holds $$f" >&2; exit 1; }
