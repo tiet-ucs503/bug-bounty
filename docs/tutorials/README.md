@@ -330,8 +330,8 @@ changed since its run goes back to `NO`.
   deleted, files chosen and dropped, one taken off and
   collected. The dashboard was looked at in both
   themes; and each service's reference, Scalar's page,
-  through nginx: every route listed, a request tried
-  from it, its policy kept
+  through nginx: every route listed, a request sent
+  from it with a token from the mock, its policy kept
 - **What differed from the pages:** the tools were
   installed into a scratch folder, not the home
   directory, by the shared-box page's commands with

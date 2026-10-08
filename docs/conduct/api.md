@@ -65,10 +65,10 @@ pasted in.
   new hash, together, in one commit
 
 The page asks jsDelivr for its script, so jsDelivr
-learns of each visit. [The UI's conduct](ui.md), U8,
-forbids that for the UI; it is allowed here, for a
-developer's page, because the alternative is a file of
-four megabytes in every image.
+learns of each visit. That is [the UI's
+conduct](ui.md), U8, at work: delivered by another,
+since the alternative is a file of four megabytes in
+every image, and so by exact version and hash.
 
 ## 3 A3 Each Route Says Who and What
 
@@ -127,6 +127,11 @@ all.
   one commit
 - **Where they differ, the code's is right,** and the
   page is the thing to mend
+- **`make check` warns, and does not fail,** when the
+  manifest names a route with no entry on the page, or
+  the page an entry for a route the manifest does not
+  name. Run it before a merge request. It cannot
+  compare the words; those are yours
 
 ## 6 What Is Public
 
