@@ -101,6 +101,28 @@ class Api(unittest.TestCase):
         r = self.echo(f"Bearer {t}", json=None, content=b"x" * (1024 * 1024 + 1))
         self.assertEqual(r.status_code, 413)
 
+    # The API's reference (docs/conduct/api.md): what the manifest names
+    # and what the routes are, held to each other. A route in one and not
+    # the other fails here, before nginx refuses it or hides it
+    def test_the_reference_names_what_the_manifest_names(self):
+        manifest = json.loads((Path(__file__).resolve().parents[3] / "box" / "project.json").read_text())
+        mine = next(s for s in manifest["services"] if s["name"] == "py-api")
+        named = {(r["method"], r["path"]): r.get("signed_in", True) for r in mine["routes"]}
+        self.assertEqual({named.pop(("GET", "/openapi.json")), named.pop(("GET", "/scalar-ui"))}, {False})
+        doc = self.client.get("/openapi.json").json()
+        made = {(m.upper(), path): "security" in op for path, item in doc["paths"].items() for m, op in item.items()}
+        self.assertEqual(made, named)
+        for (method, path), op in ((k, doc["paths"][k[1]][k[0].lower()]) for k in made):
+            self.assertTrue(op.get("description"), f"{method} {path} says nothing of itself")
+
+    def test_scalars_page_is_pinned_and_confined(self):
+        r = self.client.get("/scalar-ui")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("text/html", r.headers["content-type"])
+        self.assertIn('integrity="sha384-', r.text)
+        self.assertIn("script-src https://cdn.jsdelivr.net;", r.headers["content-security-policy"])
+        self.assertIn("connect-src 'self'", r.headers["content-security-policy"])
+
 
 if __name__ == "__main__":
     unittest.main()

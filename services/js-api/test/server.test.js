@@ -3,6 +3,7 @@
 // port. `npm test`; nothing leaves the machine
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import http from "node:http";
 import { SignJWT, exportJWK, generateKeyPair } from "jose";
 
@@ -66,4 +67,35 @@ test("a body over 1 MiB is refused", async () => {
   const r = await app.inject({ method: "POST", url: "/echo", headers: { authorization: `Bearer ${t}`, "content-type": "application/json" },
     payload: JSON.stringify({ x: "y".repeat(1024 * 1024) }) });
   assert.equal(r.statusCode, 413);
+});
+
+// The API's reference (docs/conduct/api.md): what the manifest names
+// and what the routes are, held to each other. A route in one and not
+// the other fails here, before nginx refuses it or hides it
+test("the reference names what the manifest names", async () => {
+  const manifest = JSON.parse(fs.readFileSync(new URL("../../../box/project.json", import.meta.url)));
+  const named = Object.fromEntries(manifest.services.find((s) => s.name === "js-api").routes
+    .map((r) => [`${r.method} ${r.path}`, r.signed_in ?? true]));
+  assert.equal(named["GET /openapi.json"], false);
+  assert.equal(named["GET /scalar-ui"], false);
+  delete named["GET /openapi.json"];
+  delete named["GET /scalar-ui"];
+  const doc = (await app.inject("/openapi.json")).json();
+  const made = {};
+  for (const [path, item] of Object.entries(doc.paths)) {
+    for (const [method, op] of Object.entries(item)) {
+      made[`${method.toUpperCase()} ${path}`] = Boolean(op.security);
+      assert.ok(op.description, `${method} ${path} says nothing of itself`);
+    }
+  }
+  assert.deepEqual(made, named);
+});
+
+test("Scalar's page is pinned and confined", async () => {
+  const r = await app.inject("/scalar-ui");
+  assert.equal(r.statusCode, 200);
+  assert.match(r.headers["content-type"], /text\/html/);
+  assert.match(r.body, /integrity="sha384-/);
+  assert.match(r.headers["content-security-policy"], /script-src https:\/\/cdn\.jsdelivr\.net;/);
+  assert.match(r.headers["content-security-policy"], /connect-src 'self'/);
 });

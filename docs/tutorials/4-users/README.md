@@ -26,7 +26,7 @@ title: 4 /users
 version: v0.1.0
 ---
 
-`[OK:NATIVE]` `[NO:PODMAN]` `[NO:DOCKER]` --- what
+`[OK:NATIVE]` `[OK:PODMAN]` `[NO:DOCKER]` --- what
 these mean, and what they do not: [the tutorials'
 page](../README.md) §5.
 
@@ -41,7 +41,7 @@ tests are the same in both:
   the matrix, and giving and taking roles
 - **Six routes in `box/project.json`,** so nginx passes
   them
-- **`test-4.sh`:** fourteen tests, written before the
+- **`test-4.sh`:** fifteen tests, written before the
   code, that call `/users` through nginx, as the UI
   will. The same file tests either language
 - **The service's own tests,** which need no database
@@ -55,11 +55,11 @@ step. Read them in order; at step 4, take one of the
 two.
 
 1.  **[The concept](1-concept.md).** What `/users` is
-    for, as eight rules
+    for, as nine rules
 2.  **[The contract](2-contract.md).** The routes, what
     each takes and answers, and how each refuses: what
     tutorial 6's UI relies on
-3.  **[The tests](3-tests.md).** The rules as fourteen
+3.  **[The tests](3-tests.md).** The rules as fifteen
     tests, through nginx. You run them first, and every
     one fails
 4.  **The implementation,** [in

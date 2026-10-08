@@ -39,7 +39,7 @@ Allow-list
   wrong method `403`
 
 Badge
-: `[OK:NATIVE]`, `[NO:PODMAN]` and the like, under a
+: `[OK:NATIVE]`, `[NO:DOCKER]` and the like, under a
   tutorial's title: whether every step ran as written
   on that stack, at the page's version
 

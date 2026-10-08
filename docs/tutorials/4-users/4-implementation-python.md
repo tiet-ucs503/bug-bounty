@@ -60,9 +60,11 @@ it: the starter, and what `/users` adds.
 The starter's three routes show the shape every service keeps; the
 rest are yours.
 
-    GET  /health   the box's and the probes' check; keep it
-    GET  /hello    anyone
-    POST /echo     a signed-in caller: the body back, with who sent it
+    GET  /health        the box's and the probes' check; keep it
+    GET  /hello         anyone
+    POST /echo          a signed-in caller: the body back, with who sent it
+    GET  /openapi.json  the reference, made from the routes; keep it
+    GET  /scalar-ui     the reference as a page, by Scalar; keep it
 
 and who is signed in, and what each may do, the database deciding
 (docs/tutorials/4-users/):
@@ -104,7 +106,8 @@ from contextlib import asynccontextmanager
 import jwt
 import psycopg
 from fastapi import APIRouter, Body, FastAPI, Header, Request
-from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import HTMLResponse, JSONResponse
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool, PoolTimeout
 from starlette.concurrency import run_in_threadpool
@@ -244,26 +247,95 @@ async def lifespan(_app):
     pool.close()
 
 
-# No /docs, /redoc or /openapi.json: nginx's allow-list would refuse
-# them in any case
-app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+# The API's reference (docs/conduct/api.md): the OpenAPI document at
+# /openapi.json, made from the routes below and never written by hand,
+# and Scalar's page of it at /scalar-ui. FastAPI's own /docs and /redoc
+# stay off
+app = FastAPI(title=SERVICE, version="0.1.0", docs_url=None, redoc_url=None, openapi_url="/openapi.json",
+              lifespan=lifespan)
+
+# A route that needs a token says so with openapi_extra=SIGNED_IN, or
+# by taking the Authorization header as a parameter
+SIGNED_IN = {"security": [{"bearer": []}]}
+
+
+def reference() -> dict:
+    """FastAPI's document of the routes, with the token as a scheme the
+    page can fill: an Authorization parameter becomes that scheme"""
+    if app.openapi_schema:
+        return app.openapi_schema
+    doc = get_openapi(title=app.title, version=app.version, routes=app.routes)
+    doc.setdefault("components", {})["securitySchemes"] = {
+        "bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT",
+                   "description": "An access token from the box's pool, for your UI's client or the probes'"}
+    }
+    for path in doc["paths"].values():
+        for op in path.values():
+            given = op.get("parameters", [])
+            kept = [p for p in given if (p["in"], p["name"].lower()) != ("header", "authorization")]
+            if len(kept) < len(given):
+                op.update(SIGNED_IN)
+                op["parameters"] = kept
+    app.openapi_schema = doc
+    return doc
+
+
+app.openapi = reference
+
+# Scalar's page: one file, by version and by its SHA-384, from jsDelivr;
+# its settings are data: no telemetry, none of Scalar's fonts, and none
+# of its own tools, the AI, the MCP and the sharing among them. The
+# policy admits that script, the styles it injects, and calls to this
+# host alone; nothing may frame the page
+SCALAR = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>%s: the API</title>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <script id="api-reference" type="application/json" data-url="/openapi.json"
+    data-configuration='{"telemetry": false, "withDefaultFonts": false, "showDeveloperTools": "never",
+      "agent": {"disabled": true}, "mcp": {"disabled": true}, "hideClientButton": true}'></script>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.73.1/dist/browser/standalone.js"
+    integrity="sha384-kYDGzV91Jnn3TbHINV3nt54riK2uMJDfN5Al8dAkz4FssELTBWbD8rgw32sTKfOi"
+    crossorigin="anonymous"></script>
+</body>
+</html>
+""" % SERVICE
+SCALAR_POLICY = "; ".join([
+    "default-src 'none'", "script-src https://cdn.jsdelivr.net", "style-src 'unsafe-inline'",
+    "img-src 'self' data: blob:", "font-src 'self' data:", "connect-src 'self'",
+    "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
+])
+
+
+@app.get("/scalar-ui", include_in_schema=False)
+def scalar_ui():
+    return HTMLResponse(SCALAR, headers={"Content-Security-Policy": SCALAR_POLICY, "Referrer-Policy": "no-referrer"})
 
 
 @app.get("/health")
 def health():
+    """Anyone. The box's and the probes' check: that this service answers, and which it is"""
     return {"status": "ok", "service": SERVICE}
 
 
 @app.get("/hello")
 def hello():
+    """Anyone. A greeting, naming the service"""
     return {"message": f"hello from {SERVICE}"}
 
 
 # The token check may fetch the keys, so it runs in the thread pool;
 # the body is read on the loop first. 1 MiB, as nginx's
 # client_max_body_size for the host
-@app.post("/echo")
+@app.post("/echo", openapi_extra=SIGNED_IN)
 async def echo(request: Request):
+    """Signed in. The JSON body back, with who sent it. `400` for a body that is not JSON; `401` without a
+    token; `413` over 1 MiB"""
     nostore = {"Cache-Control": "no-store"}
     body = await request.body()
     if len(body) > MAX_BODY:
@@ -304,6 +376,9 @@ def you(sub: str) -> JSONResponse:
 
 @users.get("/me")
 def me(authorization: str | None = Header(default=None)):
+    """Signed in. Records the caller at their first call, if their e-mail is verified. `200` and `{sub, email,
+    provider, profile: {display_name, affiliation}, roles, permissions}`. `403` for an e-mail not verified;
+    `503` if Cognito's `userInfo` or the database does not answer"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -321,6 +396,8 @@ def me(authorization: str | None = Header(default=None)):
 
 @users.put("/me/profile")
 def profile(body: dict = Body(default={}), authorization: str | None = Header(default=None)):
+    """Signed in. `{display_name, affiliation}`, text, 80 and 120 characters at most. `200` and the caller as
+    `GET /users/me` answers. `400` for a value not text or too long; `404` if never recorded"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -333,6 +410,8 @@ def profile(body: dict = Body(default={}), authorization: str | None = Header(de
 
 @users.get("/people")
 def people(authorization: str | None = Header(default=None)):
+    """`users.read`. `200` and a list of `{sub, email, roles, first_seen_at, seen_at}`, by e-mail, at most
+    1000. `403` without it"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -342,6 +421,8 @@ def people(authorization: str | None = Header(default=None)):
 
 @users.get("/roles")
 def roles(authorization: str | None = Header(default=None)):
+    """`users.read`. The access control matrix: `200` and a list of `{role, about, permissions}`. `403` without
+    it"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -351,6 +432,8 @@ def roles(authorization: str | None = Header(default=None)):
 
 @users.put("/people/{sub}/roles/{role}")
 def grant(sub: str, role: str, authorization: str | None = Header(default=None)):
+    """`users.grant`. Gives a person a role. `200` and `{sub, role, granted: true}`; twice is once. `403`
+    without it; `404` for no such person or role"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -360,6 +443,8 @@ def grant(sub: str, role: str, authorization: str | None = Header(default=None))
 
 @users.delete("/people/{sub}/roles/{role}")
 def revoke(sub: str, role: str, authorization: str | None = Header(default=None)):
+    """`users.grant`. Takes a role away. `200` and `{sub, role, granted: false}`. `403` without it; `404` if
+    the person lacks the role; `409` for the last `users.grant` there is"""
     who = caller(authorization)
     if who is None:
         return signed_out()
@@ -408,9 +493,20 @@ What it adds to the starter:
 Tutorial 5's notes use the same `pool`, `run` and
 `answer`.
 
+**Each route describes itself** (U9, T4.15): its first
+lines, a docstring, says who may call it, and what it
+answers and refuses; taking the `Authorization` header
+as a parameter is what marks it signed in. The starter
+makes `/openapi.json` from these, and `/scalar-ui`
+shows it. Open
+`http://py-api.localhost:8080/scalar-ui`, or your
+`NGINX_PORT`, once §5 has it running.
+
 **Document the routes.** In `docs/py-api/api.md`, after
-the starter's three in §2, the entries from [the
-contract](2-contract.md) §2, in the page's own form:
+the starter's in §2, the entries from [the
+contract](2-contract.md) §2, in the page's own form;
+the same words as each route's description, written
+together:
 
 ``` markdown
 GET /users/me

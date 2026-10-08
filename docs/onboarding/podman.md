@@ -43,17 +43,21 @@ version: v0.1.0
   command -v newuidmap newgidmap
   ```
 
-- **About 3 GB of disk,** for the images
+- **About 2 GB of disk,** for the images
 
 If either is missing, ask the administrator for exactly
 this: "the `uidmap` tools, and subordinate IDs for my
 user, 65536 of each, so I can run rootless Podman".
 Nothing else on this page needs root.
 
-Tried 2026-10-06 with Podman 5.8.3 and podman-compose
-1.5.0 from conda-forge, on Linux 7.2: every container
-of the stack up, and the checks of [the dev stack's
-page](local-dev.md) §4 passing through its nginx.
+Tried 2026-10-08 with Podman 6.1.3 and podman-compose
+1.6.0 from Arch's packages, with `crun`, on Linux 7.2:
+[the tutorials](../tutorials/README.md), 1 to 7, every
+step (§5 there), and [the dev stack's
+page](local-dev.md), §3 to §9. And 2026-10-06 with
+Podman 5.8.3 and podman-compose 1.5.0 from conda-forge:
+every container of the stack up, and that page's §4
+passing through its nginx.
 
 ## 2 Install Podman
 
@@ -140,10 +144,18 @@ compose targets take the same setting:
 make db COMPOSE=podman-compose CMD=status
 ```
 
+Or set it once for the shell, and every page's
+`make dev`, `make db` and `make dev-down` run as
+written:
+
+``` sh
+export COMPOSE=podman-compose
+```
+
 ## 6 Stop
 
-Expect each container stopped and removed, about ten
-seconds each; the database's volume is kept:
+Expect each container stopped and removed, about half
+a minute in all; the database's volume is kept:
 
 ``` sh
 make dev-down COMPOSE=podman-compose
@@ -152,11 +164,26 @@ make dev-down COMPOSE=podman-compose
 ## 7 How It Differs From Docker
 
 - **Health checks never run without systemd.** Rootless
-  Podman runs them through systemd's timers; where
-  there are none, `podman ps` shows each service
-  `(starting)` for good. Harmless here: the stack never
-  waits on a health check, `db-users` waits for the
-  database itself
+  Podman runs them through systemd's timers: with
+  them, `podman ps` shows each service `(healthy)`, as
+  Docker does; where there are none, `(starting)` for
+  good. Harmless here: the stack never waits on a
+  health check, `db-users` waits for the database
+  itself
+- **A rebuilt image does not restart its container.**
+  podman-compose makes a container again only when its
+  service's definition in the compose file changes;
+  Docker's Compose also when its image does. So the
+  render labels each service with a hash of the files
+  it is made from, `dev.made-from`, and `make dev`
+  restarts what changed, and nothing else, under both.
+  A compose command of your own needs
+  `--force-recreate` beside `--build`, and
+  podman-compose then makes again every container the
+  service needs, the mock and its key among them
+- **Rebuilt images stay, unnamed,** until you remove
+  them: `podman image prune`. And `down -v` leaves two
+  unnamed, empty volumes: `podman volume prune`
 - **The DNS resolver is the network's gateway,** not
   Docker's `127.0.0.11`. The stack's nginx is a
   template the nginx image fills with the container's
@@ -180,6 +207,10 @@ make dev-down COMPOSE=podman-compose
 - **A container named `db-users` waits a minute, then
   fails.** The database did not start;
   `podman logs example-dev_db_1`
+- **A change does not show after `make dev`.** The
+  render did not see it: a file outside the service's
+  folder and `dev/dev.env`. `make dev-down`, then
+  `make dev`
 - **`address already in use`.** Something else holds
   5432, 8080 or 9000; stop it, or [run the stack
   without containers](shared-box.md) on ports of your

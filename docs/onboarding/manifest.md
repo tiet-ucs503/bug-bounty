@@ -90,12 +90,16 @@ signed_in
   out. The box does not enforce it; the probes check
   it, and the service must
 
-Every service needs `GET /health`, not signed in.
+Every service needs `GET /health`, and its reference,
+`GET /openapi.json` and `GET /scalar-ui` ([the API's
+conduct](../conduct/api.md)), none signed in.
 
 ## 4 What Can Go Wrong
 
 - **`needs GET /health, signed_in false`.** Add the
   route; the box and the probes check it
+- **`needs GET /openapi.json, signed_in false`,** or
+  `/scalar-ui`. Add both; the starters answer them
 - **`over 48 characters`.** The project's and the
   service's names together are too long for the box's
   names; shorten either

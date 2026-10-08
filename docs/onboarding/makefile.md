@@ -47,8 +47,10 @@ check
   manifest and each named there a folder; `build.sh`
   and `buildspec.yml` the box's own in every image's
   folder; each Node lockfile agreeing with its
-  `package.json`. Writes nothing. CI runs it on every
-  push
+  `package.json`. It also warns, without failing, where
+  a service's `api.md` and the manifest name different
+  routes ([the API's conduct](../conduct/api.md), A5).
+  Writes nothing. CI runs it on every push
 
 render
 : `check`, then the box's pieces into
@@ -122,14 +124,16 @@ plan
 
 Each is given on the command line, as `make db CMD=up`.
 
-  ------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------
   Variable     Read by           Default                   Says
-  ------------ ----------------- ------------------------- ---------------------
-  `STACK`      `install-deps`,   none                      `docker` or `podman`:
-               `check-deps`                                the engine too
+  ------------ ----------------- ------------------------- ------------------
+  `STACK`      `install-deps`,   none                      `docker` or
+               `check-deps`                                `podman`: the
+                                                           engine too
 
-  `COMPOSE`    `dev`,            `docker compose`          the compose command;
-               `dev-down`, `db`                            `podman-compose`
+  `COMPOSE`    `dev`,            `docker compose`          the compose
+               `dev-down`, `db`                            command;
+                                                           `podman-compose`
 
   `UI_PORT`    `ui`              `5173`                    the UI's port
 
@@ -137,8 +141,8 @@ Each is given on the command line, as `make db CMD=up`.
 
   `EMAIL`      `dev-token`       `<SUB>@example.org`       their e-mail
 
-  `VERIFIED`   `dev-token`       `true`                    whether the e-mail is
-                                                           verified
+  `VERIFIED`   `dev-token`       `true`                    whether the e-mail
+                                                           is verified
 
   `GROUPS`     `dev-token`       none                      the pool's groups,
                                                            comma-separated
@@ -146,8 +150,9 @@ Each is given on the command line, as `make db CMD=up`.
   `MOCK_URL`   `dev-token`       `http://localhost:9000`   the mock sign-in's
                                                            address
 
-  `PREFIX`     `db-new`          none, required            the unit's prefix, as
-                                                           the manifest has it
+  `PREFIX`     `db-new`          none, required            the unit's prefix,
+                                                           as the manifest
+                                                           has it
 
   `NAME`       `db-new`          none, required            what the migration
                                                            does, `lower_case`
@@ -156,7 +161,7 @@ Each is given on the command line, as `make db CMD=up`.
 
   `TAG`        `plan`            none, required            the release's tag,
                                                            `vX.Y.Z`
-  ------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------
 
 ## 7 The Other Makefile
 

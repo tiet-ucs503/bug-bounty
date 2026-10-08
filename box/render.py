@@ -31,6 +31,7 @@ talks to AWS or Cloudflare. docs/onboarding/README.md says what each
 piece does on the box.
 """
 
+import hashlib
 import json
 import os
 import re
@@ -124,6 +125,11 @@ def check(m: dict) -> dict:
             routes.append({"method": meth, "path": path, "signed_in": bool(r.get("signed_in", True))})
         if ("GET", "/health") not in keys or any(r["path"] == "/health" and r["signed_in"] for r in routes):
             raise Bad(f"{sn}: needs GET /health, signed_in false: the box and the probes check it")
+        # The API's reference (docs/conduct/api.md): made from the routes,
+        # and Scalar's page of it, for anyone
+        for path in ("/openapi.json", "/scalar-ui"):
+            if ("GET", path) not in keys or any(r["path"] == path and r["signed_in"] for r in routes):
+                raise Bad(f"{sn}: needs GET {path}, signed_in false: the API's reference, docs/conduct/api.md")
         # The database prefixes the service owns: its own, prefix, or
         # several, prefixes, its own first. A second is a part of the
         # service with tables of its own, as /users in
@@ -634,8 +640,30 @@ RESET ROLE;
 """
 
 
-def dev_compose(p: dict) -> str:
+# What a container was made from, as a label of its service: Compose
+# makes a container again when its service's definition changes, and
+# podman-compose for nothing else, a rebuilt image included. So a
+# changed file changes the label, and `make dev` restarts what changed
+# and nothing more, under Docker and Podman alike. A service is made
+# from its folder and from dev/dev.env
+SKIPPED = {"node_modules", ".venv", "__pycache__", ".git"}
+
+
+def made_from(*paths: Path) -> str:
+    h = hashlib.sha256()
+    for path in paths:
+        if not path.exists():
+            continue
+        files = [path] if path.is_file() else sorted(
+            f for f in path.rglob("*") if f.is_file() and not SKIPPED & set(f.relative_to(path).parts))
+        for f in files:
+            h.update(f.relative_to(path.parent).as_posix().encode() + b"\0" + f.read_bytes() + b"\0")
+    return h.hexdigest()[:16]
+
+
+def dev_compose(p: dict, nginx: str = "") -> str:
     n = p["name"]
+    root = HERE.parent
     origins = sorted({re.match(r"^http://localhost(:[0-9]+)?", u).group(0) for u in p["ui"]["dev_callback_urls"]})
     db_env = (f"""
       # The project's one database, as its app login (docs/migrations/README.md)
@@ -648,6 +676,8 @@ def dev_compose(p: dict) -> str:
         hc = json.dumps([a.replace("{port}", str(s["port"])) for a in LANGUAGES[s["language"]]])
         svcs.append(f"""  {n}-{s["name"]}:
     build: ../../services/{s["name"]}
+    labels:
+      dev.made-from: "{made_from(root / "services" / s["name"], root / "dev" / "dev.env")}"
     # Settings of your own for the dev stack, in dev/dev.env, which git
     # ignores: KEY=value lines, read by every service
     env_file:
@@ -736,6 +766,9 @@ name: {n}-dev
 services:
   nginx:
     image: {NGINX}
+    # The rendered nginx.conf: nginx reads it at its start alone
+    labels:
+      dev.made-from: "{hashlib.sha256(nginx.encode()).hexdigest()[:16]}"
     ports:
       - "127.0.0.1:{DEV_PORT}:{DEV_PORT}"
     # A template, so the image fills in the resolver and nothing else
@@ -754,6 +787,8 @@ services:
   # localhost:9000, and never reads the issuer
   mock-auth:
     build: ../mock-auth
+    labels:
+      dev.made-from: "{made_from(root / "dev" / "mock-auth")}"
     environment:
       ISSUER: http://mock-auth:9000
       BIND: 0.0.0.0
@@ -766,6 +801,8 @@ services:
   # writes at run time; the rest of the bucket is static/, as above
   mock-store:
     build: ../mock-store
+    labels:
+      dev.made-from: "{made_from(root / "dev" / "mock-store")}"
     environment:
       BUCKET: static.localhost
       BIND: 0.0.0.0
@@ -966,8 +1003,9 @@ def main(argv: list[str]) -> int:
     if "--dev" in argv:
         out = HERE.parent / "dev" / "out"
         out.mkdir(parents=True, exist_ok=True)
-        (out / "nginx.conf").write_text(dev_nginx(p))
-        (out / "compose.yml").write_text(dev_compose(p))
+        nginx = dev_nginx(p)
+        (out / "nginx.conf").write_text(nginx)
+        (out / "compose.yml").write_text(dev_compose(p, nginx))
         (out / "db-users.sql").write_text(dev_db_users(p))
         print("dev/out/: nginx.conf, compose.yml, db-users.sql")
         return 0
