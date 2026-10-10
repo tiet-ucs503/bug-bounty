@@ -1,0 +1,1147 @@
+openapi: 3.1.0
+info:
+  title: Bug-Bounty Platform API
+  version: 0.1.0-draft
+  summary: Draft HTTP contract for submitters, evaluators, and bug reports.
+  description: 'DRAFT — review with the UI team and lead before implementation or freeze.
+
+
+    The service hostnames in this document are proposed, not deployed in the
+
+    supplied repository. The current ZIP has only js-api and py-api. If the
+
+    lead chooses a single py-api deployment for the first iteration, keep the
+
+    paths and schemas but route all operations to that configured base URL.
+
+
+    The supplied SQL targets MySQL 8.x, while this repository''s migrations
+
+    target PostgreSQL/dbmate. The API-level rules are independent of that
+
+    choice, but the schema/trigger implementation must be reconciled before
+
+    backend implementation.
+
+    '
+  contact:
+    name: Platform team
+servers:
+- url: https://submission-api.{zone}
+  description: Proposed submission service host; change for each environment.
+  variables:
+    zone:
+      default: example.invalid
+      description: Deployment zone supplied by the platform owner.
+security:
+- bearerAuth: []
+tags:
+- name: Submissions
+  description: Submitter-facing project submissions and versions.
+- name: Evaluations
+  description: Evaluator queue and manual/automatic evaluation records.
+- name: Bugs
+  description: Bug reports found while testing a submission.
+paths:
+  /submissions:
+    post:
+      tags:
+      - Submissions
+      operationId: createSubmission
+      summary: Create the next submission version
+      description: 'The server assigns the version and makes the newly created version
+
+        current in the same transaction. The client must not send id, version,
+
+        is_current, created_at, or updated_at. A retry may create another
+
+        version; v0.1 does not promise request idempotency.
+
+        '
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionCreate'
+            example:
+              team_id: TEAM001
+              team_name: Team Alpha
+              group: CSE-A
+              project_title: AI Evaluation Platform
+              deployment_url: https://example.com
+              site_map:
+              - /
+              - /login
+              - /dashboard
+              body: Project description in Markdown or plain text.
+      responses:
+        '201':
+          description: Submission version created and made current.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+        '413':
+          $ref: '#/components/responses/BodyTooLarge'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      tags:
+      - Submissions
+      operationId: listSubmissions
+      summary: List submissions across teams
+      description: 'Evaluator/admin only. Added to support a cross-team evaluator queue.
+
+        V0.1 returns current submissions only; use the team-scoped history route
+
+        for version history.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Paginated list of current submissions. No global ordering is promised in v0.1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /submissions/{id}:
+    get:
+      tags:
+      - Submissions
+      operationId: getSubmission
+      summary: Fetch a specific submission version
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: Submission resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /teams/{team_id}/submissions:
+    get:
+      tags:
+      - Submissions
+      operationId: listTeamSubmissions
+      summary: List all versions submitted by a team
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Submission history ordered by version ascending.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /teams/{team_id}/submissions/current:
+    get:
+      tags:
+      - Submissions
+      operationId: getCurrentTeamSubmission
+      summary: Get the team's current submission
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      responses:
+        '200':
+          description: The submission with is_current true.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /submissions/{id}/current:
+    put:
+      tags:
+      - Submissions
+      operationId: makeSubmissionCurrent
+      summary: Make an existing version current
+      description: 'No request body. In one transaction, clear the old current version for
+
+        the target''s team and set this submission version current. Repeating
+
+        the operation for the already-current version is successful.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: The target submission is now current.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Submission'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /evaluations/queue:
+    servers:
+    - url: https://evaluation-api.{zone}
+      description: Proposed evaluation service host.
+      variables:
+        zone:
+          default: example.invalid
+    get:
+      tags:
+      - Evaluations
+      operationId: getEvaluationQueue
+      summary: List current submissions awaiting manual evaluation
+      description: 'Proposed v0.1 definition: return current submissions without a manual
+
+        evaluation linked to that exact submission_id. An automatic evaluation
+
+        alone does not remove a submission from this queue. This relies on new
+
+        manual-evaluation records storing submission_id in their metadata.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Current submissions still awaiting manual evaluation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+  /submissions/{id}/evaluations:
+    servers:
+    - url: https://evaluation-api.{zone}
+      description: Proposed evaluation service host.
+      variables:
+        zone:
+          default: example.invalid
+    post:
+      tags:
+      - Evaluations
+      operationId: createManualEvaluation
+      summary: Record a manual evaluation
+      description: 'evaluator_id is derived from the authenticated caller, never trusted
+
+        from the request body. The server derives team_id from the referenced
+
+        submission. Proposed v0.1 policy allows one final manual evaluation per
+
+        submission version; confirm before freezing if multiple evaluators can
+
+        submit independent evaluations.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualEvaluationCreate'
+            example:
+              student_id: S1187
+              grade: A-
+              feedback: Strong architecture; improve edge-case handling.
+      responses:
+        '201':
+          description: Manual evaluation recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualEvaluation'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      tags:
+      - Evaluations
+      operationId: listManualEvaluations
+      summary: Retrieve manual evaluation results for a submission
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: Manual evaluations for this submission version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManualEvaluationPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /submissions/{id}/automatic-evaluations:
+    servers:
+    - url: https://evaluation-api.{zone}
+      description: Proposed evaluation service host.
+      variables:
+        zone:
+          default: example.invalid
+    post:
+      tags:
+      - Evaluations
+      operationId: runAutomaticEvaluation
+      summary: Run and persist automatic checks
+      description: 'No client-supplied score/result body. The service runs its configured
+
+        checks and stores the result. Each explicit rerun creates a new record;
+
+        v0.1 does not promise idempotency after a network timeout.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '201':
+          description: Automatic evaluation completed and persisted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomaticEvaluation'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+    get:
+      tags:
+      - Evaluations
+      operationId: listAutomaticEvaluations
+      summary: Retrieve automatic evaluation history for a submission
+      parameters:
+      - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: Automatic runs, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomaticEvaluationPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /bugs:
+    servers:
+    - url: https://bug-api.{zone}
+      description: Proposed bug reporting service host.
+      variables:
+        zone:
+          default: example.invalid
+    post:
+      tags:
+      - Bugs
+      operationId: createBugReport
+      summary: Record a bug found while testing
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BugCreate'
+            example:
+              team_id: TEAM001
+              submission_id: 42
+              severity: high
+              category: authentication
+              description: Login returns HTTP 500 for a password containing '&'.
+      responses:
+        '201':
+          description: Bug report created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReport'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/BodyTooLarge'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /bugs/{id}:
+    servers:
+    - url: https://bug-api.{zone}
+      description: Proposed bug reporting service host.
+      variables:
+        zone:
+          default: example.invalid
+    get:
+      tags:
+      - Bugs
+      operationId: getBugReport
+      summary: Retrieve a bug report
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+      responses:
+        '200':
+          description: Bug report details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReport'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /teams/{team_id}/bugs:
+    servers:
+    - url: https://bug-api.{zone}
+      description: Proposed bug reporting service host.
+      variables:
+        zone:
+          default: example.invalid
+    get:
+      tags:
+      - Bugs
+      operationId: listTeamBugReports
+      summary: List a team's bug reports
+      description: Results are ordered newest first. This route lets the UI populate a team bug list without
+        knowing each bug ID in advance.
+      parameters:
+      - $ref: '#/components/parameters/TeamId'
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Bug reports for the specified team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReportPage'
+          headers:
+            Cache-Control:
+              description: Business responses are private and must not be cached.
+              schema:
+                type: string
+                const: no-store
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Cognito access token. ID tokens are not accepted.
+  parameters:
+    SubmissionId:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of a row whose type must be submission.
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    TeamId:
+      name: team_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: ^[A-Za-z0-9_-]+$
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    Unauthenticated:
+      description: Missing, invalid, expired, or wrong-kind access token.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+          description: Bearer authentication challenge.
+        Cache-Control:
+          schema:
+            type: string
+          example: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: UNAUTHENTICATED
+            message: Sign in with a valid access token.
+    Forbidden:
+      description: Caller is signed in but not authorised for this action/resource.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: FORBIDDEN
+            message: You are not allowed to perform this action.
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+    NotFound:
+      description: The resource does not exist or has the wrong type.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: NOT_FOUND
+            message: The requested resource was not found.
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+    StateConflict:
+      description: A version/current-state invariant or operation policy was violated.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            duplicateCurrentSubmission:
+              value:
+                error: TOO_MANY_CURRENT_SUBMISSIONS
+                message: A team may have only one current submission.
+            stateConflict:
+              value:
+                error: STATE_CONFLICT
+                message: The resource changed concurrently; reload and retry deliberately.
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+    BodyTooLarge:
+      description: The request exceeds the box's 1 MiB body limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: BODY_TOO_LARGE
+            message: Request body exceeds the 1 MiB limit.
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+    ValidationError:
+      description: Request fields failed schema validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+    RateLimited:
+      description: Write rate limit reached; Retry-After may be supplied by the box.
+      headers:
+        Retry-After:
+          schema:
+            type: string
+          example: '1'
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: RATE_LIMITED
+            message: Too many requests; retry after the indicated delay.
+    DependencyUnavailable:
+      description: Database or evaluation dependency is temporarily unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: DEPENDENCY_UNAVAILABLE
+            message: The service is temporarily unavailable.
+      headers:
+        Cache-Control:
+          description: Business responses are private and must not be cached.
+          schema:
+            type: string
+            const: no-store
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+      - error
+      - message
+      properties:
+        error:
+          type: string
+          description: Stable machine-readable error code.
+          example: NOT_FOUND
+        message:
+          type: string
+          description: Safe message suitable for display.
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+    ValidationErrorResponse:
+      type: object
+      required:
+      - error
+      - message
+      properties:
+        error:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            required:
+            - field
+            - message
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+    SubmissionCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - team_id
+      - team_name
+      - group
+      - project_title
+      - deployment_url
+      - site_map
+      - body
+      properties:
+        team_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: ^[A-Za-z0-9_-]+$
+        team_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        group:
+          type: string
+          minLength: 1
+          maxLength: 64
+        project_title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        deployment_url:
+          type: string
+          format: uri
+          description: Public or authorised-to-test deployment URL.
+        site_map:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: Paths/routes exposed by the project.
+        body:
+          type: string
+          minLength: 1
+          description: Submission description/content; Markdown is allowed.
+    Submission:
+      type: object
+      required:
+      - id
+      - type
+      - team_id
+      - team_name
+      - group
+      - project_title
+      - deployment_url
+      - site_map
+      - body
+      - version
+      - is_current
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        type:
+          type: string
+          const: submission
+        team_id:
+          type: string
+        team_name:
+          type: string
+        group:
+          type: string
+        project_title:
+          type: string
+        deployment_url:
+          type: string
+          format: uri
+        site_map:
+          type: array
+          items:
+            type: string
+        body:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        is_current:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SubmissionPage:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Submission'
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        offset:
+          type: integer
+          minimum: 0
+    ManualEvaluationCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - student_id
+      - grade
+      - feedback
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        grade:
+          type: string
+          minLength: 1
+          maxLength: 32
+        feedback:
+          type: string
+          minLength: 1
+          description: Evaluator comments/feedback.
+    ManualEvaluation:
+      type: object
+      required:
+      - id
+      - type
+      - submission_id
+      - team_id
+      - student_id
+      - evaluator_id
+      - grade
+      - feedback
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        type:
+          type: string
+          const: evaluation
+        submission_id:
+          type: integer
+          format: int64
+          minimum: 1
+        team_id:
+          type: string
+        student_id:
+          type: string
+        evaluator_id:
+          type: string
+          description: Server-derived authenticated evaluator identity or its approved internal mapping.
+        grade:
+          type: string
+        feedback:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ManualEvaluationPage:
+      type: object
+      required:
+      - items
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ManualEvaluation'
+        total:
+          type: integer
+          minimum: 0
+    AutomaticEvaluation:
+      type: object
+      required:
+      - id
+      - type
+      - submission_id
+      - evaluator
+      - checks_passed
+      - checks_failed
+      - summary
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        type:
+          type: string
+          const: automatic_evaluation
+        submission_id:
+          type: integer
+          format: int64
+          minimum: 1
+        evaluator:
+          type: string
+          example: schema-validator-v1
+        checks_passed:
+          type: integer
+          minimum: 0
+        checks_failed:
+          type: integer
+          minimum: 0
+        summary:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AutomaticEvaluationPage:
+      type: object
+      required:
+      - items
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutomaticEvaluation'
+        total:
+          type: integer
+          minimum: 0
+    BugCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - team_id
+      - severity
+      - category
+      - description
+      properties:
+        team_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        submission_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+          description: Optional for v0.1; when provided, must belong to team_id.
+        severity:
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: Severity vocabulary is to be frozen with the lead; current SQL demonstrates high.
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          description: Reproduction steps and observed behaviour; stored as the document body.
+    BugReport:
+      type: object
+      required:
+      - id
+      - team_id
+      - submission_id
+      - severity
+      - category
+      - description
+      - created_at
+      - updated_at
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        team_id:
+          type: string
+        submission_id:
+          type:
+          - integer
+          - 'null'
+          format: int64
+          minimum: 1
+        severity:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    BugReportPage:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BugReport'
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        offset:
+          type: integer
+          minimum: 0
