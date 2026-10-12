@@ -1,252 +1,169 @@
----
-abstract: |
-  The rules every UI of the project keeps: designed for
-  a phone first, styled by Tailwind's utilities, built
-  in Svelte, in a visual language the project defines
-  for itself. And four more: every state drawn, usable
-  by everyone, a courtesy over the database, and what
-  it loads preferably its own.
-date: 2026-10-07
-keywords:
-- conduct
-- ui
-- svelte
-- tailwind
-- mobile-first
-- accessibility
-kind: explanation
-sources:
-- ui/index.html
-- ui/app.js
-status: draft
-subtitle: Mobile first, Tailwind, Svelte, and a visual
-  language of your own
-title: The UI's Conduct
-version: v0.1.0
----
+# Big Bounty UI Conduct
 
-Eight rules, U1 to U8, for whoever writes a page of the
-project's UI. The first four choose the tools and the
-order of work. The last four are what the tools do not
-give you.
+Mobile first, Tailwind, Svelte, and a visual language of our own
 
-## 1 U1 Mobile First
+## Abstract
 
-**Design for a phone, then add for wider screens.**
-Never the other way.
+Big Bounty is an anonymous peer-testing platform with a student portal and a faculty portal. Two things shape these rules: students are on phones, and anonymity is the product.
 
-- **Start at 360 px wide,** one column, read top to
-  bottom. The wireframe of a concept is drawn at this
-  width first
+## U1 Mobile First
 
-- **A wider screen adds, never repairs.** A style with
-  no prefix is the phone's; `md:` and `lg:` add columns
-  and room. If the phone needs a prefix to undo
-  something, the order was wrong
+Design for a phone, then add for wider screens. Never the other way.
 
-- **Fingers, not pointers.** A button or a tick is at
-  least 44 px each way. Nothing appears on hover alone
+- Start at 360 px wide, one column, read top to bottom. Sketch every page at this width first.
+- A wider screen adds, never repairs. A class with no prefix is the phone's; `md:` and `lg:` add columns and room. If the phone needs a prefix to undo something, the order was wrong.
+- Fingers, not pointers. A button or a tick is at least 44 px each way. Nothing appears on hover alone.
+- Text in a field is 16 px or more (`text-base`), or a phone's browser zooms the page on touch.
+- The faculty Sidebar becomes a top bar or a drawer on a phone. It is a wide-screen addition, not the default layout.
+- `app.html` sets the viewport:
 
-- **Text in a field is 16 px or more,** or a phone's
-  browser zooms the page when the field is touched
+&#91;embedded content: phone layout vs wide layout\]
 
-- **`index.html` sets the viewport:**
+The phone layout is the base; the accent shows what md: and lg: add.
 
-  ``` html
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  ```
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+```
 
-## 2 U2 Functional CSS: Tailwind
+## U2 Functional CSS: Tailwind
 
-**Style in the markup, by Tailwind's utility classes.**
-One class does one thing, and its name says what.
+Style in the markup, by Tailwind's utility classes. One class does one thing, and its name says what.
 
-``` svelte
+```html
 <div class="flex flex-col gap-3 md:flex-row md:items-center">
-  <input class="rounded border border-ink px-3 py-2 text-base" aria-label="Display name" />
-  <button class="rounded border-2 border-ink px-4 py-2 font-semibold">Save</button>
+  <input class="rounded-box border border-ink px-3 py-2 text-base" aria-label="Project title" />
+  <button class="rounded-box border-2 border-ink px-4 py-2 font-semibold">Submit</button>
 </div>
 ```
 
-- **No class names of your own.** No `.card`, no
-  `.row`. A part that repeats, a button or a card,
-  becomes a component (U3), not a class
-- **No `<style>` block and no `style=`,** but for a
-  value computed at run time, such as a bar's width
-- **No values of your own in brackets,** `p-[13px]` or
-  `text-[#333]`. A step you miss is a step to add to
-  the visual language (U4), once, for everyone
-- **`@apply` only in the one stylesheet,** and only for
-  what no component can hold: the page's `body`, a link
-  in rendered text
-- **The order of classes:** layout, box, type, colour,
-  then the prefixed ones. Tailwind's own Prettier
-  plugin sorts them, if the project formats by Prettier
+- No class names of your own. No `.card`, no `.row`. A part that repeats becomes a component (U3), not a class.
+- No `<style>` block and no `style=`, except for a value computed at run time, such as a progress bar's width.
+- No values of your own in brackets: `p-[13px]` and `text-[#333]` are out. A step you miss is a step to add to the visual language (U4), once, for everyone.
+- `@apply` only in the one stylesheet, and only for what no component can hold: the page's body, a link inside rendered Markdown.
+- Class order: layout, box, type, colour, then the prefixed ones. Use `prettier-plugin-tailwindcss` to sort them.
 
-Why utilities: a change to one part cannot break
-another, since nothing is shared but the scale. And the
-markup shows what a part looks like without a second
-file open.
+Why utilities: a change to one part cannot break another, since nothing is shared but the scale.
 
-## 3 U3 Svelte
+## U3 Svelte
 
-**Every page of the UI is Svelte, built by Vite into a
-folder of static files.** The box serves files and runs
-nothing of yours ([the UI](../ui/README.md) §5).
+Every page is Svelte, built by Vite into a folder of static files. The host serves files and runs nothing of ours.
 
-- **One component a file, one thing a component:** [the
-  philosophy](philosophy.md). A component over about
-  150 lines holds two things
-- **State by runes:** `$state`, `$derived`, `$props`.
-  No store until two distant components need the same
-  thing
-- **Data comes down, events go up.** A component is
-  given what it shows, and tells its parent what
-  happened. One module calls the services, with the
-  token and the retries; no component calls `fetch`
-- **No rendering on a server.** No SvelteKit server, no
-  endpoint of the UI's own: an API is a service's
-- **Tested by Vitest in jsdom,** finding each part as a
-  person would: by its element, its label or its words,
-  never by a class ([tutorial 6's
-  tests](../tutorials/6-a-svelte-ui/3-tests.md))
+- Keep SvelteKit only as a static single-page app: `adapter-static` with a fallback page, `ssr = false` at the root. No `hooks.server.js`, no `+server.js`, no form actions. An API is a service's, not the UI's.
+- One component a file, one thing a component. A component over about 150 lines holds two things.
+- State by runes: `$state`, `$derived`, `$props`. No store until two distant components need the same thing. Today's stores are `auth`, `theme`, and `appState`, and that is the limit until a fourth is argued for.
+- Data comes down, events go up. A component is given what it shows and tells its parent what happened. Components never call `fetch`. One module in `src/lib/api` talks to the backend.
+- Shared parts live in `src/lib/components`: Navbar, Sidebar, Footer, DashboardCard, FilterableEntityList, MarkdownEditor, FileUpload, SuccessModal, ProfileContent. Add to that list rather than copying a part into a page.
+- Tested by Vitest with Testing Library in jsdom, finding each part as a person would: by its role, its label, or its words, never by a class.
 
-## 4 U4 A Visual Language of Your Own
+&#91;embedded content: data flow · 4 layers\]
 
-**The project defines its look once, as tokens, and
-every part uses the tokens alone.** This page does not
-choose the look. It says what must be chosen:
+Data flows down from the service to the component; events flow up, and only the api module touches the network.
 
-- **Colours by their job,** not their hue: the ground,
-  the ink, a muted ink, one accent, one for danger. A
-  light and a dark value each
-- **Type:** one family, and a scale of four or five
-  sizes
-- **Space:** one scale, used for every gap and padding
-- **Shape:** one radius, one border's width, and
-  whether anything casts a shadow
-- **Emphasis:** what the one main action of a part
-  looks like, and that a part has only one
-- **Words:** how the UI speaks. [Writing](writing.md)
-  holds for a button as for a page
+## U4 A Visual Language of Our Own
 
-The tokens live in the one stylesheet, as Tailwind's
-theme, so each becomes a utility. **An example, not the
-project's:** a plain look, ink on paper.
+The project defines its look once, as tokens, and every part uses the tokens alone. Choose, and write down:
 
-``` css
-@import "tailwindcss";
+- **Colours by their job, not their hue:** ground, ink, muted ink, one accent, one for danger, one for success. A light and a dark value each.
+- **Type:** one family, and a scale of four or five sizes.
+- **Space:** one scale, used for every gap and padding.
+- **Shape:** one radius, one border width, and whether anything casts a shadow.
+- **Emphasis:** what the one main action of a part looks like, and that a part has only one.
+- **Words:** how the UI speaks. Plain, short, and kind. Writing holds for a button as for a page.
+- **Roles:** students and faculty share one look. A role changes what is shown, never how it looks.
 
-@theme {
-  --color-ground: #ffffff;
-  --color-ink: #111111;
-  --color-muted: #6b6b6b;
-  --color-accent: #111111;
-  --color-danger: #b00020;
-  --font-sans: system-ui, sans-serif;
-  --radius-box: 4px;
+Because the project has a dark-mode toggle, tokens are CSS variables that change under a `.dark` class, and Tailwind names them. In `src/app.css`:
+
+```css
+:root {
+  --ground: 255 255 255;
+  --ink: 17 17 17;
+  --muted: 107 107 107;
+  --accent: 17 17 17;
+  --danger: 176 0 32;
+  --success: 14 107 58;
+}
+.dark {
+  --ground: 17 17 17;
+  --ink: 245 245 245;
+  --muted: 170 170 170;
+  --accent: 245 245 245;
+  --danger: 255 107 107;
+  --success: 98 214 143;
 }
 ```
 
-From it, `bg-ground`, `text-ink`, `text-muted`,
-`border-danger` and `rounded-box` exist, and no other
-colour should appear in the markup. The example gives
-the light values alone. A first line in the theme,
-`--color-*: initial`, takes Tailwind's own colours
-away, so that none other can.
+In `tailwind.config.js`, replace the theme's colours so no other colour can appear:
 
-[Tutorial 6's
-implementation](../tutorials/6-a-svelte-ui/4-implementation.md)
-§3 to §5 is all of this at work: a theme with its dark
-values, six small parts, and a dashboard built of them.
+```js
+colors: {
+  ground: 'rgb(var(--ground) / <alpha-value>)',
+  ink: 'rgb(var(--ink) / <alpha-value>)',
+  muted: 'rgb(var(--muted) / <alpha-value>)',
+  accent: 'rgb(var(--accent) / <alpha-value>)',
+  danger: 'rgb(var(--danger) / <alpha-value>)',
+  success: 'rgb(var(--success) / <alpha-value>)',
+  transparent: 'transparent'
+},
+borderRadius: { none: '0', box: '4px' },
+fontFamily: { sans: ['system-ui', 'sans-serif'] }
+```
 
-Write your own, and a page beside [the
-UI's](../ui/README.md) that shows it: each token, its
-job, and one part drawn with it.
+From it, `bg-ground`, `text-ink`, `text-muted`, `border-danger`, and `rounded-box` exist, and no other colour appears in the markup. This is an example, not the final look. If the project moves to Tailwind 4, the same tokens go in an `@theme` block.
 
-## 5 U5 Every State Drawn Before It Is Built
+Keep a page at `/design` that shows each token, its job, and one part drawn with it, in both themes.
 
-A part has more states than the one in the designer's
-head. The concept's wireframe draws each ([the
-concept](the-cycle/concept.md) §3; [tutorial
-6's](../tutorials/6-a-svelte-ui/1-concept.md) §3):
+## U5 Every State Drawn Before It Is Built
 
-- **Waiting,** before the answer
-- **Empty,** when the answer is nothing
-- **Refused,** signed out or without the permission
-- **Failed,** when the service did not answer
-- **Full,** the one everybody draws
+A part has more states than the one in the designer's head. Draw each before building:
 
-Each state has a test. Tutorial 6 draws the last three
-for one part, and tests them for all (its D7).
+- **Waiting:** before the answer arrives.
+- **Empty:** the answer is nothing (no teams yet, no submissions to test).
+- **Refused:** signed out, or not allowed. A student on a faculty page lands here, with words.
+- **Failed:** the service did not answer. Say so and offer a retry.
+- **Full:** the one everybody draws.
 
-## 6 U6 Usable by Everyone
+&#91;embedded content: the five states of a part\]
 
-- **The right element:** a `button` for an action, an
-  `a` for a place, a `label` for every field, headings
-  in order. A `div` with a click handler is none of
-  these
-- **The keyboard reaches everything,** in the order it
-  is read, and the focus can be seen
-- **Contrast of 4.5 to 1** for text, in both themes.
-  Colour is never the only sign: an error has words
-- **Motion stops** for whoever asks,
-  `prefers-reduced-motion`
-- **A test finds a part by its element or its label**
-  (U3). A part a test cannot find that way, a screen
-  reader cannot either
+The five states side by side, as the wireframe should draw them.
 
-## 7 U7 A Courtesy over the Database
+Each state has a test. Lists, dashboards, and the submit and testing flows are the parts most likely to be missing four of the five.
 
-**The UI shows what a person may do; the database
-decides.** A button hidden is a kindness, not a guard:
-whoever calls the API by hand meets the same refusal
-([the database's conduct](database.md) §2).
+## U6 Usable by Everyone
 
-- **What to show comes from `/users/me`,** its
-  permissions, never from a role's name or an e-mail
-- **Every call can be refused,** and the part says so
-  in words
-- **The access token stays in `sessionStorage`,** as
-  the starter keeps it, and nowhere longer-lived. No
-  secret is ever in the UI: its files are public
+- The right element: a `button` for an action, an `a` for a place, a `label` for every field, headings in order. A `div` with a click handler is none of these.
+- The keyboard reaches everything, in the order it is read, and the focus can be seen. Modals (SuccessModal) trap focus, close on Escape, and return focus to what opened them.
+- Contrast of 4.5 to 1 for text, in both themes. Colour is never the only sign: an error has words, a status has a label.
+- Motion stops for whoever asks (`motion-reduce:`).
+- The Markdown editor and file upload work without a mouse, and say what they accept and what went wrong.
+- A test finds a part by its element or its label (U3). A part a test cannot find that way, a screen reader cannot either.
 
-## 8 U8 Preferably Self-Delivered
+## U7 Honest About the Sign-In, Careful with Anonymity
 
-**What the page loads comes from its own origin, where
-that is reasonable.** A font, a script or a style from
-another site is a third party who learns of every
-visit, and a way for the page to break. So prefer your
-own files; and where a well-used package is better
-taken from where it is published, that is the
-maintainer's call, made with care.
+The UI shows what a person may do. The backend decides.
 
-When something is delivered by another:
+- **The mock sign-in is a demo, and must say so.** Until a real backend exists, `auth.js` is a stand-in. Nothing in the UI may hold or imply real security, and nothing sensitive is stored.
+- A hidden button is a kindness, not a guard. Whoever calls the API by hand meets the same refusal once it exists.
+- What to show comes from a permissions object in the session (`/users/me` when it exists), never from a role's name or an e-mail address scattered through components. One helper answers "may this person do this?"
+- Session data goes in `sessionStorage`, not `localStorage`, and never anything longer-lived. No secret is ever in the UI: its files are public.
+- **Anonymity is a rule of the UI, not a feature.** A tester's identity is never shown to the team being tested, nor in a URL, a page title, an image name, or a log line. Show what the person needs and no more. If a part could reveal who wrote a review, it is a bug.
+- Every call can be refused, and the part says so in words.
 
-- **By its exact version,** never `latest` or a range
-- **With its hash,** `integrity="sha384-..."`, so the
-  browser refuses a file that is not the one you read
-- **Named in the merge request:** what it is, who
-  delivers it, and why not from the UI's own files
-- **Never what holds a person's data.** A script from
-  elsewhere runs with the page's rights: it can read
-  the token. Pin it, or do not take it
+## U8 Preferably Self-Delivered
 
-And as before:
+What the page loads comes from its own origin, where that is reasonable. A font, script, or style from another site is a third party who learns of every visit, and a way for the page to break.
 
-- **Fonts and icons are files of the UI,** or the
-  system's, unless the above is done for them
-- **`config.js` is read at run time,** never bundled,
-  so one build serves any zone ([Release the
-  UI](../ui/release.md))
-- **A new dependency is a decision,** written in the
-  merge request: what it is for, and what was tried
-  without it
+- Fonts and icons are files of the UI, or the system's.
+- If something must come from elsewhere: by its exact version, never `latest` or a range; with its hash, `integrity="sha384-..."`; and named in the merge request with what it is, who delivers it, and why not from our own files.
+- Never anything that handles a person's data. A script from elsewhere runs with the page's rights.
+- A new dependency is a decision, written in the merge request: what it is for, and what was tried without it.
+- Environment settings (the API address) are read at run time from a config file, never baked into the build, so one build serves any deployment.
 
-## 9 See Also
+## Before You Open a Merge Request
 
-- [The UI](../ui/README.md): what the box asks of any
-  UI
-- [The concept](the-cycle/concept.md): the artefact,
-  for a page a wireframe
-- [The philosophy](philosophy.md): one thing, done well
+1. Does it work at 360 px with nothing prefixed to undo?
+2. Any custom class, `style=`, or bracketed value? Remove it.
+3. Any colour not from the tokens? Add the token or use one.
+4. Are all five states drawn and tested?
+5. Can I use it with a keyboard alone, in both themes?
+6. Could this reveal who a tester is?
+7. Does it load anything from outside our origin?
